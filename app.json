@@ -8,8 +8,14 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "dev.qla.abcdoctor",
-      "userInterfaceStyle": "automatic"
+      "bundleIdentifier": "abc.qla.dev",
+      "userInterfaceStyle": "automatic",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "The camera is used to capture lecture slides and textbook pages to turn into flashcards.",
+        "NSMicrophoneUsageDescription": "The microphone is used for spoken consultations with the AI tutor and simulated patients.",
+        "NSPhotoLibraryUsageDescription": "Choose an image of study material to turn into flashcards."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +25,13 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "dev.qla.abcdoctor"
+      "package": "abc.qla.dev",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,6 +42,13 @@
       "expo-audio",
       "expo-image"
     ],
-    "scheme": "abcdoctor"
+    "scheme": "abcdoctor",
+    "owner": "qla-dev",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "323d1cfb-6bdb-4145-ab71-06be95eca9ff"
+      }
+    }
   }
 }
