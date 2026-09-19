@@ -1,0 +1,62 @@
+{
+  "tabs": { "home": "Home", "handbook": "Handbook", "quiz": "Quiz", "simulator": "Simulator", "ai": "AI Doctor" },
+  "home": {
+    "greeting": "Good morning",
+    "subtitle": "Ready for today's rounds?",
+    "continueStudying": "Continue studying",
+    "dueToday": "Due today",
+    "cards_one": "{{count}} card",
+    "cards_other": "{{count}} cards",
+    "quickActions": "Quick actions",
+    "streak_one": "{{count}} day streak",
+    "streak_other": "{{count}} day streak",
+    "highYield": "High-yield today",
+    "reviewNow": "Review now"
+  },
+  "handbook": {
+    "title": "Handbook",
+    "search": "Search topics, findings, drugs",
+    "allCategories": "All",
+    "readTime": "{{minutes}} min read",
+    "bookmarked": "Bookmarked",
+    "empty": "No topics match that search."
+  },
+  "topic": {
+    "overview": "Overview", "mechanisms": "Mechanisms", "presentation": "Clinical presentation",
+    "diagnosis": "Diagnosis", "treatment": "Treatment", "pearls": "Clinical pearls",
+    "symptoms": "Symptoms", "signs": "Physical signs", "askAi": "Ask the AI tutor",
+    "explainSimply": "Explain simply", "quizMe": "Quiz me", "makeCards": "Make flashcards"
+  },
+  "quiz": {
+    "title": "Quiz", "start": "Start quiz", "quickFire": "Quick fire", "byTopic": "By topic",
+    "examMode": "Exam mode", "weakAreas": "Weak areas", "custom": "Custom",
+    "question": "Question {{current}} of {{total}}", "submit": "Submit answer",
+    "next": "Next question", "correct": "Correct", "incorrect": "Not quite",
+    "explanation": "Explanation", "pearl": "High-yield pearl", "score": "Score",
+    "finish": "Finish", "results": "Results"
+  },
+  "flashcards": {
+    "title": "Flashcards", "due": "Due", "newCards": "New", "learning": "Learning",
+    "tapToReveal": "Tap to reveal", "again": "Again", "hard": "Hard", "good": "Good",
+    "easy": "Easy", "allDone": "All caught up", "allDoneBody": "No cards due right now.",
+    "hint": "Hint"
+  },
+  "simulator": {
+    "title": "Patient simulator", "start": "Start case", "vitals": "Vitals",
+    "chiefComplaint": "Chief complaint", "askPatient": "Ask the patient…",
+    "history": "History", "examine": "Examine", "diagnose": "Diagnose", "voiceCall": "Voice consult"
+  },
+  "triage": { "title": "Triage", "subtitle": "Sort by acuity", "start": "Start scenario", "urgency": "Urgency" },
+  "ai": {
+    "title": "AI Doctor", "placeholder": "Ask anything clinical…", "thinking": "Thinking…",
+    "skills": "Skills", "newChat": "New chat", "disclaimer": "Educational use only. Never for real patient care."
+  },
+  "progress": {
+    "title": "Progress", "studied": "Studied", "accuracy": "Accuracy", "reviews": "Reviews",
+    "thisWeek": "This week", "byCategory": "By category", "recentQuizzes": "Recent quizzes"
+  },
+  "common": {
+    "cancel": "Cancel", "done": "Done", "save": "Save", "search": "Search", "retry": "Retry",
+    "theme": "Theme", "language": "Language", "settings": "Settings", "minutes": "min"
+  }
+}
