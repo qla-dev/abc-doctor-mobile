@@ -31,7 +31,10 @@ export function ScreenHeader({ title, subtitle, trailing, compact, showSettings 
 
   const styles = StyleSheet.create({
     wrap: {
-      paddingTop: insets.top,
+      // When the system owns the chrome it has already applied the safe-area inset to this
+      // screen, so adding insets.top here is a second one and the content sits twice too low.
+      // This is the rule fitness applies as usesNativeHeader ? 0 : insets.top.
+      paddingTop: systemOwnsChrome() ? 0 : insets.top,
       paddingHorizontal: 16,
       paddingBottom: 8,
       backgroundColor: colors.background,
