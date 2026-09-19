@@ -1,0 +1,9 @@
+# EAS scans the working directory to build its upload tarball. This checkout lives under
+# C:\Users\Public, where .git's object directories carry ACLs the build user cannot read, so the
+# scan fails with EPERM before it ever reaches the source. None of this is needed on the builder.
+.git
+node_modules
+ios
+android
+.expo
+dist
