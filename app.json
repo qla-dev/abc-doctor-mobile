@@ -15,6 +15,11 @@
         "NSCameraUsageDescription": "The camera is used to capture lecture slides and textbook pages to turn into flashcards.",
         "NSMicrophoneUsageDescription": "The microphone is used for spoken consultations with the AI tutor and simulated patients.",
         "NSPhotoLibraryUsageDescription": "Choose an image of study material to turn into flashcards."
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.abc.qla.dev"
+        ]
       }
     },
     "android": {
@@ -27,10 +32,13 @@
       "predictiveBackGestureEnabled": false,
       "package": "abc.qla.dev",
       "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+        "CAMERA",
+        "RECORD_AUDIO",
+        "VIBRATE",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "INTERNET"
       ]
     },
     "web": {
@@ -39,8 +47,67 @@
     "plugins": [
       "expo-router",
       "expo-localization",
-      "expo-audio",
-      "expo-image"
+      "expo-image",
+      "expo-web-browser",
+      "expo-secure-store",
+      "expo-sqlite",
+      "expo-background-task",
+      "expo-task-manager",
+      "expo-navigation-bar",
+      "expo-system-ui",
+      "expo-font",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "ABC Doctor uses the microphone for spoken consultations with the AI tutor and simulated patients."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "ABC Doctor uses the camera to capture lecture slides and textbook pages and turn them into flashcards.",
+          "microphonePermission": "ABC Doctor uses the microphone for spoken consultations.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose an image of study material to turn into flashcards."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#007AFF",
+          "defaultChannel": "reviews"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#000000",
+          "image": "./assets/icon.png",
+          "imageWidth": 160,
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "minSdkVersion": 26
+          },
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
+        }
+      ],
+      "@bacons/apple-targets"
     ],
     "scheme": "abcdoctor",
     "owner": "qla-dev",
