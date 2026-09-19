@@ -9,7 +9,8 @@ import { FlashcardFlipCard } from '@/components/common/FlashcardFlipCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/common/Badge';
 import { FLASHCARDS_DATA } from '@/data/flashcardsData';
-import { newCard, previewIntervals, review, type ReviewState } from '@/lib/scheduler';
+import { fromStored, previewIntervals, review, toStored, newState, type ReviewState } from '@/lib/scheduler';
+import { Reviews, Streak } from '@/services/storage';
 import type { FlashcardRating } from '@/types';
 
 const RATINGS: { key: FlashcardRating; tone: 'red' | 'orange' | 'blue' | 'green' }[] = [
@@ -24,14 +25,27 @@ export default function FlashcardsScreen() {
   const { t } = useLanguage();
   const g = createGlobalStyles(colors);
 
+  // The queue is whatever is due right now, computed once on entry. Recomputing it after each
+  // review would pull a just-rated card back in the moment its interval is under a minute.
+  const queue = useMemo(
+    () => FLASHCARDS_DATA.filter(card => Reviews.isDue(card.id)),
+    []
+  );
+
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const [state, setState] = useState<ReviewState>(() => newCard());
   const [done, setDone] = useState(0);
 
-  const card = FLASHCARDS_DATA[index];
-  const intervals = useMemo(() => previewIntervals(state), [state]);
+  const card = queue[index];
 
+  // Each card resumes from its saved schedule, so a card seen three times is not treated as new.
+  const state: ReviewState = useMemo(() => {
+    if (!card) return newState();
+    const saved = Reviews.get(card.id);
+    return saved ? fromStored(saved) : newState();
+  }, [card]);
+
+  const intervals = useMemo(() => previewIntervals(state), [state]);
   const tint = { red: colors.red, orange: colors.orange, blue: colors.blue, green: colors.green };
 
   const styles = StyleSheet.create({
@@ -59,10 +73,12 @@ export default function FlashcardsScreen() {
   }
 
   const rate = (rating: FlashcardRating) => {
-    setState((current) => review(current, rating));
-    setDone((n) => n + 1);
+    const next = review(state, rating);
+    Reviews.save(toStored(card.id, next, rating));
+    Streak.touch();
+    setDone(value => value + 1);
     setFlipped(false);
-    setIndex((n) => n + 1);
+    setIndex(value => value + 1);
   };
 
   return (
@@ -70,8 +86,8 @@ export default function FlashcardsScreen() {
       <Stack.Screen options={{ title: t('flashcards.title') }} />
       <View style={styles.meta}>
         <Badge label={card.category} tone="indigo" />
-        <Badge label={`${t('flashcards.due')} ${done}/${FLASHCARDS_DATA.length}`} tone="muted" />
-        <Text style={styles.counter}>{index + 1}/{FLASHCARDS_DATA.length}</Text>
+        <Badge label={`${t('flashcards.due')} ${done}/${queue.length}`} tone="muted" />
+        <Text style={styles.counter}>{index + 1}/{queue.length}</Text>
       </View>
 
       <FlashcardFlipCard
@@ -80,12 +96,12 @@ export default function FlashcardsScreen() {
         hint={card.clinicalHint}
         hintLabel={t('flashcards.hint')}
         flipped={flipped}
-        onFlip={() => setFlipped((value) => !value)}
+        onFlip={() => setFlipped(value => !value)}
       />
 
       {flipped ? (
         <View style={styles.ratings}>
-          {RATINGS.map((rating) => (
+          {RATINGS.map(rating => (
             <Pressable
               key={rating.key}
               onPress={() => rate(rating.key)}

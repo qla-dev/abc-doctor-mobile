@@ -146,5 +146,13 @@
     "end": "End case",
     "noAnswer": "The patient looks unsure and does not answer that.",
     "opened": "Consultation started"
+  },
+  "settings": {
+    "system": "Follow system",
+    "light": "Light",
+    "dark": "Dark",
+    "data": "Data",
+    "reset": "Reset all data",
+    "resetBody": "This erases your progress, bookmarks, quiz history, notes and review schedule. It cannot be undone."
   }
 }

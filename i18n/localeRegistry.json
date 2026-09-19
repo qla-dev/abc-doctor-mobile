@@ -1,0 +1,9 @@
+{
+  "about": "The shipping contract for languages. A catalog under i18n/locales is a translation candidate; only an entry here makes a locale reachable by the runtime, the language picker and any native resource bridge. Adding a file does not ship a language.",
+  "source": "en",
+  "locales": {
+    "en": { "label": "English", "flag": "🇬🇧", "native": "en", "plurals": ["one", "other"] },
+    "bs": { "label": "Bosanski", "flag": "🇧🇦", "native": "bs", "plurals": ["one", "few", "other"], "aliases": ["hr", "sr"] },
+    "de": { "label": "Deutsch", "flag": "🇩🇪", "native": "de", "plurals": ["one", "other"] }
+  }
+}

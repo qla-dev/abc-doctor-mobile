@@ -146,5 +146,13 @@
     "end": "Fall beenden",
     "noAnswer": "Der Patient wirkt unsicher und antwortet darauf nicht.",
     "opened": "Konsultation gestartet"
+  },
+  "settings": {
+    "system": "System folgen",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "data": "Daten",
+    "reset": "Alle Daten löschen",
+    "resetBody": "Löscht Fortschritt, Lesezeichen, Quiz-Verlauf, Notizen und Wiederholungsplan. Nicht umkehrbar."
   }
 }

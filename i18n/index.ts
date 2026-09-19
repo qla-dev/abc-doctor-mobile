@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
+import registry from './localeRegistry.json';
 import en from './locales/en.json';
 import bs from './locales/bs.json';
 import de from './locales/de.json';
@@ -8,11 +9,12 @@ import de from './locales/de.json';
 export type Language = 'en' | 'bs' | 'de';
 
 /** Only registered languages ship. A catalog on disk is a candidate, not a product language. */
-export const LANGUAGES: { code: Language; label: string; flag: string }[] = [
-  { code: 'en', label: 'English', flag: '🇬🇧' },
-  { code: 'bs', label: 'Bosanski', flag: '🇧🇦' },
-  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
-];
+export const LANGUAGES: { code: Language; label: string; flag: string }[] =
+  Object.entries(registry.locales).map(([code, meta]) => ({
+    code: code as Language,
+    label: meta.label,
+    flag: meta.flag,
+  }));
 
 const SUPPORTED = LANGUAGES.map(l => l.code);
 
@@ -20,7 +22,9 @@ const SUPPORTED = LANGUAGES.map(l => l.code);
 export function deviceLanguage(): Language {
   const tag = getLocales()[0]?.languageCode ?? 'en';
   // Serbian and Croatian speakers read Bosnian without friction; they are not shipped separately yet.
-  const aliased = tag === 'hr' || tag === 'sr' ? 'bs' : tag;
+  // Aliases come from the registry, so adding one is a data change rather than a code change.
+  const aliasOwner = Object.entries(registry.locales).find(([, meta]) => (meta as { aliases?: string[] }).aliases?.includes(tag));
+  const aliased = aliasOwner ? aliasOwner[0] : tag;
   return (SUPPORTED as string[]).includes(aliased) ? (aliased as Language) : 'en';
 }
 

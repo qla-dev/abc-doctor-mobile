@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { Lightbulb } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/common/Badge';
 import { QuizOptionRow } from '@/components/common/QuizOptionRow';
 import { ProgressRing } from '@/components/common/ProgressRing';
 import { QUIZ_QUESTIONS_DATA } from '@/data/quizzesData';
+import { QuizHistory, Streak } from '@/services/storage';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
@@ -23,6 +24,8 @@ export default function QuizPlayerScreen() {
   const [selected, setSelected] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [score, setScore] = useState(0);
+  const [answers, setAnswers] = useState<{ questionId: string; selectedOptionIds: string[]; isCorrect: boolean }[]>([]);
+  const [startedAt] = useState(() => Date.now());
 
   const question = QUIZ_QUESTIONS_DATA[index];
   const total = Math.min(QUIZ_QUESTIONS_DATA.length, 10);
@@ -46,9 +49,31 @@ export default function QuizPlayerScreen() {
   const submit = () => {
     setRevealed(true);
     if (isCorrect) setScore((value) => value + 1);
+    setAnswers((current) => [
+      ...current,
+      { questionId: question.id, selectedOptionIds: selected ? [selected] : [], isCorrect },
+    ]);
   };
 
   const next = () => {
+    const finished = index + 1 >= total;
+    if (finished) {
+      // One record per run, written when the run ends rather than per question: a history
+      // entry is a sitting, and a half-finished sitting is not one.
+      QuizHistory.record({
+        id: String(startedAt),
+        date: new Date().toISOString(),
+        mode: 'quick',
+        topicTitle: question.topicTitle,
+        score: score + (isCorrect ? 0 : 0),
+        totalQuestions: total,
+        timeSpentSeconds: Math.round((Date.now() - startedAt) / 1000),
+        answers,
+      });
+      Streak.touch();
+      router.back();
+      return;
+    }
     setRevealed(false);
     setSelected(null);
     setIndex((value) => (value + 1) % QUIZ_QUESTIONS_DATA.length);

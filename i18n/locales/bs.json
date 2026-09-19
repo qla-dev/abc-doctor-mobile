@@ -148,5 +148,13 @@
     "end": "Završi slučaj",
     "noAnswer": "Pacijent djeluje nesigurno i ne odgovara na to.",
     "opened": "Konsultacija je počela"
+  },
+  "settings": {
+    "system": "Prati sistem",
+    "light": "Svijetla",
+    "dark": "Tamna",
+    "data": "Podaci",
+    "reset": "Obriši sve podatke",
+    "resetBody": "Ovo briše napredak, sačuvane teme, historiju kvizova, bilješke i raspored ponavljanja. Nije moguće vratiti."
   }
 }

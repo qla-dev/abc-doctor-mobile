@@ -1,6 +1,7 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { Lightbulb } from 'lucide-react-native';
+import { Bookmark, BookmarkCheck, Lightbulb } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
@@ -10,6 +11,9 @@ import { Badge } from '@/components/common/Badge';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { TOPICS_DATA } from '@/data/topicsData';
+import { AppField } from '@/components/common/AppField';
+import { HighYieldStars } from '@/components/common/Rows';
+import { Bookmarks, Notes, Progress } from '@/services/storage';
 
 export default function TopicDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -17,6 +21,20 @@ export default function TopicDetailScreen() {
   const { t } = useLanguage();
   const g = createGlobalStyles(colors);
   const topic = TOPICS_DATA.find((item) => item.id === id);
+
+  const [bookmarked, setBookmarked] = useState(() => (id ? Bookmarks.has(id) : false));
+  const [note, setNote] = useState(() => (id ? Notes.get(id) : ''));
+
+  // Opening a topic counts as having read it. Progress.set only ever raises the stored value,
+  // so re-reading a finished topic cannot undo it.
+  useEffect(() => {
+    if (id) Progress.set(id, Math.max(25, Progress.get(id)));
+  }, [id]);
+
+  const saveNote = useCallback((text: string) => {
+    setNote(text);
+    if (id) Notes.set(id, text);
+  }, [id]);
 
   const styles = StyleSheet.create({
     title: { color: colors.text, fontSize: 25, fontWeight: '800', letterSpacing: -0.6, marginTop: 8 },
@@ -40,14 +58,30 @@ export default function TopicDetailScreen() {
 
   return (
     <ScrollView style={g.screen} contentContainerStyle={g.scrollContent} showsVerticalScrollIndicator={false}>
-      <Stack.Screen options={{ title: topic.title, headerBackTitle: t('handbook.title') }} />
+      <Stack.Screen
+        options={{
+          title: topic.title,
+          headerRight: () => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('handbook.bookmarked')}
+              onPress={() => { if (id) setBookmarked(Bookmarks.toggle(id)); }}
+              hitSlop={10}
+            >
+              {bookmarked
+                ? <BookmarkCheck size={21} color={colors.blue} />
+                : <Bookmark size={21} color={colors.muted} />}
+            </Pressable>
+          ),
+        }}
+      />
 
       <Text style={styles.title}>{topic.title}</Text>
       <Text style={styles.subtitle}>{topic.subtitle}</Text>
       <View style={styles.metaRow}>
         <Badge label={topic.category} tone="indigo" />
         <Badge label={t('handbook.readTime', { minutes: topic.readTimeMinutes })} tone="muted" />
-        <Badge label={'★'.repeat(topic.highYieldRating)} tone="orange" />
+        <HighYieldStars rating={topic.highYieldRating} />
       </View>
 
       <SectionHeader title={t('topic.overview')} />
@@ -86,6 +120,18 @@ export default function TopicDetailScreen() {
           </View>
         </AppCard>
       ))}
+
+      <SectionHeader title={t('settings.data')} />
+      <AppCard>
+        <AppField
+          label={t('handbook.bookmarked')}
+          hideLabel
+          value={note}
+          onChangeText={saveNote}
+          placeholder={t('topic.overview')}
+          multiline
+        />
+      </AppCard>
 
       <SectionHeader title={t('topic.askAi')} />
       <View style={styles.actions}>

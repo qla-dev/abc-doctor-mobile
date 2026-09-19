@@ -12,6 +12,9 @@ import { SectionHeader } from '@/components/common/SectionHeader';
 import { ProgressRing } from '@/components/common/ProgressRing';
 import { TOPICS_DATA } from '@/data/topicsData';
 import { FLASHCARDS_DATA } from '@/data/flashcardsData';
+import { Progress, Reviews, Streak } from '@/services/storage';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 export default function HomeScreen() {
   const { colors } = useTheme();
@@ -19,7 +22,21 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const g = createGlobalStyles(colors);
 
-  const dueCount = FLASHCARDS_DATA.length;
+  // Re-read on focus: coming back from a review session must show the new counts, and these
+  // are synchronous MMKV reads so there is no loading state to manage.
+  const [stats, setStats] = useState(() => ({
+    due: Reviews.dueCount(FLASHCARDS_DATA.map(card => card.id)),
+    streak: Streak.read().days,
+    progress: Progress.all(),
+  }));
+  useFocusEffect(useCallback(() => {
+    setStats({
+      due: Reviews.dueCount(FLASHCARDS_DATA.map(card => card.id)),
+      streak: Streak.read().days,
+      progress: Progress.all(),
+    });
+  }, []));
+  const dueCount = stats.due;
   const inProgress = TOPICS_DATA.filter(topic => topic.completionPercentage > 0 && topic.completionPercentage < 100);
   const resume = inProgress[0] ?? TOPICS_DATA[0];
   const highYield = TOPICS_DATA.filter(topic => topic.highYieldRating >= 4).slice(0, 3);
@@ -53,15 +70,15 @@ export default function HomeScreen() {
         <View style={styles.statRow}>
           <AppCard padded={false}>
             <View style={styles.stat}>
-              <ProgressRing progress={0.62} size={56} stroke={5} />
+              <ProgressRing progress={Object.values(stats.progress).reduce((sum, value) => sum + value, 0) / (TOPICS_DATA.length * 100)} size={56} stroke={5} />
               <Text style={styles.statLabel}>{t('progress.studied')}</Text>
             </View>
           </AppCard>
           <AppCard padded={false}>
             <View style={styles.stat}>
               <Flame size={26} color={colors.orange} />
-              <Text style={styles.statValue}>7</Text>
-              <Text style={styles.statLabel}>{t('home.streak', { count: 7 })}</Text>
+              <Text style={styles.statValue}>{stats.streak}</Text>
+              <Text style={styles.statLabel}>{t('home.streak', { count: stats.streak })}</Text>
             </View>
           </AppCard>
           <AppCard padded={false}>
@@ -78,7 +95,7 @@ export default function HomeScreen() {
           <Badge label={resume.category} tone="indigo" />
           <Text style={styles.resumeTitle}>{resume.title}</Text>
           <Text style={styles.resumeSub}>{resume.subtitle}</Text>
-          <ProgressRing progress={resume.completionPercentage / 100} size={44} stroke={4} />
+          <ProgressRing progress={(stats.progress[resume.id] ?? resume.completionPercentage) / 100} size={44} stroke={4} />
         </AppCard>
 
         <SectionHeader title={t('home.quickActions')} />

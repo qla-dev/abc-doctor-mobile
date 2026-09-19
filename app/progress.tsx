@@ -9,21 +9,28 @@ import { SectionHeader } from '@/components/common/SectionHeader';
 import { Badge } from '@/components/common/Badge';
 import { TOPICS_DATA } from '@/data/topicsData';
 import { QUIZ_QUESTIONS_DATA } from '@/data/quizzesData';
+import { FLASHCARDS_DATA } from '@/data/flashcardsData';
+import { Progress, QuizHistory, Reviews } from '@/services/storage';
 
 export default function ProgressScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const g = createGlobalStyles(colors);
 
+  const stored = Progress.all();
+  const accuracy = QuizHistory.accuracy();
+  const reviewed = Object.keys(Reviews.all()).length;
+  const due = Reviews.dueCount(FLASHCARDS_DATA.map(card => card.id));
+
   const byCategory = TOPICS_DATA.reduce<Record<string, { total: number; done: number }>>((acc, topic) => {
     const entry = acc[topic.category] ?? { total: 0, done: 0 };
     entry.total += 1;
-    entry.done += topic.completionPercentage / 100;
+    entry.done += (stored[topic.id] ?? topic.completionPercentage) / 100;
     acc[topic.category] = entry;
     return acc;
   }, {});
 
-  const overall = TOPICS_DATA.reduce((sum, topic) => sum + topic.completionPercentage, 0) / (TOPICS_DATA.length * 100);
+  const overall = TOPICS_DATA.reduce((sum, topic) => sum + (stored[topic.id] ?? topic.completionPercentage), 0) / (TOPICS_DATA.length * 100);
 
   const styles = StyleSheet.create({
     statRow: { flexDirection: 'row', gap: 12 },
@@ -50,13 +57,13 @@ export default function ProgressScreen() {
         </AppCard>
         <AppCard padded={false}>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>78%</Text>
+            <Text style={styles.statValue}>{accuracy === null ? '—' : accuracy + '%'}</Text>
             <Text style={styles.statLabel}>{t('progress.accuracy')}</Text>
           </View>
         </AppCard>
         <AppCard padded={false}>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>{QUIZ_QUESTIONS_DATA.length}</Text>
+            <Text style={styles.statValue}>{reviewed}</Text>
             <Text style={styles.statLabel}>{t('progress.reviews')}</Text>
           </View>
         </AppCard>
