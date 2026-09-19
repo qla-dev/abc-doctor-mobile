@@ -58,7 +58,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>
-      <ScreenHeader title={t('home.greeting')} subtitle={t('home.subtitle')} />
+      <ScreenHeader title={t('home.greeting')} subtitle={t('home.subtitle')} showSettings />
 
       <View style={g.scrollContent}>
         <View style={styles.statRow}>

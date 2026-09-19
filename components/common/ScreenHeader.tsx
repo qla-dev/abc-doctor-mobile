@@ -1,33 +1,39 @@
 import { ReactNode } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { Settings } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
+import { useLanguage } from '@/context/LanguageContext';
+import { playClickSound } from '@/lib/sound';
+import { systemOwnsChrome } from '@/lib/liquidGlass';
 
 /**
- * The single source of top spacing. Every screen's content begins below this, so the gap from
- * the status bar to the first pixel of content is identical everywhere instead of each screen
- * inventing its own inset arithmetic.
+ * The single source of top spacing, owned by the screen rather than the navigator.
  *
- * `insets.top + 8` is what putni-nalozi and freightbook both use, and it is the reason their
- * screens sit right under the notch without looking cramped or adrift.
+ * `insets.top` exactly — no extra. fitness uses the bare inset on 89 screens, and the reason is
+ * that the title's own line height supplies the optical gap. Adding 8 on top of it is what made
+ * every screen sit too low.
  */
-export function ScreenHeader({ title, subtitle, trailing, compact }: {
+export function ScreenHeader({ title, subtitle, trailing, compact, showSettings }: {
   title: string;
   subtitle?: string;
   trailing?: ReactNode;
   /** Pushed screens use the smaller title, as a navigation bar would. */
   compact?: boolean;
+  /** Tab screens carry the settings button here rather than in a native toolbar. */
+  showSettings?: boolean;
 }) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { t } = useLanguage();
 
   const styles = StyleSheet.create({
     wrap: {
-      paddingTop: insets.top + 8,
+      paddingTop: insets.top,
       paddingHorizontal: 16,
-      paddingBottom: 12,
-      // Deliberately the screen background, not a tinted bar: the header is not a painted
-      // surface, it is the top of the page.
+      paddingBottom: 8,
       backgroundColor: colors.background,
     },
     row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -38,6 +44,10 @@ export function ScreenHeader({ title, subtitle, trailing, compact }: {
       color: colors.text,
     },
     subtitle: { fontSize: 12.5, color: colors.muted, marginTop: 2 },
+    button: {
+      width: 36, height: 36, borderRadius: 18,
+      alignItems: 'center', justifyContent: 'center', backgroundColor: colors.input,
+    },
   });
 
   return (
@@ -45,19 +55,36 @@ export function ScreenHeader({ title, subtitle, trailing, compact }: {
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
           <Text numberOfLines={1} style={styles.title}>{title}</Text>
-          {subtitle ? <Text numberOfLines={1} style={styles.subtitle}>{subtitle}</Text> : null}
+          {subtitle ? <Text numberOfLines={2} style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
         {trailing}
+        {showSettings ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.settings')}
+            onPress={() => {
+              void playClickSound();
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/settings');
+            }}
+            style={({ pressed }) => [styles.button, { opacity: pressed ? 0.6 : 1 }]}
+          >
+            <Settings size={18} color={colors.muted} />
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
 }
 
 /**
- * Bottom padding for a scroll view under the floating tab bar. iOS 26's bar hovers over
- * content, so a list that stops at the safe area still ends up half-covered.
+ * Bottom padding for a scroll view inside the tabs.
+ *
+ * Zero on iOS 26: the native tab bar applies its own content inset, so anything added here is
+ * doubled. Only the platforms that draw a bar over the content need a manual gap.
  */
 export function useTabScrollPadding() {
   const insets = useSafeAreaInsets();
-  return insets.bottom + (Platform.OS === 'ios' ? 96 : 76);
+  if (systemOwnsChrome()) return 16;
+  return insets.bottom + (Platform.OS === 'ios' ? 68 : 60);
 }

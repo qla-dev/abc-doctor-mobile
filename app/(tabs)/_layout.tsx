@@ -1,46 +1,18 @@
 import { Platform } from 'react-native';
-import { Stack, Tabs, router } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import * as Haptics from 'expo-haptics';
-import { BookOpen, Home, ListChecks, MessagesSquare, Settings, Stethoscope } from 'lucide-react-native';
+import { BookOpen, Home, ListChecks, MessagesSquare, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
-import { playClickSound } from '@/lib/sound';
 
 const TAB_SCREEN_LISTENERS = { tabPress: () => void Haptics.selectionAsync() };
-
-function openSettings() {
-  void playClickSound();
-  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  router.push('/settings');
-}
 
 function IosTabs() {
   const { colors, resolvedMode } = useTheme();
   const { t } = useLanguage();
   return (
-    <>
-      {/*
-        The toolbar button lives on the Stack screen that hosts the tabs, not inside each tab:
-        iOS renders one navigation bar above the whole tab navigator, so declaring it per tab
-        would fight over the same slot. Stack.Toolbar.Button takes an SF Symbol name only —
-        never a component — so a custom mark would have to be pre-rasterised to an image.
-      */}
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: '',
-        }}
-      />
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button
-          accessibilityLabel={t('common.settings')}
-          icon="gearshape"
-          onPress={openSettings}
-        />
-      </Stack.Toolbar>
-      <NativeTabs
+    <NativeTabs
         key={resolvedMode}
         tintColor={colors.blue}
         backgroundColor={colors.card}
@@ -72,32 +44,18 @@ function IosTabs() {
           <NativeTabs.Trigger.Icon sf={{ default: 'bubble.left.and.bubble.right', selected: 'bubble.left.and.bubble.right.fill' } as any} />
           <NativeTabs.Trigger.Label>{t('tabs.ai')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
-      </NativeTabs>
-    </>
+    </NativeTabs>
   );
 }
 
 function AndroidTabs() {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const headerRight = () => (
-    <Settings
-      size={21}
-      color={colors.text}
-      onPress={openSettings}
-      accessibilityLabel={t('common.settings')}
-    />
-  );
   return (
     <Tabs
       screenListeners={TAB_SCREEN_LISTENERS}
       screenOptions={{
-        headerShown: true,
-        headerStyle: { backgroundColor: colors.background },
-        headerTitleStyle: { color: colors.text },
-        headerShadowVisible: false,
-        headerRightContainerStyle: { paddingRight: 16 },
-        headerRight,
+        headerShown: false,
         tabBarActiveTintColor: colors.blue,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.separator },
