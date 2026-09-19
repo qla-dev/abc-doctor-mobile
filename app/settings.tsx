@@ -53,7 +53,9 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={g.scrollContent} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      style={g.screen} contentContainerStyle={g.scrollContent} showsVerticalScrollIndicator={false}>
       <Stack.Screen options={{ title: t('common.settings') }} />
 
       <SectionHeader title={t('common.theme')} />

@@ -80,7 +80,9 @@ export default function QuizPlayerScreen() {
   };
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={g.scrollContent} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      style={g.screen} contentContainerStyle={g.scrollContent} showsVerticalScrollIndicator={false}>
       <Stack.Screen options={{ title: t('quiz.title') }} />
 
       <View style={styles.progressRow}>

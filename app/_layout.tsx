@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Stack } from 'expo-router';
 import * as SystemUI from 'expo-system-ui';
@@ -28,14 +29,23 @@ function RootStack() {
       <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
-          // Chevron only: the route group name ('(tabs)') is an implementation detail and has no
-          // business appearing next to a back arrow.
+          // Chevron only: the route group name is an implementation detail.
           headerBackButtonDisplayMode: 'minimal',
           headerShadowVisible: false,
-          headerStyle: { backgroundColor: colors.background },
-          headerTitleStyle: { color: colors.text },
           headerTintColor: colors.blue,
+          headerTitleStyle: { color: colors.text },
           contentStyle: { backgroundColor: colors.background },
+          // On iOS the bar is not painted at all: no background view, no hairline, and no
+          // scroll-edge material. The screen background runs straight up behind it, which is
+          // what makes the top of a page read as page rather than as chrome.
+          ...(Platform.OS === 'ios'
+            ? {
+                headerTransparent: true,
+                headerBackground: () => null,
+                headerStyle: { backgroundColor: 'transparent' },
+                scrollEdgeEffects: { top: 'hidden' as const },
+              }
+            : { headerStyle: { backgroundColor: colors.background } }),
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

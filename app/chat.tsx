@@ -40,7 +40,7 @@ export default function ChatScreen() {
   const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: c.background },
     header: {
-      paddingTop: insets.top + 6, paddingHorizontal: 12, paddingBottom: 10,
+      paddingTop: insets.top + 8, paddingHorizontal: 12, paddingBottom: 10,
       flexDirection: 'row', alignItems: 'center', gap: 10,
     },
     back: {

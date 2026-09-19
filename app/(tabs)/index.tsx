@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScreenHeader, useTabScrollPadding } from '@/components/common/ScreenHeader';
 import { Brain, Flame, Layers, Siren, TrendingUp } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -19,7 +19,7 @@ import { useCallback, useState } from 'react';
 export default function HomeScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const insets = useSafeAreaInsets();
+  const bottomPad = useTabScrollPadding();
   const g = createGlobalStyles(colors);
 
   // Re-read on focus: coming back from a review session must show the new counts, and these
@@ -42,9 +42,6 @@ export default function HomeScreen() {
   const highYield = TOPICS_DATA.filter(topic => topic.highYieldRating >= 4).slice(0, 3);
 
   const styles = StyleSheet.create({
-    hero: { paddingTop: insets.top + 12, paddingHorizontal: 16, paddingBottom: 6 },
-    greeting: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -0.9 },
-    sub: { color: colors.muted, fontSize: 14, marginTop: 3 },
     statRow: { flexDirection: 'row', gap: 12 },
     stat: { flex: 1, alignItems: 'center', gap: 7, paddingVertical: 14, paddingHorizontal: 6, minHeight: 116, justifyContent: 'center' },
     statValue: { color: colors.text, fontSize: 22, fontWeight: '800' },
@@ -60,13 +57,10 @@ export default function HomeScreen() {
   });
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
-      <View style={styles.hero}>
-        <Text style={styles.greeting}>{t('home.greeting')}</Text>
-        <Text style={styles.sub}>{t('home.subtitle')}</Text>
-      </View>
+    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>
+      <ScreenHeader title={t('home.greeting')} subtitle={t('home.subtitle')} />
 
-      <View style={[g.scrollContent, { paddingTop: 14 }]}>
+      <View style={g.scrollContent}>
         <View style={styles.statRow}>
           <AppCard padded={false}>
             <View style={styles.stat}>

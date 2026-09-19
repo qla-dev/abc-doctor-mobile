@@ -44,7 +44,9 @@ export default function ProgressScreen() {
   });
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={g.scrollContent} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      style={g.screen} contentContainerStyle={g.scrollContent} showsVerticalScrollIndicator={false}>
       <Stack.Screen options={{ title: t('progress.title') }} />
 
       <SectionHeader title={t('progress.thisWeek')} />

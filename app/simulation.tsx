@@ -87,7 +87,7 @@ export default function SimulationScreen() {
 
   const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: c.background },
-    header: { paddingTop: insets.top + 6, paddingHorizontal: 12, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 },
+    header: { paddingTop: insets.top + 8, paddingHorizontal: 12, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 },
     back: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.input },
     name: { color: c.text, fontSize: 16.5, fontWeight: '700' },
     meta: { color: c.muted, fontSize: 12, marginTop: 1 },

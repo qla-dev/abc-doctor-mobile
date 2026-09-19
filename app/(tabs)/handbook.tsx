@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScreenHeader, useTabScrollPadding } from '@/components/common/ScreenHeader';
 import { BookOpen, Search } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -17,7 +17,7 @@ import { TOPICS_DATA } from '@/data/topicsData';
 export default function HandbookScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const insets = useSafeAreaInsets();
+  const bottomPad = useTabScrollPadding();
   const g = createGlobalStyles(colors);
   const [query, setQuery] = useState('');
 
@@ -38,17 +38,15 @@ export default function HandbookScreen() {
   }, [query]);
 
   const styles = StyleSheet.create({
-    header: { paddingTop: insets.top + 12, paddingHorizontal: 16, gap: 12 },
-    title: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -0.9 },
     searchRow: { flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 13, paddingVertical: 11 },
     input: { flex: 1, color: colors.text, fontSize: 15, padding: 0 },
     count: { color: colors.muted, fontSize: 12.5 },
   });
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('handbook.title')}</Text>
+    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>
+      <ScreenHeader title={t('handbook.title')} />
+      <View style={{ paddingHorizontal: 16, paddingBottom: 4 }}>
         <GlassPanel radius={14}>
           <View style={styles.searchRow}>
             <Search size={17} color={colors.muted} />
@@ -65,7 +63,7 @@ export default function HandbookScreen() {
         </GlassPanel>
       </View>
 
-      <View style={[g.scrollContent, { paddingTop: 14 }]}>
+      <View style={g.scrollContent}>
         <SectionHeader
           title={`${categories.length} ${t('handbook.allCategories')}`}
           action={<Text style={styles.count}>{results.length}</Text>}

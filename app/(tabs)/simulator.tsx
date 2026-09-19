@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScreenHeader, useTabScrollPadding } from '@/components/common/ScreenHeader';
 import * as Haptics from 'expo-haptics';
 import { Shuffle, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -20,7 +20,7 @@ import {
 export default function SimulatorSetupScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const insets = useSafeAreaInsets();
+  const bottomPad = useTabScrollPadding();
   const g = createGlobalStyles(colors);
 
   const specialties = availableSpecialties();
@@ -31,9 +31,6 @@ export default function SimulatorSetupScreen() {
   const patch = (next: Partial<CaseSetup>) => setSetup(current => ({ ...current, ...next }));
 
   const styles = StyleSheet.create({
-    header: { paddingTop: insets.top + 12, paddingHorizontal: 16 },
-    title: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -0.9 },
-    sub: { color: colors.muted, fontSize: 14, marginTop: 3 },
     field: { gap: 9 },
     chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
     summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
@@ -43,13 +40,10 @@ export default function SimulatorSetupScreen() {
   const genderLabel = { M: t('setup.male'), F: t('setup.female'), any: t('setup.anyGender') }[setup.gender];
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('simulator.title')}</Text>
-        <Text style={styles.sub}>{t('setup.title')}</Text>
-      </View>
+    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>
+      <ScreenHeader title={t('simulator.title')} subtitle={t('setup.title')} />
 
-      <View style={[g.scrollContent, { paddingTop: 14 }]}>
+      <View style={g.scrollContent}>
         <SectionHeader title={t('setup.difficulty')} />
         <SegmentedControl<Difficulty>
           value={setup.difficulty}

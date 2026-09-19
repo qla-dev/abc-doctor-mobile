@@ -82,7 +82,9 @@ export default function FlashcardsScreen() {
   };
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      style={g.screen} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <Stack.Screen options={{ title: t('flashcards.title') }} />
       <View style={styles.meta}>
         <Badge label={card.category} tone="indigo" />

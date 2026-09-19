@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScreenHeader, useTabScrollPadding } from '@/components/common/ScreenHeader';
 import { Clock, Crosshair, GraduationCap, Shuffle, Sliders } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -13,7 +13,7 @@ import { QUIZ_QUESTIONS_DATA } from '@/data/quizzesData';
 export default function QuizScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  const insets = useSafeAreaInsets();
+  const bottomPad = useTabScrollPadding();
   const g = createGlobalStyles(colors);
 
   const modes = [
@@ -25,8 +25,6 @@ export default function QuizScreen() {
   ];
 
   const styles = StyleSheet.create({
-    header: { paddingTop: insets.top + 12, paddingHorizontal: 16 },
-    title: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -0.9 },
     modeRow: { flexDirection: 'row', alignItems: 'center', gap: 13 },
     iconWrap: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
     modeLabel: { color: colors.text, fontSize: 15.5, fontWeight: '700' },
@@ -35,11 +33,9 @@ export default function QuizScreen() {
   });
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{t('quiz.title')}</Text>
-      </View>
-      <View style={[g.scrollContent, { paddingTop: 14 }]}>
+    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>
+      <ScreenHeader title={t('quiz.title')} />
+      <View style={g.scrollContent}>
         <SectionHeader title={t('quiz.start')} />
         {modes.map(mode => {
           const Icon = mode.icon;
