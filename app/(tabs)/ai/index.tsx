@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
-import { ScreenHeader, useTabScrollPadding } from '@/components/common/ScreenHeader';
+import { FallbackTabHeader, useTabScrollPadding } from '@/components/common/TabHeader';
+import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { Brain, ClipboardList, Layers, Send, Siren, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -24,7 +25,11 @@ const SKILLS: { id: string; label: string; icon: typeof Brain; tone: Tone }[] = 
 export default function AiScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
+
   const bottomPad = useTabScrollPadding();
+  const usesNativeHeader = useScreenHeader({ title: t('tabs.ai'),
+    right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
+  });
   const g = createGlobalStyles(colors);
   const [draft, setDraft] = useState('');
 
@@ -44,9 +49,13 @@ export default function AiScreen() {
   });
 
   return (
-    <KeyboardAvoidingView style={g.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('ai.title')} subtitle={t('ai.disclaimer')} />
+    <KeyboardAvoidingView style={g.screen} collapsable={false} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <FallbackTabHeader title={t('tabs.ai')} />
+      <ScrollView
+      style={{ flex: 1 }}
+      contentInsetAdjustmentBehavior={usesNativeHeader ? 'automatic' : 'never'}
+      automaticallyAdjustsScrollIndicatorInsets={usesNativeHeader}
+      contentContainerStyle={{ paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
         <View style={g.scrollContent}>
           <SectionHeader title={t('ai.skills')} />
           {SKILLS.map((skill) => {

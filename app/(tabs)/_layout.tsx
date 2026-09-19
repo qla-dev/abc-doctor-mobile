@@ -1,10 +1,10 @@
-import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import * as Haptics from 'expo-haptics';
 import { BookOpen, Home, ListChecks, MessagesSquare, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
+import { useNativeIOSTabsActive } from '@/lib/nativeTabBarPreference';
 
 const TAB_SCREEN_LISTENERS = { tabPress: () => void Haptics.selectionAsync() };
 
@@ -23,7 +23,9 @@ function IosTabs() {
         disableTransparentOnScrollEdge
         screenListeners={TAB_SCREEN_LISTENERS}
       >
-        <NativeTabs.Trigger name="index">
+        {/* `(home)` is a group, not a folder name: that is what keeps this tab's index at `/`,
+            so the launch URL resolves instead of falling through to Unmatched Route. */}
+        <NativeTabs.Trigger name="(home)">
           <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' } as any} />
           <NativeTabs.Trigger.Label>{t('tabs.home')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
@@ -48,7 +50,12 @@ function IosTabs() {
   );
 }
 
-function AndroidTabs() {
+/**
+ * The bar Android draws, and the one iOS falls back to — either because the device predates the
+ * glass APIs or because the user turned the toggle off. fitness splits the same way, in
+ * TabsLayout's NativeTabsLayout / FallbackTabsLayout pair.
+ */
+function FallbackTabs() {
   const { colors } = useTheme();
   const { t } = useLanguage();
   return (
@@ -61,7 +68,7 @@ function AndroidTabs() {
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.separator },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: t('tabs.home'), tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }} />
+      <Tabs.Screen name="(home)" options={{ title: t('tabs.home'), tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }} />
       <Tabs.Screen name="handbook" options={{ title: t('tabs.handbook'), tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size} /> }} />
       <Tabs.Screen name="quiz" options={{ title: t('tabs.quiz'), tabBarIcon: ({ color, size }) => <ListChecks color={color} size={size} /> }} />
       <Tabs.Screen name="simulator" options={{ title: t('tabs.simulator'), tabBarIcon: ({ color, size }) => <Stethoscope color={color} size={size} /> }} />
@@ -70,6 +77,12 @@ function AndroidTabs() {
   );
 }
 
+/**
+ * Which bar is on is a property of the device and the preference, not of the platform: iOS
+ * before the glass APIs, and iOS 26 with the toggle off, both take the fallback. Switching on
+ * `Platform.OS === 'ios'` alone left the glass tab bar under the fallback headers.
+ */
 export default function TabsLayout() {
-  return Platform.OS === 'ios' ? <IosTabs /> : <AndroidTabs />;
+  const usesNativeTabs = useNativeIOSTabsActive();
+  return usesNativeTabs ? <IosTabs /> : <FallbackTabs />;
 }
