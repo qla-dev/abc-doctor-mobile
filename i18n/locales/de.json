@@ -1,53 +1,150 @@
 {
-  "tabs": { "home": "Start", "handbook": "Handbuch", "quiz": "Quiz", "simulator": "Simulator", "ai": "KI-Arzt" },
+  "tabs": {
+    "home": "Start",
+    "handbook": "Handbuch",
+    "quiz": "Quiz",
+    "simulator": "Simulator",
+    "ai": "KI-Arzt"
+  },
   "home": {
-    "greeting": "Guten Morgen", "subtitle": "Bereit für die heutige Visite?",
-    "continueStudying": "Weiterlernen", "dueToday": "Heute fällig",
-    "cards_one": "{{count}} Karte", "cards_other": "{{count}} Karten",
+    "greeting": "Guten Morgen",
+    "subtitle": "Bereit für die heutige Visite?",
+    "continueStudying": "Weiterlernen",
+    "dueToday": "Heute fällig",
+    "cards_one": "{{count}} Karte",
+    "cards_other": "{{count}} Karten",
     "quickActions": "Schnellzugriff",
-    "streak_one": "{{count}} Tag in Folge", "streak_other": "{{count}} Tage in Folge",
-    "highYield": "Heute besonders wichtig", "reviewNow": "Jetzt wiederholen"
+    "streak_one": "{{count}} Tag in Folge",
+    "streak_other": "{{count}} Tage in Folge",
+    "highYield": "Heute besonders wichtig",
+    "reviewNow": "Jetzt wiederholen"
   },
   "handbook": {
-    "title": "Handbuch", "search": "Themen, Befunde, Medikamente suchen", "allCategories": "Alle",
-    "readTime": "{{minutes}} Min. Lesezeit", "bookmarked": "Gemerkt", "empty": "Keine Themen für diese Suche."
+    "title": "Handbuch",
+    "search": "Themen, Befunde, Medikamente suchen",
+    "allCategories": "Alle",
+    "readTime": "{{minutes}} Min. Lesezeit",
+    "bookmarked": "Gemerkt",
+    "empty": "Keine Themen für diese Suche."
   },
   "topic": {
-    "overview": "Überblick", "mechanisms": "Mechanismen", "presentation": "Klinisches Bild",
-    "diagnosis": "Diagnostik", "treatment": "Therapie", "pearls": "Klinische Merksätze",
-    "symptoms": "Symptome", "signs": "Körperliche Befunde", "askAi": "KI-Tutor fragen",
-    "explainSimply": "Einfach erklären", "quizMe": "Frag mich ab", "makeCards": "Karten erstellen"
+    "overview": "Überblick",
+    "mechanisms": "Mechanismen",
+    "presentation": "Klinisches Bild",
+    "diagnosis": "Diagnostik",
+    "treatment": "Therapie",
+    "pearls": "Klinische Merksätze",
+    "symptoms": "Symptome",
+    "signs": "Körperliche Befunde",
+    "askAi": "KI-Tutor fragen",
+    "explainSimply": "Einfach erklären",
+    "quizMe": "Frag mich ab",
+    "makeCards": "Karten erstellen"
   },
   "quiz": {
-    "title": "Quiz", "start": "Quiz starten", "quickFire": "Schnellrunde", "byTopic": "Nach Thema",
-    "examMode": "Prüfungsmodus", "weakAreas": "Schwachstellen", "custom": "Individuell",
-    "question": "Frage {{current}} von {{total}}", "submit": "Antwort bestätigen",
-    "next": "Nächste Frage", "correct": "Richtig", "incorrect": "Nicht ganz",
-    "explanation": "Erklärung", "pearl": "Merksatz", "score": "Ergebnis",
-    "finish": "Beenden", "results": "Ergebnisse"
+    "title": "Quiz",
+    "start": "Quiz starten",
+    "quickFire": "Schnellrunde",
+    "byTopic": "Nach Thema",
+    "examMode": "Prüfungsmodus",
+    "weakAreas": "Schwachstellen",
+    "custom": "Individuell",
+    "question": "Frage {{current}} von {{total}}",
+    "submit": "Antwort bestätigen",
+    "next": "Nächste Frage",
+    "correct": "Richtig",
+    "incorrect": "Nicht ganz",
+    "explanation": "Erklärung",
+    "pearl": "Merksatz",
+    "score": "Ergebnis",
+    "finish": "Beenden",
+    "results": "Ergebnisse"
   },
   "flashcards": {
-    "title": "Karteikarten", "due": "Fällig", "newCards": "Neu", "learning": "Lernen",
-    "tapToReveal": "Tippen zum Aufdecken", "again": "Nochmal", "hard": "Schwer", "good": "Gut",
-    "easy": "Leicht", "allDone": "Alles erledigt", "allDoneBody": "Derzeit keine Karten fällig.",
+    "title": "Karteikarten",
+    "due": "Fällig",
+    "newCards": "Neu",
+    "learning": "Lernen",
+    "tapToReveal": "Tippen zum Aufdecken",
+    "again": "Nochmal",
+    "hard": "Schwer",
+    "good": "Gut",
+    "easy": "Leicht",
+    "allDone": "Alles erledigt",
+    "allDoneBody": "Derzeit keine Karten fällig.",
     "hint": "Hinweis"
   },
   "simulator": {
-    "title": "Patientensimulator", "start": "Fall starten", "vitals": "Vitalwerte",
-    "chiefComplaint": "Hauptbeschwerde", "askPatient": "Den Patienten fragen…",
-    "history": "Anamnese", "examine": "Untersuchen", "diagnose": "Diagnose stellen", "voiceCall": "Sprachkonsultation"
+    "title": "Patientensimulator",
+    "start": "Fall starten",
+    "vitals": "Vitalwerte",
+    "chiefComplaint": "Hauptbeschwerde",
+    "askPatient": "Den Patienten fragen…",
+    "history": "Anamnese",
+    "examine": "Untersuchen",
+    "diagnose": "Diagnose stellen",
+    "voiceCall": "Sprachkonsultation"
   },
-  "triage": { "title": "Triage", "subtitle": "Nach Dringlichkeit sortieren", "start": "Szenario starten", "urgency": "Dringlichkeit" },
+  "triage": {
+    "title": "Triage",
+    "subtitle": "Nach Dringlichkeit sortieren",
+    "start": "Szenario starten",
+    "urgency": "Dringlichkeit"
+  },
   "ai": {
-    "title": "KI-Arzt", "placeholder": "Frag etwas Klinisches…", "thinking": "Denkt nach…",
-    "skills": "Fähigkeiten", "newChat": "Neuer Chat", "disclaimer": "Nur zu Lernzwecken. Nie für echte Patienten."
+    "title": "KI-Arzt",
+    "placeholder": "Frag etwas Klinisches…",
+    "thinking": "Denkt nach…",
+    "skills": "Fähigkeiten",
+    "newChat": "Neuer Chat",
+    "disclaimer": "Nur zu Lernzwecken. Nie für echte Patienten."
   },
   "progress": {
-    "title": "Fortschritt", "studied": "Gelernt", "accuracy": "Trefferquote", "reviews": "Wiederholungen",
-    "thisWeek": "Diese Woche", "byCategory": "Nach Kategorie", "recentQuizzes": "Letzte Quizze"
+    "title": "Fortschritt",
+    "studied": "Gelernt",
+    "accuracy": "Trefferquote",
+    "reviews": "Wiederholungen",
+    "thisWeek": "Diese Woche",
+    "byCategory": "Nach Kategorie",
+    "recentQuizzes": "Letzte Quizze"
   },
   "common": {
-    "cancel": "Abbrechen", "done": "Fertig", "save": "Speichern", "search": "Suche", "retry": "Erneut versuchen",
-    "theme": "Design", "language": "Sprache", "settings": "Einstellungen", "minutes": "Min."
+    "cancel": "Abbrechen",
+    "done": "Fertig",
+    "save": "Speichern",
+    "search": "Suche",
+    "retry": "Erneut versuchen",
+    "theme": "Design",
+    "language": "Sprache",
+    "settings": "Einstellungen",
+    "minutes": "Min."
+  },
+  "setup": {
+    "title": "Neuer Fall",
+    "difficulty": "Schwierigkeit",
+    "easy": "Leicht",
+    "medium": "Mittel",
+    "hard": "Schwer",
+    "specialty": "Fachgebiet",
+    "anySpecialty": "Alle",
+    "gender": "Patient",
+    "male": "Männlich",
+    "female": "Weiblich",
+    "anyGender": "Egal",
+    "age": "Altersgruppe",
+    "randomize": "Zufällig",
+    "start": "Konsultation starten",
+    "summary": "{{age}} {{gender}}, {{specialty}}"
+  },
+  "sim": {
+    "typing": "Patient schreibt…",
+    "placeholder": "Den Patienten fragen…",
+    "examine": "Untersuchen",
+    "investigations": "Befunde",
+    "diagnose": "Diagnose",
+    "vitals": "Vitalwerte",
+    "end": "Fall beenden",
+    "noAnswer": "Der Patient wirkt unsicher und antwortet darauf nicht.",
+    "opened": "Konsultation gestartet"
   }
 }

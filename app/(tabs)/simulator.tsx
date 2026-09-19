@@ -1,81 +1,119 @@
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Activity, HeartPulse, Mic, Wind } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import { Shuffle, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
 import { AppCard } from '@/components/common/AppCard';
 import { AppButton } from '@/components/common/AppButton';
-import { Badge } from '@/components/common/Badge';
 import { SectionHeader } from '@/components/common/SectionHeader';
-import { PATIENT_CASES_DATA } from '@/data/patientCasesData';
+import { SegmentedControl } from '@/components/common/SegmentedControl';
+import { Badge } from '@/components/common/Badge';
+import {
+  AGE_BANDS, availableSpecialties, randomSetup,
+  type AgeBand, type CaseSetup, type Difficulty, type GenderChoice,
+} from '@/lib/caseGenerator';
 
-const TRIAGE_TONE = { red: 'red', orange: 'orange', yellow: 'orange', green: 'green' } as const;
-
-export default function SimulatorScreen() {
+export default function SimulatorSetupScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const g = createGlobalStyles(colors);
 
+  const specialties = availableSpecialties();
+  const [setup, setSetup] = useState<CaseSetup>({
+    difficulty: 'medium', specialty: 'any', gender: 'any', ageBand: '35-54',
+  });
+
+  const patch = (next: Partial<CaseSetup>) => setSetup(current => ({ ...current, ...next }));
+
   const styles = StyleSheet.create({
     header: { paddingTop: insets.top + 12, paddingHorizontal: 16 },
     title: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -0.9 },
     sub: { color: colors.muted, fontSize: 14, marginTop: 3 },
-    patientRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
-    avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.input },
-    avatarText: { color: colors.text, fontSize: 14, fontWeight: '800' },
-    name: { color: colors.text, fontSize: 16, fontWeight: '700' },
-    complaint: { color: colors.muted, fontSize: 13, marginTop: 2 },
-    vitals: { flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' },
-    vital: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 9, backgroundColor: colors.input },
-    vitalText: { color: colors.text, fontSize: 12, fontWeight: '700' },
+    field: { gap: 9 },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+    summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+    summaryText: { color: colors.text, fontSize: 14.5, fontWeight: '600', flex: 1 },
   });
+
+  const genderLabel = { M: t('setup.male'), F: t('setup.female'), any: t('setup.anyGender') }[setup.gender];
 
   return (
     <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('simulator.title')}</Text>
-        <Text style={styles.sub}>{t('simulator.chiefComplaint')}</Text>
+        <Text style={styles.sub}>{t('setup.title')}</Text>
       </View>
+
       <View style={[g.scrollContent, { paddingTop: 14 }]}>
-        <SectionHeader title={t('simulator.start')} />
-        {PATIENT_CASES_DATA.slice(0, 5).map((patient) => (
-          <AppCard key={patient.id}>
-            <View style={styles.patientRow}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{patient.age}{patient.gender}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{patient.patientName}</Text>
-                <Text style={styles.complaint} numberOfLines={2}>{patient.chiefComplaint}</Text>
-              </View>
-              <Badge label={patient.triageColor} tone={TRIAGE_TONE[patient.triageColor]} />
-            </View>
-            <View style={styles.vitals}>
-              <View style={styles.vital}>
-                <HeartPulse size={13} color={colors.red} />
-                <Text style={styles.vitalText}>{patient.vitals.hr}</Text>
-              </View>
-              <View style={styles.vital}>
-                <Activity size={13} color={colors.blue} />
-                <Text style={styles.vitalText}>{patient.vitals.bp}</Text>
-              </View>
-              <View style={styles.vital}>
-                <Wind size={13} color={colors.green} />
-                <Text style={styles.vitalText}>{patient.vitals.spo2}</Text>
-              </View>
-            </View>
-            <AppButton
-              label={t('simulator.voiceCall')}
-              tone="primary"
-              icon={<Mic size={16} color="#FFFFFF" />}
-              onPress={() => router.push({ pathname: "/voice", params: { patient: patient.patientName } })}
-              full
-            />
-          </AppCard>
-        ))}
+        <SectionHeader title={t('setup.difficulty')} />
+        <SegmentedControl<Difficulty>
+          value={setup.difficulty}
+          onChange={difficulty => patch({ difficulty })}
+          options={[
+            { value: 'easy', label: t('setup.easy') },
+            { value: 'medium', label: t('setup.medium') },
+            { value: 'hard', label: t('setup.hard') },
+          ]}
+        />
+
+        <SectionHeader title={t('setup.specialty')} />
+        <SegmentedControl<string>
+          value={setup.specialty}
+          onChange={specialty => patch({ specialty })}
+          options={[{ value: 'any', label: t('setup.anySpecialty') }, ...specialties.map(s => ({ value: s, label: s }))]}
+        />
+
+        <SectionHeader title={t('setup.gender')} />
+        <SegmentedControl<GenderChoice>
+          value={setup.gender}
+          onChange={gender => patch({ gender })}
+          options={[
+            { value: 'any', label: t('setup.anyGender') },
+            { value: 'M', label: t('setup.male') },
+            { value: 'F', label: t('setup.female') },
+          ]}
+        />
+
+        <SectionHeader title={t('setup.age')} />
+        <SegmentedControl<AgeBand>
+          value={setup.ageBand}
+          onChange={ageBand => patch({ ageBand })}
+          options={AGE_BANDS.map(band => ({ value: band, label: band }))}
+        />
+
+        <SectionHeader title={t('setup.summary', { age: setup.ageBand, gender: genderLabel, specialty: setup.specialty === 'any' ? t('setup.anySpecialty') : setup.specialty })} />
+        <AppCard>
+          <View style={styles.summaryRow}>
+            <Stethoscope size={20} color={colors.blue} />
+            <Text style={styles.summaryText}>
+              {t('setup.summary', {
+                age: setup.ageBand,
+                gender: genderLabel,
+                specialty: setup.specialty === 'any' ? t('setup.anySpecialty') : setup.specialty,
+              })}
+            </Text>
+            <Badge label={t(`setup.${setup.difficulty}`)} tone={setup.difficulty === 'hard' ? 'red' : setup.difficulty === 'medium' ? 'orange' : 'green'} />
+          </View>
+        </AppCard>
+
+        <AppButton
+          label={t('setup.randomize')}
+          tone="secondary"
+          icon={<Shuffle size={16} color={colors.text} />}
+          onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); setSetup(randomSetup()); }}
+          full
+        />
+        <AppButton
+          label={t('setup.start')}
+          tone="primary"
+          onPress={() => router.push({ pathname: '/simulation', params: { ...setup } })}
+          full
+        />
       </View>
     </ScrollView>
   );

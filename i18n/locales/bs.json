@@ -1,53 +1,152 @@
 {
-  "tabs": { "home": "Početna", "handbook": "Priručnik", "quiz": "Kviz", "simulator": "Simulator", "ai": "AI Doktor" },
+  "tabs": {
+    "home": "Početna",
+    "handbook": "Priručnik",
+    "quiz": "Kviz",
+    "simulator": "Simulator",
+    "ai": "AI Doktor"
+  },
   "home": {
-    "greeting": "Dobro jutro", "subtitle": "Spremni za današnju vizitu?",
-    "continueStudying": "Nastavi učiti", "dueToday": "Za danas",
-    "cards_one": "{{count}} kartica", "cards_few": "{{count}} kartice", "cards_other": "{{count}} kartica",
+    "greeting": "Dobro jutro",
+    "subtitle": "Spremni za današnju vizitu?",
+    "continueStudying": "Nastavi učiti",
+    "dueToday": "Za danas",
+    "cards_one": "{{count}} kartica",
+    "cards_few": "{{count}} kartice",
+    "cards_other": "{{count}} kartica",
     "quickActions": "Brze radnje",
-    "streak_one": "{{count}} dan zaredom", "streak_few": "{{count}} dana zaredom", "streak_other": "{{count}} dana zaredom",
-    "highYield": "Najvažnije danas", "reviewNow": "Ponovi sada"
+    "streak_one": "{{count}} dan zaredom",
+    "streak_few": "{{count}} dana zaredom",
+    "streak_other": "{{count}} dana zaredom",
+    "highYield": "Najvažnije danas",
+    "reviewNow": "Ponovi sada"
   },
   "handbook": {
-    "title": "Priručnik", "search": "Pretraži teme, nalaze, lijekove", "allCategories": "Sve",
-    "readTime": "{{minutes}} min čitanja", "bookmarked": "Sačuvano", "empty": "Nema tema za tu pretragu."
+    "title": "Priručnik",
+    "search": "Pretraži teme, nalaze, lijekove",
+    "allCategories": "Sve",
+    "readTime": "{{minutes}} min čitanja",
+    "bookmarked": "Sačuvano",
+    "empty": "Nema tema za tu pretragu."
   },
   "topic": {
-    "overview": "Pregled", "mechanisms": "Mehanizmi", "presentation": "Klinička slika",
-    "diagnosis": "Dijagnoza", "treatment": "Liječenje", "pearls": "Kliničke perle",
-    "symptoms": "Simptomi", "signs": "Fizikalni znaci", "askAi": "Pitaj AI tutora",
-    "explainSimply": "Objasni jednostavno", "quizMe": "Ispitaj me", "makeCards": "Napravi kartice"
+    "overview": "Pregled",
+    "mechanisms": "Mehanizmi",
+    "presentation": "Klinička slika",
+    "diagnosis": "Dijagnoza",
+    "treatment": "Liječenje",
+    "pearls": "Kliničke perle",
+    "symptoms": "Simptomi",
+    "signs": "Fizikalni znaci",
+    "askAi": "Pitaj AI tutora",
+    "explainSimply": "Objasni jednostavno",
+    "quizMe": "Ispitaj me",
+    "makeCards": "Napravi kartice"
   },
   "quiz": {
-    "title": "Kviz", "start": "Počni kviz", "quickFire": "Brzi kviz", "byTopic": "Po temi",
-    "examMode": "Ispitni režim", "weakAreas": "Slabe tačke", "custom": "Prilagođeno",
-    "question": "Pitanje {{current}} od {{total}}", "submit": "Potvrdi odgovor",
-    "next": "Sljedeće pitanje", "correct": "Tačno", "incorrect": "Nije tačno",
-    "explanation": "Objašnjenje", "pearl": "Ključna perla", "score": "Rezultat",
-    "finish": "Završi", "results": "Rezultati"
+    "title": "Kviz",
+    "start": "Počni kviz",
+    "quickFire": "Brzi kviz",
+    "byTopic": "Po temi",
+    "examMode": "Ispitni režim",
+    "weakAreas": "Slabe tačke",
+    "custom": "Prilagođeno",
+    "question": "Pitanje {{current}} od {{total}}",
+    "submit": "Potvrdi odgovor",
+    "next": "Sljedeće pitanje",
+    "correct": "Tačno",
+    "incorrect": "Nije tačno",
+    "explanation": "Objašnjenje",
+    "pearl": "Ključna perla",
+    "score": "Rezultat",
+    "finish": "Završi",
+    "results": "Rezultati"
   },
   "flashcards": {
-    "title": "Kartice", "due": "Za ponoviti", "newCards": "Nove", "learning": "Učenje",
-    "tapToReveal": "Dodirni za odgovor", "again": "Ponovo", "hard": "Teško", "good": "Dobro",
-    "easy": "Lako", "allDone": "Sve odrađeno", "allDoneBody": "Trenutno nema kartica za ponavljanje.",
+    "title": "Kartice",
+    "due": "Za ponoviti",
+    "newCards": "Nove",
+    "learning": "Učenje",
+    "tapToReveal": "Dodirni za odgovor",
+    "again": "Ponovo",
+    "hard": "Teško",
+    "good": "Dobro",
+    "easy": "Lako",
+    "allDone": "Sve odrađeno",
+    "allDoneBody": "Trenutno nema kartica za ponavljanje.",
     "hint": "Podsjetnik"
   },
   "simulator": {
-    "title": "Simulator pacijenta", "start": "Počni slučaj", "vitals": "Vitalni znaci",
-    "chiefComplaint": "Glavna tegoba", "askPatient": "Pitaj pacijenta…",
-    "history": "Anamneza", "examine": "Pregledaj", "diagnose": "Postavi dijagnozu", "voiceCall": "Glasovna konsultacija"
+    "title": "Simulator pacijenta",
+    "start": "Počni slučaj",
+    "vitals": "Vitalni znaci",
+    "chiefComplaint": "Glavna tegoba",
+    "askPatient": "Pitaj pacijenta…",
+    "history": "Anamneza",
+    "examine": "Pregledaj",
+    "diagnose": "Postavi dijagnozu",
+    "voiceCall": "Glasovna konsultacija"
   },
-  "triage": { "title": "Trijaža", "subtitle": "Sortiraj po hitnosti", "start": "Počni scenarij", "urgency": "Hitnost" },
+  "triage": {
+    "title": "Trijaža",
+    "subtitle": "Sortiraj po hitnosti",
+    "start": "Počni scenarij",
+    "urgency": "Hitnost"
+  },
   "ai": {
-    "title": "AI Doktor", "placeholder": "Pitaj bilo šta kliničko…", "thinking": "Razmišljam…",
-    "skills": "Vještine", "newChat": "Novi razgovor", "disclaimer": "Samo za edukaciju. Nikada za stvarne pacijente."
+    "title": "AI Doktor",
+    "placeholder": "Pitaj bilo šta kliničko…",
+    "thinking": "Razmišljam…",
+    "skills": "Vještine",
+    "newChat": "Novi razgovor",
+    "disclaimer": "Samo za edukaciju. Nikada za stvarne pacijente."
   },
   "progress": {
-    "title": "Napredak", "studied": "Naučeno", "accuracy": "Tačnost", "reviews": "Ponavljanja",
-    "thisWeek": "Ova sedmica", "byCategory": "Po kategoriji", "recentQuizzes": "Nedavni kvizovi"
+    "title": "Napredak",
+    "studied": "Naučeno",
+    "accuracy": "Tačnost",
+    "reviews": "Ponavljanja",
+    "thisWeek": "Ova sedmica",
+    "byCategory": "Po kategoriji",
+    "recentQuizzes": "Nedavni kvizovi"
   },
   "common": {
-    "cancel": "Otkaži", "done": "Gotovo", "save": "Sačuvaj", "search": "Pretraga", "retry": "Pokušaj ponovo",
-    "theme": "Tema", "language": "Jezik", "settings": "Postavke", "minutes": "min"
+    "cancel": "Otkaži",
+    "done": "Gotovo",
+    "save": "Sačuvaj",
+    "search": "Pretraga",
+    "retry": "Pokušaj ponovo",
+    "theme": "Tema",
+    "language": "Jezik",
+    "settings": "Postavke",
+    "minutes": "min"
+  },
+  "setup": {
+    "title": "Novi slučaj",
+    "difficulty": "Težina",
+    "easy": "Lako",
+    "medium": "Srednje",
+    "hard": "Teško",
+    "specialty": "Oblast",
+    "anySpecialty": "Sve",
+    "gender": "Pacijent",
+    "male": "Muško",
+    "female": "Žensko",
+    "anyGender": "Svejedno",
+    "age": "Dobna skupina",
+    "randomize": "Nasumično",
+    "start": "Počni konsultaciju",
+    "summary": "{{age}} {{gender}}, {{specialty}}"
+  },
+  "sim": {
+    "typing": "Pacijent piše…",
+    "placeholder": "Pitaj pacijenta…",
+    "examine": "Pregled",
+    "investigations": "Pretrage",
+    "diagnose": "Dijagnoza",
+    "vitals": "Vitalni znaci",
+    "end": "Završi slučaj",
+    "noAnswer": "Pacijent djeluje nesigurno i ne odgovara na to.",
+    "opened": "Konsultacija je počela"
   }
 }

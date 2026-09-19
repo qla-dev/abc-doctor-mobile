@@ -1,5 +1,11 @@
 {
-  "tabs": { "home": "Home", "handbook": "Handbook", "quiz": "Quiz", "simulator": "Simulator", "ai": "AI Doctor" },
+  "tabs": {
+    "home": "Home",
+    "handbook": "Handbook",
+    "quiz": "Quiz",
+    "simulator": "Simulator",
+    "ai": "AI Doctor"
+  },
   "home": {
     "greeting": "Good morning",
     "subtitle": "Ready for today's rounds?",
@@ -22,41 +28,123 @@
     "empty": "No topics match that search."
   },
   "topic": {
-    "overview": "Overview", "mechanisms": "Mechanisms", "presentation": "Clinical presentation",
-    "diagnosis": "Diagnosis", "treatment": "Treatment", "pearls": "Clinical pearls",
-    "symptoms": "Symptoms", "signs": "Physical signs", "askAi": "Ask the AI tutor",
-    "explainSimply": "Explain simply", "quizMe": "Quiz me", "makeCards": "Make flashcards"
+    "overview": "Overview",
+    "mechanisms": "Mechanisms",
+    "presentation": "Clinical presentation",
+    "diagnosis": "Diagnosis",
+    "treatment": "Treatment",
+    "pearls": "Clinical pearls",
+    "symptoms": "Symptoms",
+    "signs": "Physical signs",
+    "askAi": "Ask the AI tutor",
+    "explainSimply": "Explain simply",
+    "quizMe": "Quiz me",
+    "makeCards": "Make flashcards"
   },
   "quiz": {
-    "title": "Quiz", "start": "Start quiz", "quickFire": "Quick fire", "byTopic": "By topic",
-    "examMode": "Exam mode", "weakAreas": "Weak areas", "custom": "Custom",
-    "question": "Question {{current}} of {{total}}", "submit": "Submit answer",
-    "next": "Next question", "correct": "Correct", "incorrect": "Not quite",
-    "explanation": "Explanation", "pearl": "High-yield pearl", "score": "Score",
-    "finish": "Finish", "results": "Results"
+    "title": "Quiz",
+    "start": "Start quiz",
+    "quickFire": "Quick fire",
+    "byTopic": "By topic",
+    "examMode": "Exam mode",
+    "weakAreas": "Weak areas",
+    "custom": "Custom",
+    "question": "Question {{current}} of {{total}}",
+    "submit": "Submit answer",
+    "next": "Next question",
+    "correct": "Correct",
+    "incorrect": "Not quite",
+    "explanation": "Explanation",
+    "pearl": "High-yield pearl",
+    "score": "Score",
+    "finish": "Finish",
+    "results": "Results"
   },
   "flashcards": {
-    "title": "Flashcards", "due": "Due", "newCards": "New", "learning": "Learning",
-    "tapToReveal": "Tap to reveal", "again": "Again", "hard": "Hard", "good": "Good",
-    "easy": "Easy", "allDone": "All caught up", "allDoneBody": "No cards due right now.",
+    "title": "Flashcards",
+    "due": "Due",
+    "newCards": "New",
+    "learning": "Learning",
+    "tapToReveal": "Tap to reveal",
+    "again": "Again",
+    "hard": "Hard",
+    "good": "Good",
+    "easy": "Easy",
+    "allDone": "All caught up",
+    "allDoneBody": "No cards due right now.",
     "hint": "Hint"
   },
   "simulator": {
-    "title": "Patient simulator", "start": "Start case", "vitals": "Vitals",
-    "chiefComplaint": "Chief complaint", "askPatient": "Ask the patient…",
-    "history": "History", "examine": "Examine", "diagnose": "Diagnose", "voiceCall": "Voice consult"
+    "title": "Patient simulator",
+    "start": "Start case",
+    "vitals": "Vitals",
+    "chiefComplaint": "Chief complaint",
+    "askPatient": "Ask the patient…",
+    "history": "History",
+    "examine": "Examine",
+    "diagnose": "Diagnose",
+    "voiceCall": "Voice consult"
   },
-  "triage": { "title": "Triage", "subtitle": "Sort by acuity", "start": "Start scenario", "urgency": "Urgency" },
+  "triage": {
+    "title": "Triage",
+    "subtitle": "Sort by acuity",
+    "start": "Start scenario",
+    "urgency": "Urgency"
+  },
   "ai": {
-    "title": "AI Doctor", "placeholder": "Ask anything clinical…", "thinking": "Thinking…",
-    "skills": "Skills", "newChat": "New chat", "disclaimer": "Educational use only. Never for real patient care."
+    "title": "AI Doctor",
+    "placeholder": "Ask anything clinical…",
+    "thinking": "Thinking…",
+    "skills": "Skills",
+    "newChat": "New chat",
+    "disclaimer": "Educational use only. Never for real patient care."
   },
   "progress": {
-    "title": "Progress", "studied": "Studied", "accuracy": "Accuracy", "reviews": "Reviews",
-    "thisWeek": "This week", "byCategory": "By category", "recentQuizzes": "Recent quizzes"
+    "title": "Progress",
+    "studied": "Studied",
+    "accuracy": "Accuracy",
+    "reviews": "Reviews",
+    "thisWeek": "This week",
+    "byCategory": "By category",
+    "recentQuizzes": "Recent quizzes"
   },
   "common": {
-    "cancel": "Cancel", "done": "Done", "save": "Save", "search": "Search", "retry": "Retry",
-    "theme": "Theme", "language": "Language", "settings": "Settings", "minutes": "min"
+    "cancel": "Cancel",
+    "done": "Done",
+    "save": "Save",
+    "search": "Search",
+    "retry": "Retry",
+    "theme": "Theme",
+    "language": "Language",
+    "settings": "Settings",
+    "minutes": "min"
+  },
+  "setup": {
+    "title": "New case",
+    "difficulty": "Difficulty",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "specialty": "Specialty",
+    "anySpecialty": "Any",
+    "gender": "Patient",
+    "male": "Male",
+    "female": "Female",
+    "anyGender": "Any",
+    "age": "Age band",
+    "randomize": "Randomize",
+    "start": "Start consultation",
+    "summary": "{{age}} {{gender}}, {{specialty}}"
+  },
+  "sim": {
+    "typing": "Patient is typing…",
+    "placeholder": "Ask the patient…",
+    "examine": "Examine",
+    "investigations": "Investigations",
+    "diagnose": "Diagnose",
+    "vitals": "Vitals",
+    "end": "End case",
+    "noAnswer": "The patient looks unsure and does not answer that.",
+    "opened": "Consultation started"
   }
 }

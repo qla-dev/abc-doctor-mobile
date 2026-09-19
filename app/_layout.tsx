@@ -40,6 +40,7 @@ function RootStack() {
         {/* Chat and voice live outside the tab navigator, as freightbook does with app/lena.tsx:
             an immersive full-bleed surface, not a themed screen with a tab bar under it. */}
         <Stack.Screen name="chat" options={{ headerShown: false, animation: "slide_from_bottom", animationDuration: 280 }} />
+        <Stack.Screen name="simulation" options={{ headerShown: false, animation: "slide_from_bottom", animationDuration: 280 }} />
         <Stack.Screen name="voice" options={{ headerShown: false, presentation: "fullScreenModal", animation: "fade" }} />
       </Stack>
     </>
