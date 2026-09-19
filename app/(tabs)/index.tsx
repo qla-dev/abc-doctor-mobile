@@ -29,9 +29,9 @@ export default function HomeScreen() {
     greeting: { color: colors.text, fontSize: 32, fontWeight: '800', letterSpacing: -0.9 },
     sub: { color: colors.muted, fontSize: 14, marginTop: 3 },
     statRow: { flexDirection: 'row', gap: 12 },
-    stat: { flex: 1, alignItems: 'center', gap: 8, paddingVertical: 16 },
+    stat: { flex: 1, alignItems: 'center', gap: 7, paddingVertical: 14, paddingHorizontal: 6, minHeight: 116, justifyContent: 'center' },
     statValue: { color: colors.text, fontSize: 22, fontWeight: '800' },
-    statLabel: { color: colors.muted, fontSize: 11.5, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
+    statLabel: { color: colors.muted, fontSize: 10.5, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3, textAlign: 'center' },
     resumeTitle: { color: colors.text, fontSize: 17, fontWeight: '700', marginTop: 8 },
     resumeSub: { color: colors.muted, fontSize: 13, lineHeight: 18, marginTop: 3, marginBottom: 12 },
     quickRow: { flexDirection: 'row', gap: 12 },
@@ -43,7 +43,7 @@ export default function HomeScreen() {
   });
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
       <View style={styles.hero}>
         <Text style={styles.greeting}>{t('home.greeting')}</Text>
         <Text style={styles.sub}>{t('home.subtitle')}</Text>

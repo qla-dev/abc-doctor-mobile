@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Brain, ClipboardList, Layers, Send, Siren, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -57,7 +58,7 @@ export default function AiScreen() {
           {SKILLS.map((skill) => {
             const Icon = skill.icon;
             return (
-              <AppCard key={skill.id}>
+              <AppCard key={skill.id} onPress={() => router.push({ pathname: "/chat", params: { skill: skill.id } })}>
                 <View style={styles.skillRow}>
                   <View style={[styles.iconWrap, { backgroundColor: tintFor(skill.tone) + '22' }]}>
                     <Icon size={20} color={tintFor(skill.tone)} />
@@ -81,7 +82,13 @@ export default function AiScreen() {
               style={styles.input}
               multiline
             />
-            <View style={styles.send}><Send size={15} color="#FFFFFF" /></View>
+            <Pressable
+              onPress={() => router.push({ pathname: '/chat', params: draft.trim() ? { seed: draft.trim() } : {} })}
+              accessibilityRole="button"
+              style={styles.send}
+            >
+              <Send size={15} color="#FFFFFF" />
+            </Pressable>
           </View>
         </GlassPanel>
       </View>

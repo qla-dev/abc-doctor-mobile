@@ -46,7 +46,7 @@ export default function HandbookScreen() {
   });
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('handbook.title')}</Text>
         <GlassPanel radius={14}>

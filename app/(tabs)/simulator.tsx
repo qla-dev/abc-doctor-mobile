@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Activity, HeartPulse, Mic, Wind } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -33,7 +34,7 @@ export default function SimulatorScreen() {
   });
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('simulator.title')}</Text>
         <Text style={styles.sub}>{t('simulator.chiefComplaint')}</Text>
@@ -66,7 +67,13 @@ export default function SimulatorScreen() {
                 <Text style={styles.vitalText}>{patient.vitals.spo2}</Text>
               </View>
             </View>
-            <AppButton label={t('simulator.voiceCall')} tone="primary" icon={<Mic size={16} color="#FFFFFF" />} full />
+            <AppButton
+              label={t('simulator.voiceCall')}
+              tone="primary"
+              icon={<Mic size={16} color="#FFFFFF" />}
+              onPress={() => router.push({ pathname: "/voice", params: { patient: patient.patientName } })}
+              full
+            />
           </AppCard>
         ))}
       </View>

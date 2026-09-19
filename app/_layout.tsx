@@ -26,6 +26,10 @@ function RootStack() {
       <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
+          // Chevron only: the route group name ('(tabs)') is an implementation detail and has no
+          // business appearing next to a back arrow.
+          headerBackButtonDisplayMode: 'minimal',
+          headerShadowVisible: false,
           headerStyle: { backgroundColor: colors.background },
           headerTitleStyle: { color: colors.text },
           headerTintColor: colors.blue,
@@ -33,6 +37,10 @@ function RootStack() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        {/* Chat and voice live outside the tab navigator, as freightbook does with app/lena.tsx:
+            an immersive full-bleed surface, not a themed screen with a tab bar under it. */}
+        <Stack.Screen name="chat" options={{ headerShown: false, animation: "slide_from_bottom", animationDuration: 280 }} />
+        <Stack.Screen name="voice" options={{ headerShown: false, presentation: "fullScreenModal", animation: "fade" }} />
       </Stack>
     </>
   );

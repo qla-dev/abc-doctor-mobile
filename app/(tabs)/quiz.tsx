@@ -35,7 +35,7 @@ export default function QuizScreen() {
   });
 
   return (
-    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={g.screen} contentContainerStyle={{ paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={styles.title}>{t('quiz.title')}</Text>
       </View>
