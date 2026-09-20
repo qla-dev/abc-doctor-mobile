@@ -42,6 +42,7 @@
     "makeCards": "Karten erstellen"
   },
   "quiz": {
+    "subtitle": "Bereit, Ihr Wissen zu prüfen?",
     "title": "Quiz",
     "start": "Quiz starten",
     "quickFire": "Schnellrunde",
@@ -75,6 +76,7 @@
     "hint": "Hinweis"
   },
   "simulator": {
+    "subtitle": "Ein Patient wartet auf Ihre Anamnese.",
     "title": "Patientensimulator",
     "start": "Fall starten",
     "vitals": "Vitalwerte",
@@ -92,6 +94,7 @@
     "urgency": "Dringlichkeit"
   },
   "ai": {
+    "subtitle": "Fragen Sie alles, was Sie einen Mentor fragen würden.",
     "title": "KI-Arzt",
     "placeholder": "Frag etwas Klinisches…",
     "thinking": "Denkt nach…",
@@ -107,6 +110,14 @@
     "thisWeek": "Diese Woche",
     "byCategory": "Nach Kategorie",
     "recentQuizzes": "Letzte Quizze"
+  },
+  "date": {
+    "previousMonth": "Voriger Monat",
+    "nextMonth": "Nächster Monat",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "tomorrow": "Morgen",
+    "choose": "Datum wählen"
   },
   "common": {
     "appName": "ABC Doctor",

@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { router } from 'expo-router';
 import { FallbackTabHeader, useTabBarClearance } from '@/components/common/TabHeader';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
+import { useDayControl } from '@/hooks/useDayControl';
 import { Brain, ClipboardList, Layers, Send, Siren, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -11,6 +12,7 @@ import { AppCard } from '@/components/common/AppCard';
 import { GlassPanel } from '@/components/common/GlassPanel';
 import { Badge } from '@/components/common/Badge';
 import { SectionHeader } from '@/components/common/SectionHeader';
+import { SectionIntro } from '@/components/common/SectionIntro';
 
 type Tone = 'indigo' | 'blue' | 'green' | 'orange' | 'red';
 
@@ -27,7 +29,9 @@ export default function AiScreen() {
   const { t } = useLanguage();
 
   const composerClearance = useTabBarClearance();
+  const day = useDayControl();
   const usesNativeHeader = useScreenHeader({ title: t('tabs.ai'),
+    leftText: day.leftText,
     right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
   });
   const g = createGlobalStyles(colors);
@@ -50,13 +54,19 @@ export default function AiScreen() {
 
   return (
     <KeyboardAvoidingView style={g.screen} collapsable={false} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <FallbackTabHeader title={t('tabs.ai')} />
+      <FallbackTabHeader
+        title={t('tabs.ai')}
+        dateLabel={day.dateLabel}
+        onDatePress={day.onDatePress}
+        chooseDateLabel={day.chooseDateLabel}
+      />
       <ScrollView
       style={{ flex: 1 }}
       contentInsetAdjustmentBehavior={usesNativeHeader ? 'automatic' : 'never'}
       automaticallyAdjustsScrollIndicatorInsets={usesNativeHeader}
       contentContainerStyle={{ paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
         <View style={g.scrollContent}>
+          <SectionIntro subtitle={t('ai.subtitle')} />
           <SectionHeader title={t('ai.skills')} />
           {SKILLS.map((skill) => {
             const Icon = skill.icon;
@@ -95,6 +105,7 @@ export default function AiScreen() {
           </View>
         </GlassPanel>
       </View>
+      {day.sheet}
     </KeyboardAvoidingView>
   );
 }

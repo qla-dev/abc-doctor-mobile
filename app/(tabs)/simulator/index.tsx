@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { FallbackTabHeader, useTabScrollPadding } from '@/components/common/TabHeader';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
+import { useDayControl } from '@/hooks/useDayControl';
 import * as Haptics from 'expo-haptics';
 import { Shuffle, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -11,6 +12,7 @@ import { createGlobalStyles } from '@/theme/styles';
 import { AppCard } from '@/components/common/AppCard';
 import { AppButton } from '@/components/common/AppButton';
 import { SectionHeader } from '@/components/common/SectionHeader';
+import { SectionIntro } from '@/components/common/SectionIntro';
 import { SegmentedControl } from '@/components/common/SegmentedControl';
 import { Badge } from '@/components/common/Badge';
 import {
@@ -23,7 +25,9 @@ export default function SimulatorSetupScreen() {
   const { t } = useLanguage();
 
   const bottomPad = useTabScrollPadding();
+  const day = useDayControl();
   const usesNativeHeader = useScreenHeader({ title: t('tabs.simulator'),
+    leftText: day.leftText,
     right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
   });
   const g = createGlobalStyles(colors);
@@ -46,7 +50,12 @@ export default function SimulatorSetupScreen() {
 
   return (
     <View style={g.screen} collapsable={false}>
-      <FallbackTabHeader title={t('tabs.simulator')} />
+      <FallbackTabHeader
+        title={t('tabs.simulator')}
+        dateLabel={day.dateLabel}
+        onDatePress={day.onDatePress}
+        chooseDateLabel={day.chooseDateLabel}
+      />
       <ScrollView
         style={{ flex: 1 }}
         contentInsetAdjustmentBehavior={usesNativeHeader ? 'automatic' : 'never'}
@@ -54,7 +63,8 @@ export default function SimulatorSetupScreen() {
         contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>
 
         <View style={g.scrollContent}>
-          <SectionHeader title={t('setup.difficulty')} />
+        <SectionIntro subtitle={t('simulator.subtitle')} />
+        <SectionHeader title={t('setup.difficulty')} />
           <SegmentedControl<Difficulty>
             value={setup.difficulty}
             onChange={difficulty => patch({ difficulty })}
@@ -120,6 +130,7 @@ export default function SimulatorSetupScreen() {
           />
         </View>
       </ScrollView>
+      {day.sheet}
     </View>
   );
 }

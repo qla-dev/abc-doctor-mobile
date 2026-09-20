@@ -2,7 +2,10 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { FallbackTabHeader, useTabScrollPadding } from '@/components/common/TabHeader';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
-import { Brain, Flame, Layers, Settings, Siren, TrendingUp } from 'lucide-react-native';
+import { useDayControl } from '@/hooks/useDayControl';
+import { SpecialtySearchField, SpecialtyCards } from '@/components/common/SpecialtyRow';
+import { SectionIntro } from '@/components/common/SectionIntro';
+import { Brain, Layers, Settings, Siren, TrendingUp } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
@@ -12,8 +15,7 @@ import { Badge } from '@/components/common/Badge';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import { ProgressRing } from '@/components/common/ProgressRing';
 import { TOPICS_DATA } from '@/data/topicsData';
-import { FLASHCARDS_DATA } from '@/data/flashcardsData';
-import { Progress, Reviews, Streak } from '@/services/storage';
+import { Progress } from '@/services/storage';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 
@@ -27,8 +29,13 @@ export default function HomeScreen() {
   // because the large title and the collapsed bar title are one string natively and these two
   // differ. fitness's SettingsScreen builds the same effect from a nativeTitle and a threshold.
   const [showBarTitle, setShowBarTitle] = useState(false);
+  // The day is the store's, not this screen's: the control is on every tab and the day has to be
+  // the same one on all of them. Nothing reads it yet — the calendar is a control without a
+  // consumer, on purpose, until there is day-scoped content for it to move.
+  const day = useDayControl();
   const usesNativeHeader = useScreenHeader({ title: t('common.appName'),
     nativeTitle: showBarTitle ? t('common.appName') : '',
+    leftText: day.leftText,
     right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
     nativeOptions: {
       headerLargeTitleEnabled: false,
@@ -41,30 +48,15 @@ export default function HomeScreen() {
 
   // Re-read on focus: coming back from a review session must show the new counts, and these
   // are synchronous MMKV reads so there is no loading state to manage.
-  const [stats, setStats] = useState(() => ({
-    due: Reviews.dueCount(FLASHCARDS_DATA.map(card => card.id)),
-    streak: Streak.read().days,
-    progress: Progress.all(),
-  }));
-  useFocusEffect(useCallback(() => {
-    setStats({
-      due: Reviews.dueCount(FLASHCARDS_DATA.map(card => card.id)),
-      streak: Streak.read().days,
-      progress: Progress.all(),
-    });
-  }, []));
-  const dueCount = stats.due;
+  const [progress, setProgress] = useState(Progress.all);
+  useFocusEffect(useCallback(() => setProgress(Progress.all()), []));
   const inProgress = TOPICS_DATA.filter(topic => topic.completionPercentage > 0 && topic.completionPercentage < 100);
   const resume = inProgress[0] ?? TOPICS_DATA[0];
   const highYield = TOPICS_DATA.filter(topic => topic.highYieldRating >= 4).slice(0, 3);
 
   const styles = StyleSheet.create({
+    greetingBlock: { paddingTop: 5 },
     greeting: { color: colors.text, fontSize: 34, fontWeight: '700' },
-    greetingSub: { color: colors.muted, fontSize: 14, marginTop: 2, marginBottom: 6 },
-    statRow: { flexDirection: 'row', gap: 12 },
-    stat: { flex: 1, alignItems: 'center', gap: 7, paddingVertical: 14, paddingHorizontal: 6, minHeight: 116, justifyContent: 'center' },
-    statValue: { color: colors.text, fontSize: 22, fontWeight: '800' },
-    statLabel: { color: colors.muted, fontSize: 10.5, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3, textAlign: 'center' },
     resumeTitle: { color: colors.text, fontSize: 17, fontWeight: '700', marginTop: 8 },
     resumeSub: { color: colors.muted, fontSize: 13, lineHeight: 18, marginTop: 3, marginBottom: 12 },
     quickRow: { flexDirection: 'row', gap: 12 },
@@ -79,6 +71,9 @@ export default function HomeScreen() {
     <View style={g.screen} collapsable={false}>
       <FallbackTabHeader
         title={t('common.appName')}
+        dateLabel={day.dateLabel}
+        onDatePress={day.onDatePress}
+        chooseDateLabel={day.chooseDateLabel}
         right={[{
           icon: <Settings size={21} color={colors.blue} />,
           accessibilityLabel: t('common.settings'),
@@ -99,39 +94,25 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>
 
         <View style={g.scrollContent}>
-          <View>
+          <View style={styles.greetingBlock}>
             <Text style={styles.greeting}>{t('home.greeting')}</Text>
-            <Text style={styles.greetingSub}>{t('home.subtitle')}</Text>
+            <SectionIntro subtitle={t('home.subtitle')} style={{ marginTop: 10, marginBottom: 6 }} />
           </View>
-          <View style={styles.statRow}>
-            <AppCard padded={false}>
-              <View style={styles.stat}>
-                <ProgressRing progress={Object.values(stats.progress).reduce((sum, value) => sum + value, 0) / (TOPICS_DATA.length * 100)} size={56} stroke={5} />
-                <Text style={styles.statLabel}>{t('progress.studied')}</Text>
-              </View>
-            </AppCard>
-            <AppCard padded={false}>
-              <View style={styles.stat}>
-                <Flame size={26} color={colors.orange} />
-                <Text style={styles.statValue}>{stats.streak}</Text>
-                <Text style={styles.statLabel}>{t('home.streak', { count: stats.streak })}</Text>
-              </View>
-            </AppCard>
-            <AppCard padded={false}>
-              <View style={styles.stat}>
-                <Layers size={26} color={colors.blue} />
-                <Text style={styles.statValue}>{dueCount}</Text>
-                <Text style={styles.statLabel}>{t('home.dueToday')}</Text>
-              </View>
-            </AppCard>
-          </View>
+          <SpecialtySearchField
+            placeholder={t('handbook.search')}
+            onPress={() => router.push('/handbook')}
+          />
+
+          <SpecialtyCards
+            onSelect={category => router.push({ pathname: '/handbook', params: { q: category } })}
+          />
 
           <SectionHeader title={t('home.continueStudying')} />
           <AppCard onPress={() => router.push(`/topic/${resume.id}`)}>
             <Badge label={resume.category} tone="indigo" />
             <Text style={styles.resumeTitle}>{resume.title}</Text>
             <Text style={styles.resumeSub}>{resume.subtitle}</Text>
-            <ProgressRing progress={(stats.progress[resume.id] ?? resume.completionPercentage) / 100} size={44} stroke={4} />
+            <ProgressRing progress={(progress[resume.id] ?? resume.completionPercentage) / 100} size={44} stroke={4} />
           </AppCard>
 
           <SectionHeader title={t('home.quickActions')} />
@@ -167,6 +148,7 @@ export default function HomeScreen() {
           <AppButton label={t('home.reviewNow')} onPress={() => router.push('/flashcards')} full />
         </View>
       </ScrollView>
+      {day.sheet}
     </View>
   );
 }

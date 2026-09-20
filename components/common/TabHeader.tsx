@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ChevronDown } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useNativeIOSHeadersActive, useNativeIOSTabsActive } from '@/lib/nativeTabBarPreference';
@@ -31,6 +32,14 @@ export interface TabHeaderAction {
 interface TabHeaderProps {
   /** Centered title — the screen's own name. */
   title: string;
+  /**
+   * Left slot: the day this screen is showing, already formatted. Tapping it opens the picker.
+   * Omitted on tabs that are not scoped to a day — fitness's TabHeader states the same rule.
+   */
+  dateLabel?: string;
+  onDatePress?: () => void;
+  /** Accessibility label for the day button, since its text is a date and not a name. */
+  chooseDateLabel?: string;
   left?: TabHeaderAction[];
   right?: TabHeaderAction[];
   skipTopInset?: boolean;
@@ -43,6 +52,9 @@ interface TabHeaderProps {
  */
 const TabHeader: React.FC<TabHeaderProps> = ({
   title,
+  dateLabel,
+  onDatePress,
+  chooseDateLabel,
   left,
   right,
   skipTopInset,
@@ -79,6 +91,8 @@ const TabHeader: React.FC<TabHeaderProps> = ({
       alignItems: 'center',
     },
     slot: { minWidth: slotWidth, minHeight: BUTTON_SIZE, flexDirection: 'row', alignItems: 'center' },
+    dateButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, minHeight: BUTTON_SIZE },
+    dateLabel: { color: colors.text, fontSize: 16, fontWeight: '500' },
     title: { color: colors.text, fontSize: 18, fontWeight: '700', textAlign: 'center' },
     button: { width: BUTTON_SIZE, height: BUTTON_SIZE, alignItems: 'center', justifyContent: 'center' },
   });
@@ -97,7 +111,20 @@ const TabHeader: React.FC<TabHeaderProps> = ({
 
   return (
     <View style={styles.bar}>
-      <View style={styles.slot}>{leftActions.map(renderAction)}</View>
+      <View style={styles.slot}>
+        {dateLabel ? (
+          <TouchableOpacity
+            onPress={onDatePress ? withHaptic(onDatePress) : undefined}
+            accessibilityRole="button"
+            accessibilityLabel={chooseDateLabel ?? dateLabel}
+            style={styles.dateButton}
+          >
+            <Text style={styles.dateLabel} numberOfLines={1}>{dateLabel}</Text>
+            {onDatePress ? <ChevronDown size={12} color={colors.muted} style={{ marginLeft: 3 }} /> : null}
+          </TouchableOpacity>
+        ) : null}
+        {leftActions.map(renderAction)}
+      </View>
 
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">

@@ -15,9 +15,11 @@ const KEY = 'abc_doctor_theme_v1';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme();
-  // Dark is the product default, not the system's preference: the app is used in wards and on
-  // call, where a black screen is the kinder one. `system` remains selectable.
-  const [mode, setModeState] = useState<ThemeMode>('dark');
+  // Nothing stored means System, the way fitness's themeService.normalizePreference falls through
+  // to it. Dark stays AMOLED, so a device already in dark appearance renders exactly what picking
+  // Dark by hand would — one palette, not two — and a device in light appearance is no longer
+  // overridden on first launch.
+  const [mode, setModeState] = useState<ThemeMode>('system');
 
   useEffect(() => {
     AsyncStorage.getItem(KEY).then(value => {

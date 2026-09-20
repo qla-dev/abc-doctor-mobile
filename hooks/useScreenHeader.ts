@@ -6,7 +6,19 @@ import type { NativeStackNavigationOptions } from 'expo-router/build/react-navig
 import {
   createIOSNativeHeaderOptions,
   createNativeHeaderIconButtonItem,
+  createNativeHeaderTextButtonItem,
 } from '@/lib/nativeHeaderItems';
+
+/**
+ * A bar item that reads as words rather than a glyph — the day button, say. The native bar takes
+ * a label or a symbol, never a component, so the fallback bar's chevron has no counterpart here.
+ */
+export type HeaderTextItem = {
+  label: string;
+  accessibilityLabel: string;
+  onPress: () => void;
+  identifier: string;
+};
 
 export type HeaderIconItem = {
   /** SF Symbol name; the native bar takes symbols or images, never a component. */
@@ -23,7 +35,7 @@ export type HeaderIconItem = {
  * Adjusted from fitness's useScreenHeader. Theirs supports menus, badges and a duplicate-press
  * guard on the primary action; this is the same shape reduced to what our screens actually use.
  */
-export function useScreenHeader({ title, nativeTitle, left, right, nativeOptions }: {
+export function useScreenHeader({ title, nativeTitle, leftText, left, right, nativeOptions }: {
   /** Title for the in-screen bar, which has no scroll state and always shows it. */
   title: string;
   /**
@@ -33,6 +45,8 @@ export function useScreenHeader({ title, nativeTitle, left, right, nativeOptions
    * exactly this way.
    */
   nativeTitle?: string;
+  /** A text button pinned ahead of `left`, for a label the bar shows instead of an icon. */
+  leftText?: HeaderTextItem;
   left?: HeaderIconItem[];
   right?: HeaderIconItem[];
   /** Per-screen overrides, applied last: large title off, a transparent bar, and so on. */
@@ -45,7 +59,7 @@ export function useScreenHeader({ title, nativeTitle, left, right, nativeOptions
   // Handlers dispatch through a ref so the native buttons — rebuilt only when their visible
   // state changes — always invoke the current closure rather than the one they were built with.
   const handlers = useRef<Record<string, () => void>>({});
-  [...(left ?? []), ...(right ?? [])].forEach(item => {
+  [...(leftText ? [leftText] : []), ...(left ?? []), ...(right ?? [])].forEach(item => {
     handlers.current[item.identifier] = item.onPress;
   });
 
@@ -54,6 +68,7 @@ export function useScreenHeader({ title, nativeTitle, left, right, nativeOptions
   const signature = JSON.stringify({
     title,
     nativeTitle: nativeTitle ?? null,
+    leftText: leftText ? [leftText.identifier, leftText.label, leftText.accessibilityLabel] : null,
     nativeOptions: nativeOptions ?? null,
     usesNativeHeader,
     tint: colors.blue,
@@ -82,7 +97,16 @@ export function useScreenHeader({ title, nativeTitle, left, right, nativeOptions
         separated: true,
       });
 
-    const leftItems = (left ?? []).map(build);
+    const textItem = leftText
+      ? [createNativeHeaderTextButtonItem({
+          label: leftText.label,
+          onPress: () => handlers.current[leftText.identifier]?.(),
+          tintColor: colors.blue,
+          identifier: leftText.identifier,
+          accessibilityLabel: leftText.accessibilityLabel,
+        })]
+      : [];
+    const leftItems = [...textItem, ...(left ?? []).map(build)];
     const rightItems = (right ?? []).map(build);
 
     navigation.setOptions({

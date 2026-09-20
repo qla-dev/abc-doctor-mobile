@@ -42,6 +42,7 @@
     "makeCards": "Make flashcards"
   },
   "quiz": {
+    "subtitle": "Ready to test what you know?",
     "title": "Quiz",
     "start": "Start quiz",
     "quickFire": "Quick fire",
@@ -75,6 +76,7 @@
     "hint": "Hint"
   },
   "simulator": {
+    "subtitle": "A patient is waiting for your history.",
     "title": "Patient simulator",
     "start": "Start case",
     "vitals": "Vitals",
@@ -92,6 +94,7 @@
     "urgency": "Urgency"
   },
   "ai": {
+    "subtitle": "Ask anything you would ask a mentor.",
     "title": "AI Doctor",
     "placeholder": "Ask anything clinical…",
     "thinking": "Thinking…",
@@ -107,6 +110,14 @@
     "thisWeek": "This week",
     "byCategory": "By category",
     "recentQuizzes": "Recent quizzes"
+  },
+  "date": {
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "choose": "Choose date"
   },
   "common": {
     "appName": "ABC Doctor",

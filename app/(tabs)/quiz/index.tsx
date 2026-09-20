@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { FallbackTabHeader, useTabScrollPadding } from '@/components/common/TabHeader';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
+import { useDayControl } from '@/hooks/useDayControl';
 import { Clock, Crosshair, GraduationCap, Shuffle, Sliders } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -9,6 +10,8 @@ import { createGlobalStyles } from '@/theme/styles';
 import { AppCard } from '@/components/common/AppCard';
 import { Badge } from '@/components/common/Badge';
 import { SectionHeader } from '@/components/common/SectionHeader';
+import { SectionIntro } from '@/components/common/SectionIntro';
+import { StudyStats } from '@/components/common/StudyStats';
 import { QUIZ_QUESTIONS_DATA } from '@/data/quizzesData';
 
 export default function QuizScreen() {
@@ -16,7 +19,9 @@ export default function QuizScreen() {
   const { t } = useLanguage();
 
   const bottomPad = useTabScrollPadding();
+  const day = useDayControl();
   const usesNativeHeader = useScreenHeader({ title: t('tabs.quiz'),
+    leftText: day.leftText,
     right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
   });
   const g = createGlobalStyles(colors);
@@ -39,13 +44,20 @@ export default function QuizScreen() {
 
   return (
     <View style={g.screen} collapsable={false}>
-      <FallbackTabHeader title={t('tabs.quiz')} />
+      <FallbackTabHeader
+        title={t('tabs.quiz')}
+        dateLabel={day.dateLabel}
+        onDatePress={day.onDatePress}
+        chooseDateLabel={day.chooseDateLabel}
+      />
       <ScrollView
         style={{ flex: 1 }}
         contentInsetAdjustmentBehavior={usesNativeHeader ? 'automatic' : 'never'}
         automaticallyAdjustsScrollIndicatorInsets={usesNativeHeader}
         contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>
         <View style={g.scrollContent}>
+          <SectionIntro subtitle={t('quiz.subtitle')} />
+          <StudyStats />
           <SectionHeader title={t('quiz.start')} />
           {modes.map(mode => {
             const Icon = mode.icon;
@@ -76,6 +88,7 @@ export default function QuizScreen() {
           </AppCard>
         </View>
       </ScrollView>
+      {day.sheet}
     </View>
   );
 }

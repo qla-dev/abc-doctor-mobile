@@ -44,6 +44,7 @@
     "makeCards": "Napravi kartice"
   },
   "quiz": {
+    "subtitle": "Spremni da provjerite znanje?",
     "title": "Kviz",
     "start": "Počni kviz",
     "quickFire": "Brzi kviz",
@@ -77,6 +78,7 @@
     "hint": "Podsjetnik"
   },
   "simulator": {
+    "subtitle": "Pacijent čeka na vašu anamnezu.",
     "title": "Simulator pacijenta",
     "start": "Počni slučaj",
     "vitals": "Vitalni znaci",
@@ -94,6 +96,7 @@
     "urgency": "Hitnost"
   },
   "ai": {
+    "subtitle": "Pitajte sve što biste pitali mentora.",
     "title": "AI Doktor",
     "placeholder": "Pitaj bilo šta kliničko…",
     "thinking": "Razmišljam…",
@@ -109,6 +112,14 @@
     "thisWeek": "Ova sedmica",
     "byCategory": "Po kategoriji",
     "recentQuizzes": "Nedavni kvizovi"
+  },
+  "date": {
+    "previousMonth": "Prethodni mjesec",
+    "nextMonth": "Sljedeći mjesec",
+    "today": "Danas",
+    "yesterday": "Jučer",
+    "tomorrow": "Sutra",
+    "choose": "Odaberi datum"
   },
   "common": {
     "appName": "ABC Doctor",

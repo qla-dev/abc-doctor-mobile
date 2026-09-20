@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { FallbackTabHeader, useTabScrollPadding } from '@/components/common/TabHeader';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
+import { useDayControl } from '@/hooks/useDayControl';
 import { BookOpen, Search } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -20,11 +22,15 @@ export default function HandbookScreen() {
   const { t } = useLanguage();
 
   const bottomPad = useTabScrollPadding();
+  const day = useDayControl();
   const usesNativeHeader = useScreenHeader({ title: t('tabs.handbook'),
+    leftText: day.leftText,
     right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
   });
   const g = createGlobalStyles(colors);
-  const [query, setQuery] = useState('');
+  // Seeded by Home's specialty row, so tapping a branch there lands here already filtered.
+  const { q } = useLocalSearchParams<{ q?: string }>();
+  const [query, setQuery] = useState(q ?? '');
 
   const categories = useMemo(
     () => Array.from(new Set(TOPICS_DATA.map(topic => topic.category))),
@@ -50,7 +56,12 @@ export default function HandbookScreen() {
 
   return (
     <View style={g.screen} collapsable={false}>
-      <FallbackTabHeader title={t('tabs.handbook')} />
+      <FallbackTabHeader
+        title={t('tabs.handbook')}
+        dateLabel={day.dateLabel}
+        onDatePress={day.onDatePress}
+        chooseDateLabel={day.chooseDateLabel}
+      />
       <ScrollView
         style={{ flex: 1 }}
         contentInsetAdjustmentBehavior={usesNativeHeader ? 'automatic' : 'never'}
@@ -96,6 +107,7 @@ export default function HandbookScreen() {
           )}
         </View>
       </ScrollView>
+      {day.sheet}
     </View>
   );
 }
