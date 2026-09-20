@@ -5,11 +5,13 @@ import { router } from 'expo-router';
 import { FallbackTabHeader, useTabScrollPadding } from '@/components/common/TabHeader';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useDayControl } from '@/hooks/useDayControl';
-import { BookOpen, Search } from 'lucide-react-native';
+import { BookOpen, ClipboardList, Layers, MessagesSquare, Search, Settings } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
 import { GlassPanel } from '@/components/common/GlassPanel';
+import { FooterCta } from '@/components/common/Sheets';
+import { Pressable } from 'react-native';
 import { List } from '@/components/common/List';
 import { ListItem } from '@/components/common/ListItem';
 import { Badge } from '@/components/common/Badge';
@@ -25,7 +27,9 @@ export default function HandbookScreen() {
   const day = useDayControl();
   const usesNativeHeader = useScreenHeader({ title: t('tabs.handbook'),
     leftText: day.leftText,
-    right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
+    right: [
+      { sfSymbol: 'bubble.left.and.bubble.right', accessibilityLabel: t('history.title'), identifier: 'history', onPress: () => router.push('/history') },
+      { sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
   });
   const g = createGlobalStyles(colors);
   // Seeded by Home's specialty row, so tapping a branch there lands here already filtered.
@@ -52,6 +56,12 @@ export default function HandbookScreen() {
     searchRow: { flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 13, paddingVertical: 11 },
     input: { flex: 1, color: colors.text, fontSize: 15, padding: 0 },
     count: { color: colors.muted, fontSize: 12.5 },
+    ctaRow: { flexDirection: 'row', gap: 10 },
+    cta: {
+      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+      gap: 8, paddingVertical: 12, borderRadius: 14, borderWidth: 1,
+    },
+    ctaLabel: { fontSize: 13.5, fontWeight: '700' },
   });
 
   return (
@@ -61,6 +71,15 @@ export default function HandbookScreen() {
         dateLabel={day.dateLabel}
         onDatePress={day.onDatePress}
         chooseDateLabel={day.chooseDateLabel}
+        right={[{
+          icon: <MessagesSquare size={21} color={colors.blue} />,
+          accessibilityLabel: t('history.title'),
+          onPress: () => router.push('/history'),
+        }, {
+          icon: <Settings size={21} color={colors.blue} />,
+          accessibilityLabel: t('common.settings'),
+          onPress: () => router.push('/settings'),
+        }]}
       />
       <ScrollView
         style={{ flex: 1 }}
@@ -107,6 +126,26 @@ export default function HandbookScreen() {
           )}
         </View>
       </ScrollView>
+      <FooterCta>
+        <View style={styles.ctaRow}>
+          <Pressable
+            onPress={() => router.push({ pathname: '/chat', params: { skill: 'quiz' } })}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.cta, { backgroundColor: colors.blue + '1A', borderColor: colors.blue, opacity: pressed ? 0.75 : 1 }]}
+          >
+            <ClipboardList size={18} color={colors.blue} />
+            <Text style={[styles.ctaLabel, { color: colors.blue }]} numberOfLines={1}>{t('handbook.makeQuiz')}</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push({ pathname: '/chat', params: { skill: 'cards' } })}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.cta, { backgroundColor: colors.green + '1A', borderColor: colors.green, opacity: pressed ? 0.75 : 1 }]}
+          >
+            <Layers size={18} color={colors.green} />
+            <Text style={[styles.ctaLabel, { color: colors.green }]} numberOfLines={1}>{t('handbook.makeCards')}</Text>
+          </Pressable>
+        </View>
+      </FooterCta>
       {day.sheet}
     </View>
   );

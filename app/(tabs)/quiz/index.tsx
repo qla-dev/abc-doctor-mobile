@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { FallbackTabHeader, useTabScrollPadding } from '@/components/common/TabHeader';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useDayControl } from '@/hooks/useDayControl';
-import { Clock, Crosshair, GraduationCap, Shuffle, Sliders } from 'lucide-react-native';
+import { CheckCheck, Clock, Crosshair, GraduationCap, Layers, ListChecks, MessageSquareText, MessagesSquare, Settings, Shuffle, Sliders } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
@@ -12,7 +13,12 @@ import { Badge } from '@/components/common/Badge';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import { SectionIntro } from '@/components/common/SectionIntro';
 import { StudyStats } from '@/components/common/StudyStats';
+import { ChoiceCards, type Choice } from '@/components/common/ChoiceCards';
+import { SegmentedControl } from '@/components/common/SegmentedControl';
+import { AppButton } from '@/components/common/AppButton';
 import { QUIZ_QUESTIONS_DATA } from '@/data/quizzesData';
+
+type TestKind = 'flashcards' | 'multiple' | 'truefalse' | 'open';
 
 export default function QuizScreen() {
   const { colors } = useTheme();
@@ -20,11 +26,31 @@ export default function QuizScreen() {
 
   const bottomPad = useTabScrollPadding();
   const day = useDayControl();
-  const usesNativeHeader = useScreenHeader({ title: t('tabs.quiz'),
+  const usesNativeHeader = useScreenHeader({ title: t('tabs.tests'),
     leftText: day.leftText,
-    right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
+    right: [
+      { sfSymbol: 'bubble.left.and.bubble.right', accessibilityLabel: t('history.title'), identifier: 'history', onPress: () => router.push('/history') },
+      { sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
   });
   const g = createGlobalStyles(colors);
+
+  /**
+   * A test is two choices, not one: what KIND of question it asks, and how the answer is given.
+   * Both are picked before anything starts, the way the simulator picks its case.
+   */
+  const [kind, setKind] = useState<TestKind>('flashcards');
+  const [answerBy, setAnswerBy] = useState<'text' | 'voice'>('text');
+
+  const kinds: Choice<TestKind>[] = [
+    { value: 'flashcards', label: t('quiz.flashcards'), hint: t('quiz.flashcardsHint'), tone: 'blue',
+      icon: p => <Layers {...p} /> },
+    { value: 'multiple', label: t('quiz.multipleChoice'), hint: t('quiz.multipleChoiceHint'), tone: 'indigo',
+      icon: p => <ListChecks {...p} /> },
+    { value: 'truefalse', label: t('quiz.trueFalse'), hint: t('quiz.trueFalseHint'), tone: 'green',
+      icon: p => <CheckCheck {...p} /> },
+    { value: 'open', label: t('quiz.openQuestion'), hint: t('quiz.openQuestionHint'), tone: 'orange',
+      icon: p => <MessageSquareText {...p} /> },
+  ];
 
   const modes = [
     { key: 'quick', label: t('quiz.quickFire'), icon: Shuffle, tint: colors.blue, count: 10 },
@@ -45,10 +71,19 @@ export default function QuizScreen() {
   return (
     <View style={g.screen} collapsable={false}>
       <FallbackTabHeader
-        title={t('tabs.quiz')}
+        title={t('tabs.tests')}
         dateLabel={day.dateLabel}
         onDatePress={day.onDatePress}
         chooseDateLabel={day.chooseDateLabel}
+        right={[{
+          icon: <MessagesSquare size={21} color={colors.blue} />,
+          accessibilityLabel: t('history.title'),
+          onPress: () => router.push('/history'),
+        }, {
+          icon: <Settings size={21} color={colors.blue} />,
+          accessibilityLabel: t('common.settings'),
+          onPress: () => router.push('/settings'),
+        }]}
       />
       <ScrollView
         style={{ flex: 1 }}
@@ -58,11 +93,36 @@ export default function QuizScreen() {
         <View style={g.scrollContent}>
           <SectionIntro subtitle={t('quiz.subtitle')} />
           <StudyStats />
+
+          <SectionHeader title={t('quiz.kind')} />
+          <ChoiceCards options={kinds} value={kind} onChange={setKind} />
+
+          {/* Only an open question can be spoken — there is nothing to say out loud about
+              picking B over C, so the control appears when it means something. */}
+          {kind === 'open' ? (
+            <>
+              <SectionHeader title={t('quiz.answerBy')} />
+              <SegmentedControl<'text' | 'voice'>
+                value={answerBy}
+                onChange={setAnswerBy}
+                options={[
+                  { value: 'text', label: t('quiz.answerText') },
+                  { value: 'voice', label: t('quiz.answerVoice') },
+                ]}
+              />
+            </>
+          ) : null}
+
           <SectionHeader title={t('quiz.start')} />
           {modes.map(mode => {
             const Icon = mode.icon;
             return (
-              <AppCard key={mode.key} onPress={() => router.push('/quiz/player')}>
+              <AppCard
+                key={mode.key}
+                onPress={() => router.push(kind === 'flashcards'
+                  ? { pathname: '/flashcards', params: { mode: mode.key } }
+                  : { pathname: '/quiz/player', params: { mode: mode.key, kind, answerBy } })}
+              >
                 <View style={styles.modeRow}>
                   <View style={[styles.iconWrap, { backgroundColor: mode.tint + '22' }]}>
                     <Icon size={21} color={mode.tint} />

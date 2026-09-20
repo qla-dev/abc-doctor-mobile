@@ -32,6 +32,10 @@ yarn-error.*
 
 # local env files
 .env*.local
+# .env itself too: it names one machine's LAN address, and later it will hold keys.
+# .env.example stays tracked as the list of what belongs in it.
+.env
+!.env.example
 
 # typescript
 *.tsbuildinfo

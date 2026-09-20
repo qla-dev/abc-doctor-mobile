@@ -1,10 +1,11 @@
 {
   "tabs": {
+    "tests": "Tests",
     "home": "Start",
     "handbook": "Handbuch",
     "quiz": "Quiz",
     "simulator": "Simulator",
-    "ai": "KI-Arzt"
+    "ai": "NinaAI"
   },
   "home": {
     "greeting": "Guten Morgen Doktor",
@@ -20,6 +21,8 @@
     "reviewNow": "Jetzt wiederholen"
   },
   "handbook": {
+    "makeQuiz": "Quiz erstellen",
+    "makeCards": "Karteikarten erstellen",
     "title": "Handbuch",
     "search": "Themen, Befunde, Medikamente suchen",
     "allCategories": "Alle",
@@ -42,6 +45,18 @@
     "makeCards": "Karten erstellen"
   },
   "quiz": {
+    "flashcardsHint": "Karte umdrehen und selbst bewerten",
+    "multipleChoiceHint": "Eine richtige von mehreren",
+    "trueFalseHint": "Kurze Aussage, ja oder nein",
+    "openQuestionHint": "Du antwortest mit eigenen Worten",
+    "flashcards": "Karteikarten",
+    "multipleChoice": "Mehrfachauswahl",
+    "trueFalse": "Wahr oder falsch",
+    "openQuestion": "Offene Frage",
+    "kind": "Testart",
+    "answerBy": "Ich antworte",
+    "answerText": "Per Text",
+    "answerVoice": "Per Sprache",
     "subtitle": "Bereit, Ihr Wissen zu prüfen?",
     "title": "Quiz",
     "start": "Quiz starten",
@@ -94,13 +109,18 @@
     "urgency": "Dringlichkeit"
   },
   "ai": {
-    "subtitle": "Fragen Sie alles, was Sie einen Mentor fragen würden.",
-    "title": "KI-Arzt",
-    "placeholder": "Frag etwas Klinisches…",
+    "pickSkill": "Fähigkeit wählen",
+    "freeTalk": "Starten",
+    "subtitle": "Weitere Fragen?",
+    "title": "NinaAI",
+    "placeholder": "Fragen Sie Nina AI alles…",
     "thinking": "Denkt nach…",
     "skills": "Fähigkeiten",
+    "dictate": "Sprachnachricht",
+    "stopRecording": "Aufnahme stoppen",
     "newChat": "Neuer Chat",
-    "disclaimer": "Nur zu Lernzwecken. Nie für echte Patienten."
+    "disclaimer": "Nur zu Lernzwecken. Nie für echte Patienten.",
+    "greeting": "Ich bin Nina. Fragen Sie mich etwas — oder sagen Sie, was ich sein soll."
   },
   "progress": {
     "title": "Fortschritt",
@@ -119,6 +139,17 @@
     "tomorrow": "Morgen",
     "choose": "Datum wählen"
   },
+  "voice": {
+    "tapToTalk": "Mikrofon antippen zum Sprechen",
+    "speaker": "Lautsprecher",
+    "connecting": "Verbinde…",
+    "ready": "Nina hört zu",
+    "failed": "Sprachsitzung fehlgeschlagen"
+  },
+  "history": {
+    "title": "Verlauf",
+    "empty": "Noch keine Gespräche."
+  },
   "common": {
     "appName": "ABC Doctor",
     "cancel": "Abbrechen",
@@ -132,6 +163,10 @@
     "minutes": "Min."
   },
   "setup": {
+    "mode": "Modus",
+    "modeText": "Text",
+    "modeVoice": "Sprache",
+    "starting": "Öffne…",
     "title": "Neuer Fall",
     "difficulty": "Schwierigkeit",
     "easy": "Leicht",
@@ -149,6 +184,8 @@
     "summary": "{{age}} {{gender}}, {{specialty}}"
   },
   "sim": {
+    "noThread": "Kein Gespräch geöffnet. Zurück und Fall starten.",
+    "voice": "Sprache",
     "typing": "Patient schreibt…",
     "placeholder": "Den Patienten fragen…",
     "examine": "Untersuchen",

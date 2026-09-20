@@ -1,10 +1,11 @@
 {
   "tabs": {
+    "tests": "Testovi",
     "home": "Početna",
     "handbook": "Priručnik",
     "quiz": "Kviz",
     "simulator": "Simulator",
-    "ai": "AI Doktor"
+    "ai": "NinaAI"
   },
   "home": {
     "greeting": "Dobro jutro doktore",
@@ -22,6 +23,8 @@
     "reviewNow": "Ponovi sada"
   },
   "handbook": {
+    "makeQuiz": "Napravi kviz",
+    "makeCards": "Napravi kartice",
     "title": "Priručnik",
     "search": "Pretraži teme, nalaze, lijekove",
     "allCategories": "Sve",
@@ -44,6 +47,18 @@
     "makeCards": "Napravi kartice"
   },
   "quiz": {
+    "flashcardsHint": "Okreni karticu i ocijeni se",
+    "multipleChoiceHint": "Jedan tačan od ponuđenih",
+    "trueFalseHint": "Brza tvrdnja, da ili ne",
+    "openQuestionHint": "Odgovaraš svojim riječima",
+    "flashcards": "Kartice",
+    "multipleChoice": "Višestruki izbor",
+    "trueFalse": "Tačno ili netačno",
+    "openQuestion": "Otvoreno pitanje",
+    "kind": "Vrsta testa",
+    "answerBy": "Odgovaram",
+    "answerText": "Tekstom",
+    "answerVoice": "Glasom",
     "subtitle": "Spremni da provjerite znanje?",
     "title": "Kviz",
     "start": "Počni kviz",
@@ -96,13 +111,18 @@
     "urgency": "Hitnost"
   },
   "ai": {
-    "subtitle": "Pitajte sve što biste pitali mentora.",
-    "title": "AI Doktor",
-    "placeholder": "Pitaj bilo šta kliničko…",
+    "pickSkill": "Izaberi vještinu",
+    "freeTalk": "Započni",
+    "subtitle": "Imate druga pitanja?",
+    "title": "NinaAI",
+    "placeholder": "Pitaj bilo šta Ninu AI…",
     "thinking": "Razmišljam…",
     "skills": "Vještine",
+    "dictate": "Glasovna poruka",
+    "stopRecording": "Zaustavi snimanje",
     "newChat": "Novi razgovor",
-    "disclaimer": "Samo za edukaciju. Nikada za stvarne pacijente."
+    "disclaimer": "Samo za edukaciju. Nikada za stvarne pacijente.",
+    "greeting": "Ja sam Nina. Pitaj me bilo šta — ili reci šta da budem."
   },
   "progress": {
     "title": "Napredak",
@@ -121,6 +141,17 @@
     "tomorrow": "Sutra",
     "choose": "Odaberi datum"
   },
+  "voice": {
+    "tapToTalk": "Dodirni mikrofon za razgovor",
+    "speaker": "Zvučnik",
+    "connecting": "Povezujem…",
+    "ready": "Nina sluša",
+    "failed": "Glasovna sesija nije uspjela"
+  },
+  "history": {
+    "title": "Historija",
+    "empty": "Još nema razgovora."
+  },
   "common": {
     "appName": "ABC Doctor",
     "cancel": "Otkaži",
@@ -134,6 +165,10 @@
     "minutes": "min"
   },
   "setup": {
+    "mode": "Način",
+    "modeText": "Tekst",
+    "modeVoice": "Glas",
+    "starting": "Otvaram…",
     "title": "Novi slučaj",
     "difficulty": "Težina",
     "easy": "Lako",
@@ -151,6 +186,8 @@
     "summary": "{{age}} {{gender}}, {{specialty}}"
   },
   "sim": {
+    "noThread": "Razgovor nije otvoren. Vrati se i pokreni slučaj.",
+    "voice": "Glas",
     "typing": "Pacijent piše…",
     "placeholder": "Pitaj pacijenta…",
     "examine": "Pregled",

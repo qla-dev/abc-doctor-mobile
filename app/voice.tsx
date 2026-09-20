@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Nina } from '@/services/nina';
+import { startVoiceSession, type VoiceSession } from '@/lib/realtimeVoice';
+import { setAudioModeAsync } from 'expo-audio';
+import { ApiError } from '@/lib/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing, cancelAnimation, interpolate, useAnimatedStyle,
   useSharedValue, withRepeat, withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { Mic, MicOff, X } from 'lucide-react-native';
+import { Mic, MicOff, Volume2, VolumeX, X } from 'lucide-react-native';
 import { darkColors } from '@/theme/colors';
 import { useLanguage } from '@/context/LanguageContext';
 import { playClickSound } from '@/lib/sound';
@@ -20,14 +24,81 @@ const BREATH_MS = 2200;
 const HALO_MS = 2600;
 
 export default function VoiceScreen() {
-  const { skill, patient } = useLocalSearchParams<{ skill?: string; patient?: string }>();
+  const { skill, patient, conversationId } = useLocalSearchParams<{ skill?: string; patient?: string; conversationId?: string }>();
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const [muted, setMuted] = useState(false);
+  /** connecting -> ready, or the reason it did not. */
+  const [status, setStatus] = useState<'idle' | 'connecting' | 'ready' | 'error'>('idle');
+  const [detail, setDetail] = useState<string | null>(null);
+  const session = useRef<VoiceSession | null>(null);
+  const [speaker, setSpeaker] = useState(true);
+  const [canRoute, setCanRoute] = useState(true);
   const [reduceMotion, setReduceMotion] = useState(false);
 
   const breath = useSharedValue(0);
   const halo = useSharedValue(0);
+
+  /**
+   * The session is cut the moment the overlay appears, not on a button — entering voice mode IS
+   * the request to talk. The key it returns lives about a minute, so there is no point minting it
+   * earlier and no reason to make anyone ask for it.
+   */
+  useEffect(() => {
+    const id = conversationId ? Number(conversationId) : null;
+    if (id === null) return;
+
+    let cancelled = false;
+    setStatus('connecting');
+
+    (async () => {
+      try {
+        // Recording and playback at once, and out of the earpiece into the speaker — without
+        // this iOS routes a call-shaped session to the receiver and it sounds broken.
+        await setAudioModeAsync({
+          allowsRecording: true,
+          playsInSilentMode: true,
+          shouldPlayInBackground: false,
+        });
+
+        const secret = await Nina.realtimeSession(id);
+        if (cancelled) return;
+
+        const live = await startVoiceSession({
+          callUrl: secret.call_url,
+          key: secret.value,
+          speaker,
+          // Each completed turn is stored as it lands, not batched at hang-up: a call that
+          // drops mid-sentence should still leave behind everything said before it.
+          onTranscript: (role, text) => {
+            void Nina.saveTranscript(id, role, text).catch(() => {});
+          },
+          onStateChange: state => {
+            if (cancelled) return;
+            if (state === 'connected') setStatus('ready');
+            if (state === 'failed' || state === 'closed') setStatus('error');
+          },
+        });
+
+        if (cancelled) { live.hangUp(); return; }
+
+        session.current = live;
+        setSpeaker(live.speakerOn);
+        setCanRoute(live.canRoute);
+        setDetail(`${secret.model} · ${secret.voice}`);
+      } catch (e) {
+        if (cancelled) return;
+        setStatus('error');
+        setDetail(e instanceof ApiError ? e.message : (e as Error).message);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      session.current?.hangUp();
+      session.current = null;
+    };
+  }, [conversationId]);
 
   useEffect(() => {
     let active = true;
@@ -104,20 +175,43 @@ export default function VoiceScreen() {
 
       <Text style={styles.caption}>{title}</Text>
       <Text style={styles.subcaption}>
-        {muted ? t('common.retry') : t('ai.thinking')}
+        {status === 'connecting' ? t('voice.connecting')
+          : status === 'error' ? (detail ?? t('voice.failed'))
+          : status === 'ready' ? `${t('voice.ready')}${detail ? `\n${detail}` : ''}`
+          : muted ? t('common.retry') : t('ai.thinking')}
       </Text>
 
       <View style={styles.controls}>
         <Pressable
-          onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setMuted((value) => !value); }}
+          onPress={() => {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setMuted(value => {
+              session.current?.setMuted(!value);
+              return !value;
+            });
+          }}
           accessibilityRole="button"
           accessibilityLabel={t('simulator.voiceCall')}
           style={({ pressed }) => [styles.control, { backgroundColor: c.input, opacity: pressed ? 0.6 : 1 }]}
         >
           {muted ? <MicOff size={23} color={c.red} /> : <Mic size={23} color={c.text} />}
         </Pressable>
+        {canRoute ? <Pressable
+          onPress={() => {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setSpeaker(value => {
+              session.current?.setSpeaker(!value);
+              return !value;
+            });
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={t('voice.speaker')}
+          style={({ pressed }) => [styles.control, { backgroundColor: c.input, opacity: pressed ? 0.6 : 1 }]}
+        >
+          {speaker ? <Volume2 size={23} color={c.text} /> : <VolumeX size={23} color={c.muted} />}
+        </Pressable> : null}
         <Pressable
-          onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); router.back(); }}
+          onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); session.current?.hangUp(); router.back(); }}
           accessibilityRole="button"
           accessibilityLabel={t('common.done')}
           style={({ pressed }) => [styles.control, styles.hangUp, { opacity: pressed ? 0.6 : 1 }]}

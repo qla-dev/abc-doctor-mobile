@@ -10,6 +10,8 @@ import { AudioLines, ChevronLeft, Send, Sparkles } from 'lucide-react-native';
 import { darkColors } from '@/theme/colors';
 import { useLanguage } from '@/context/LanguageContext';
 import { GlassPanel } from '@/components/common/GlassPanel';
+import { ApiError } from '@/lib/api';
+import { Nina } from '@/services/nina';
 import { playClickSound } from '@/lib/sound';
 
 type Message = { id: string; role: 'user' | 'assistant'; text: string };
@@ -26,6 +28,31 @@ export default function ChatScreen() {
 
   const [draft, setDraft] = useState(seed ?? '');
   const [messages, setMessages] = useState<Message[]>([]);
+
+  const [placing, setPlacing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * A call needs a thread to hold it. This button used to open the call screen with nothing
+   * behind it — no conversation id, so the session was never even cut and the orb sat there
+   * connecting to nothing. It opens a spoken consultation instead and hands it to the
+   * conversation screen, which is where the turns land as they are said.
+   */
+  const talk = async () => {
+    if (placing) return;
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setPlacing(true);
+    try {
+      const thread = await Nina.startConversation('consultant', 'voice');
+      // replace, not push: nothing here survives the call, and a back chevron onto an empty
+      // prototype chat is not a destination.
+      router.replace({ pathname: '/nina', params: { conversationId: String(thread.id), autoVoice: '1' } });
+    } catch (e) {
+      setError((e as ApiError).message);
+    } finally {
+      setPlacing(false);
+    }
+  };
 
   const send = () => {
     const text = draft.trim();
@@ -49,6 +76,7 @@ export default function ChatScreen() {
     },
     title: { color: c.text, fontSize: 17, fontWeight: '700', flex: 1 },
     skillTag: { color: c.blue, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.4 },
+    error: { color: c.red, fontSize: 13, paddingHorizontal: 16, paddingBottom: 6 },
     thread: { padding: 16, gap: 12, paddingBottom: 24 },
     bubbleUser: {
       alignSelf: 'flex-end', maxWidth: '85%', backgroundColor: c.blue,
@@ -83,6 +111,7 @@ export default function ChatScreen() {
         <Text style={styles.title}>{t('ai.title')}</Text>
         {skill ? <Text style={styles.skillTag}>{skill}</Text> : null}
       </View>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <ScrollView ref={scroller} contentContainerStyle={styles.thread} showsVerticalScrollIndicator={false}>
         {messages.length === 0 ? (
@@ -113,10 +142,8 @@ export default function ChatScreen() {
             />
             {/* Voice sits beside send, not behind a menu: it is a peer way to ask, not a setting. */}
             <Pressable
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push({ pathname: '/voice', params: skill ? { skill } : {} });
-              }}
+              onPress={() => void talk()}
+              disabled={placing}
               accessibilityRole="button"
               accessibilityLabel={t('simulator.voiceCall')}
               style={({ pressed }) => [styles.circle, { backgroundColor: c.input, opacity: pressed ? 0.6 : 1 }]}

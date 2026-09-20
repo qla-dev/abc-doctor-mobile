@@ -5,7 +5,7 @@ import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useDayControl } from '@/hooks/useDayControl';
 import { SpecialtySearchField, SpecialtyCards } from '@/components/common/SpecialtyRow';
 import { SectionIntro } from '@/components/common/SectionIntro';
-import { Brain, Layers, Settings, Siren, TrendingUp } from 'lucide-react-native';
+import { Brain, Layers, MessagesSquare, Settings, Siren, TrendingUp } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
@@ -36,7 +36,9 @@ export default function HomeScreen() {
   const usesNativeHeader = useScreenHeader({ title: t('common.appName'),
     nativeTitle: showBarTitle ? t('common.appName') : '',
     leftText: day.leftText,
-    right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
+    right: [
+      { sfSymbol: 'bubble.left.and.bubble.right', accessibilityLabel: t('history.title'), identifier: 'history', onPress: () => router.push('/history') },
+      { sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
     nativeOptions: {
       headerLargeTitleEnabled: false,
       headerLargeTitleShadowVisible: false,
@@ -75,6 +77,10 @@ export default function HomeScreen() {
         onDatePress={day.onDatePress}
         chooseDateLabel={day.chooseDateLabel}
         right={[{
+          icon: <MessagesSquare size={21} color={colors.blue} />,
+          accessibilityLabel: t('history.title'),
+          onPress: () => router.push('/history'),
+        }, {
           icon: <Settings size={21} color={colors.blue} />,
           accessibilityLabel: t('common.settings'),
           onPress: () => router.push('/settings'),
@@ -98,10 +104,12 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>{t('home.greeting')}</Text>
             <SectionIntro subtitle={t('home.subtitle')} style={{ marginTop: 10, marginBottom: 6 }} />
           </View>
-          <SpecialtySearchField
-            placeholder={t('handbook.search')}
-            onPress={() => router.push('/handbook')}
-          />
+          <View style={{ marginTop: -2 }}>
+            <SpecialtySearchField
+              placeholder={t('handbook.search')}
+              onPress={() => router.push('/handbook')}
+            />
+          </View>
 
           <SpecialtyCards
             onSelect={category => router.push({ pathname: '/handbook', params: { q: category } })}

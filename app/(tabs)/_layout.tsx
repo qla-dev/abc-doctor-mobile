@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import * as Haptics from 'expo-haptics';
-import { BookOpen, Home, ListChecks, MessagesSquare, Stethoscope } from 'lucide-react-native';
+import { BookOpen, Home, ListChecks, Sparkles } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { useNativeIOSTabsActive } from '@/lib/nativeTabBarPreference';
@@ -29,21 +29,20 @@ function IosTabs() {
           <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' } as any} />
           <NativeTabs.Trigger.Label>{t('tabs.home')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
-        {/* role="search" gives Handbook the system's own search presentation on iOS 26. */}
-        <NativeTabs.Trigger name="handbook" role="search">
+        <NativeTabs.Trigger name="quiz">
+          <NativeTabs.Trigger.Icon sf={{ default: 'checklist', selected: 'checklist' } as any} />
+          <NativeTabs.Trigger.Label>{t('tabs.tests')}</NativeTabs.Trigger.Label>
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="handbook">
           <NativeTabs.Trigger.Icon sf={{ default: 'book', selected: 'book.fill' } as any} />
           <NativeTabs.Trigger.Label>{t('tabs.handbook')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="quiz">
-          <NativeTabs.Trigger.Icon sf={{ default: 'checklist', selected: 'checklist' } as any} />
-          <NativeTabs.Trigger.Label>{t('tabs.quiz')}</NativeTabs.Trigger.Label>
-        </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="simulator">
-          <NativeTabs.Trigger.Icon sf={{ default: 'stethoscope', selected: 'stethoscope' } as any} />
-          <NativeTabs.Trigger.Label>{t('tabs.simulator')}</NativeTabs.Trigger.Label>
-        </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="ai">
-          <NativeTabs.Trigger.Icon sf={{ default: 'bubble.left.and.bubble.right', selected: 'bubble.left.and.bubble.right.fill' } as any} />
+        {/* Nina is the search tab, and `role="search"` is what sets her apart from the rest:
+            iOS 26 gives a search tab its own place at the end of the bar and, as the bar
+            minimises, turns it into the search field itself. Asking her something IS the search
+            here, so that field opens a consultation — see the ai tab's Stack.SearchBar. */}
+        <NativeTabs.Trigger name="ai" role="search">
+          <NativeTabs.Trigger.Icon sf={{ default: 'sparkles', selected: 'sparkles' } as any} />
           <NativeTabs.Trigger.Label>{t('tabs.ai')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
     </NativeTabs>
@@ -69,10 +68,11 @@ function FallbackTabs() {
       }}
     >
       <Tabs.Screen name="(home)" options={{ title: t('tabs.home'), tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }} />
+      <Tabs.Screen name="quiz" options={{ title: t('tabs.tests'), tabBarIcon: ({ color, size }) => <ListChecks color={color} size={size} /> }} />
       <Tabs.Screen name="handbook" options={{ title: t('tabs.handbook'), tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size} /> }} />
-      <Tabs.Screen name="quiz" options={{ title: t('tabs.quiz'), tabBarIcon: ({ color, size }) => <ListChecks color={color} size={size} /> }} />
-      <Tabs.Screen name="simulator" options={{ title: t('tabs.simulator'), tabBarIcon: ({ color, size }) => <Stethoscope color={color} size={size} /> }} />
-      <Tabs.Screen name="ai" options={{ title: t('tabs.ai'), tabBarIcon: ({ color, size }) => <MessagesSquare color={color} size={size} /> }} />
+      {/* Last here too: this bar has no separate slot to give her, and the order is the only
+          thing that can say the same. */}
+      <Tabs.Screen name="ai" options={{ title: t('tabs.ai'), tabBarIcon: ({ color, size }) => <Sparkles color={color} size={size} /> }} />
     </Tabs>
   );
 }

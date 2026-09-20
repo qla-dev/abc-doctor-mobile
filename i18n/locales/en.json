@@ -1,10 +1,11 @@
 {
   "tabs": {
+    "tests": "Tests",
     "home": "Home",
     "handbook": "Handbook",
     "quiz": "Quiz",
     "simulator": "Simulator",
-    "ai": "AI Doctor"
+    "ai": "NinaAI"
   },
   "home": {
     "greeting": "Good morning doctor",
@@ -20,6 +21,8 @@
     "reviewNow": "Review now"
   },
   "handbook": {
+    "makeQuiz": "Make a quiz",
+    "makeCards": "Make flashcards",
     "title": "Handbook",
     "search": "Search topics, findings, drugs",
     "allCategories": "All",
@@ -42,6 +45,18 @@
     "makeCards": "Make flashcards"
   },
   "quiz": {
+    "flashcardsHint": "Flip the card and grade yourself",
+    "multipleChoiceHint": "One correct of several",
+    "trueFalseHint": "A quick claim, yes or no",
+    "openQuestionHint": "You answer in your own words",
+    "flashcards": "Flashcards",
+    "multipleChoice": "Multiple choice",
+    "trueFalse": "True or false",
+    "openQuestion": "Open question",
+    "kind": "Kind of test",
+    "answerBy": "I answer",
+    "answerText": "By text",
+    "answerVoice": "By voice",
     "subtitle": "Ready to test what you know?",
     "title": "Quiz",
     "start": "Start quiz",
@@ -94,13 +109,18 @@
     "urgency": "Urgency"
   },
   "ai": {
-    "subtitle": "Ask anything you would ask a mentor.",
-    "title": "AI Doctor",
-    "placeholder": "Ask anything clinical…",
+    "pickSkill": "Pick a skill",
+    "freeTalk": "Start",
+    "subtitle": "Other questions?",
+    "title": "NinaAI",
+    "placeholder": "Ask Nina AI anything…",
     "thinking": "Thinking…",
     "skills": "Skills",
+    "dictate": "Voice message",
+    "stopRecording": "Stop recording",
     "newChat": "New chat",
-    "disclaimer": "Educational use only. Never for real patient care."
+    "disclaimer": "Educational use only. Never for real patient care.",
+    "greeting": "I'm Nina. Ask me anything — or say what I should be."
   },
   "progress": {
     "title": "Progress",
@@ -119,6 +139,17 @@
     "tomorrow": "Tomorrow",
     "choose": "Choose date"
   },
+  "voice": {
+    "tapToTalk": "Tap the mic to talk",
+    "speaker": "Speaker",
+    "connecting": "Connecting…",
+    "ready": "Nina is listening",
+    "failed": "Voice session failed"
+  },
+  "history": {
+    "title": "History",
+    "empty": "No conversations yet."
+  },
   "common": {
     "appName": "ABC Doctor",
     "cancel": "Cancel",
@@ -132,6 +163,10 @@
     "minutes": "min"
   },
   "setup": {
+    "mode": "Mode",
+    "modeText": "Text",
+    "modeVoice": "Voice",
+    "starting": "Opening…",
     "title": "New case",
     "difficulty": "Difficulty",
     "easy": "Easy",
@@ -149,6 +184,8 @@
     "summary": "{{age}} {{gender}}, {{specialty}}"
   },
   "sim": {
+    "noThread": "No conversation was opened. Go back and start a case.",
+    "voice": "Voice",
     "typing": "Patient is typing…",
     "placeholder": "Ask the patient…",
     "examine": "Examine",
