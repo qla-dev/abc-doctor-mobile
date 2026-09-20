@@ -7,7 +7,7 @@
     "ai": "AI Doctor"
   },
   "home": {
-    "greeting": "Good morning",
+    "greeting": "Good morning doctor",
     "subtitle": "Ready for today's rounds?",
     "continueStudying": "Continue studying",
     "dueToday": "Due today",
@@ -109,6 +109,7 @@
     "recentQuizzes": "Recent quizzes"
   },
   "common": {
+    "appName": "ABC Doctor",
     "cancel": "Cancel",
     "done": "Done",
     "save": "Save",

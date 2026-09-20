@@ -7,7 +7,7 @@
     "ai": "KI-Arzt"
   },
   "home": {
-    "greeting": "Guten Morgen",
+    "greeting": "Guten Morgen Doktor",
     "subtitle": "Bereit für die heutige Visite?",
     "continueStudying": "Weiterlernen",
     "dueToday": "Heute fällig",
@@ -109,6 +109,7 @@
     "recentQuizzes": "Letzte Quizze"
   },
   "common": {
+    "appName": "ABC Doctor",
     "cancel": "Abbrechen",
     "done": "Fertig",
     "save": "Speichern",

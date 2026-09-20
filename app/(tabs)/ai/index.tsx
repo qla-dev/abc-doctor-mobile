@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
-import { FallbackTabHeader, useTabScrollPadding } from '@/components/common/TabHeader';
+import { FallbackTabHeader, useTabBarClearance } from '@/components/common/TabHeader';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { Brain, ClipboardList, Layers, Send, Siren, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -26,7 +26,7 @@ export default function AiScreen() {
   const { colors } = useTheme();
   const { t } = useLanguage();
 
-  const bottomPad = useTabScrollPadding();
+  const composerClearance = useTabBarClearance();
   const usesNativeHeader = useScreenHeader({ title: t('tabs.ai'),
     right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
   });
@@ -45,7 +45,7 @@ export default function AiScreen() {
     composer: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 11 },
     input: { flex: 1, color: colors.text, fontSize: 15, maxHeight: 90, padding: 0 },
     send: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
-    composerWrap: { paddingHorizontal: 16, paddingBottom: bottomPad },
+    composerWrap: { paddingHorizontal: 16, paddingBottom: composerClearance },
   });
 
   return (

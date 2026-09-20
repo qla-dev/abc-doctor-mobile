@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { useNavigation } from 'expo-router';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useNativeIOSHeadersActive } from '@/lib/nativeTabBarPreference';
+import type { NativeStackNavigationOptions } from 'expo-router/build/react-navigation/native-stack/types';
 import {
   createIOSNativeHeaderOptions,
   createNativeHeaderIconButtonItem,
@@ -22,10 +23,20 @@ export type HeaderIconItem = {
  * Adjusted from fitness's useScreenHeader. Theirs supports menus, badges and a duplicate-press
  * guard on the primary action; this is the same shape reduced to what our screens actually use.
  */
-export function useScreenHeader({ title, left, right }: {
+export function useScreenHeader({ title, nativeTitle, left, right, nativeOptions }: {
+  /** Title for the in-screen bar, which has no scroll state and always shows it. */
   title: string;
+  /**
+   * Title for the NATIVE bar, when it should differ from the one above. Pass '' to leave the bar
+   * empty and the screen's own heading to carry the name, then pass the title once the content
+   * has scrolled — fitness's SettingsScreen drives its `nativeTitle` from an onScroll threshold
+   * exactly this way.
+   */
+  nativeTitle?: string;
   left?: HeaderIconItem[];
   right?: HeaderIconItem[];
+  /** Per-screen overrides, applied last: large title off, a transparent bar, and so on. */
+  nativeOptions?: Partial<NativeStackNavigationOptions>;
 }) {
   const navigation = useNavigation();
   const { colors } = useTheme();
@@ -42,6 +53,8 @@ export function useScreenHeader({ title, left, right }: {
   // every render.
   const signature = JSON.stringify({
     title,
+    nativeTitle: nativeTitle ?? null,
+    nativeOptions: nativeOptions ?? null,
     usesNativeHeader,
     tint: colors.blue,
     text: colors.text,
@@ -74,9 +87,10 @@ export function useScreenHeader({ title, left, right }: {
 
     navigation.setOptions({
       ...createIOSNativeHeaderOptions(colors.blue, colors.text),
-      title,
+      title: nativeTitle ?? title,
       unstable_headerLeftItems: leftItems.length ? () => leftItems : undefined,
       unstable_headerRightItems: rightItems.length ? () => rightItems : undefined,
+      ...nativeOptions,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigation, signature]);

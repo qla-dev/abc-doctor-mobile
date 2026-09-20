@@ -22,8 +22,20 @@ export default function HomeScreen() {
   const { t } = useLanguage();
 
   const bottomPad = useTabScrollPadding();
-  const usesNativeHeader = useScreenHeader({ title: t('tabs.home'),
+  // The bar starts empty. The greeting is this screen's own heading, and the product name only
+  // slides into the bar once that heading has scrolled away — there is no large title to tuck up,
+  // because the large title and the collapsed bar title are one string natively and these two
+  // differ. fitness's SettingsScreen builds the same effect from a nativeTitle and a threshold.
+  const [showBarTitle, setShowBarTitle] = useState(false);
+  const usesNativeHeader = useScreenHeader({ title: t('common.appName'),
+    nativeTitle: showBarTitle ? t('common.appName') : '',
     right: [{ sfSymbol: 'gearshape', accessibilityLabel: t('common.settings'), identifier: 'settings', onPress: () => router.push('/settings') }],
+    nativeOptions: {
+      headerLargeTitleEnabled: false,
+      headerLargeTitleShadowVisible: false,
+      headerTransparent: true,
+      headerShadowVisible: false,
+    },
   });
   const g = createGlobalStyles(colors);
 
@@ -47,7 +59,7 @@ export default function HomeScreen() {
   const highYield = TOPICS_DATA.filter(topic => topic.highYieldRating >= 4).slice(0, 3);
 
   const styles = StyleSheet.create({
-    greeting: { color: colors.text, fontSize: 28, fontWeight: '800', letterSpacing: -0.8 },
+    greeting: { color: colors.text, fontSize: 34, fontWeight: '700' },
     greetingSub: { color: colors.muted, fontSize: 14, marginTop: 2, marginBottom: 6 },
     statRow: { flexDirection: 'row', gap: 12 },
     stat: { flex: 1, alignItems: 'center', gap: 7, paddingVertical: 14, paddingHorizontal: 6, minHeight: 116, justifyContent: 'center' },
@@ -66,7 +78,7 @@ export default function HomeScreen() {
   return (
     <View style={g.screen} collapsable={false}>
       <FallbackTabHeader
-        title={t('tabs.home')}
+        title={t('common.appName')}
         right={[{
           icon: <Settings size={21} color={colors.blue} />,
           accessibilityLabel: t('common.settings'),
@@ -77,6 +89,13 @@ export default function HomeScreen() {
         style={{ flex: 1 }}
         contentInsetAdjustmentBehavior={usesNativeHeader ? 'automatic' : 'never'}
         automaticallyAdjustsScrollIndicatorInsets={usesNativeHeader}
+        scrollEventThrottle={16}
+        onScroll={({ nativeEvent }) => {
+          // Once iOS has applied its own inset, contentOffset.y rests at -contentInset.top, so the
+          // two are added for the threshold to mean "moved away from the top" rather than "past 16".
+          const offset = nativeEvent.contentOffset.y + nativeEvent.contentInset.top;
+          setShowBarTitle(offset > 16);
+        }}
         contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>
 
         <View style={g.scrollContent}>

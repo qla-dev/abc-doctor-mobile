@@ -7,7 +7,7 @@
     "ai": "AI Doktor"
   },
   "home": {
-    "greeting": "Dobro jutro",
+    "greeting": "Dobro jutro doktore",
     "subtitle": "Spremni za današnju vizitu?",
     "continueStudying": "Nastavi učiti",
     "dueToday": "Za danas",
@@ -111,6 +111,7 @@
     "recentQuizzes": "Nedavni kvizovi"
   },
   "common": {
+    "appName": "ABC Doctor",
     "cancel": "Otkaži",
     "done": "Gotovo",
     "save": "Sačuvaj",

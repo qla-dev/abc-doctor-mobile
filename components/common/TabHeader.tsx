@@ -128,6 +128,20 @@ export function FallbackTabHeader(props: TabHeaderProps) {
 }
 
 /**
+ * Bottom clearance for content PINNED above the tab bar — a composer, a toolbar, anything that
+ * is not a scroll view. The native bar floats over the screen and only insets scroll views, so
+ * such content has to clear it itself. UIKit already reports the cost: RNSTabsScreenComponentView
+ * is an RNSSafeAreaProviding returning the view's own `safeAreaInsets`, and UITabBarController
+ * adds its bar's height to its children's bottom inset — so `insets.bottom` is the bar plus the
+ * home indicator, with no tab-bar constant to guess at. Under the JS bar, which shortens the
+ * screen rather than floating over it, the same expression collapses to just the gap.
+ */
+export function useTabBarClearance() {
+  const insets = useSafeAreaInsets();
+  return insets.bottom + 12;
+}
+
+/**
  * Bottom padding for a scroll view inside the tabs. The native tab bar applies its own content
  * inset, so anything added there is doubled.
  */
