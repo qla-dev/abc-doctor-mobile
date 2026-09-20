@@ -66,7 +66,11 @@ export default function AiScreen() {
       automaticallyAdjustsScrollIndicatorInsets={usesNativeHeader}
       contentContainerStyle={{ paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
         <View style={g.scrollContent}>
-          <SectionIntro subtitle={t('ai.subtitle')} />
+          <SectionIntro
+            subtitle={t('ai.subtitle')}
+            actionLabel="Nina AI"
+            onPress={() => router.push('/nina')}
+          />
           <SectionHeader title={t('ai.skills')} />
           {SKILLS.map((skill) => {
             const Icon = skill.icon;
