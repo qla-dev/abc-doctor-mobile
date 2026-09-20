@@ -9,11 +9,11 @@ import { AppCard } from '@/components/common/AppCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/common/Badge';
 import { ApiError } from '@/lib/api';
-import { Nina, type NinaConversation } from '@/services/nina';
+import { Mark, type MarkConversation } from '@/services/mark';
 import { formatDateLabel, localeFor, toDateString } from '@/lib/dateLabel';
 
 /**
- * Every thread Nina has held, newest first, and a way back into any of them.
+ * Every thread Mark has held, newest first, and a way back into any of them.
  *
  * Re-reads on focus rather than once on mount: a consultation started, backed out of, and looked
  * for here a second later has to be in the list, and it was not there when this screen first ran.
@@ -23,13 +23,13 @@ export default function HistoryScreen() {
   const { t, language } = useLanguage();
   const g = createGlobalStyles(colors);
 
-  const [threads, setThreads] = useState<NinaConversation[] | null>(null);
+  const [threads, setThreads] = useState<MarkConversation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      setThreads(await Nina.conversations());
+      setThreads(await Mark.conversations());
       setError(null);
     } catch (e) {
       setError((e as ApiError).message);
@@ -43,8 +43,8 @@ export default function HistoryScreen() {
    * the vitals and the two action buttons; the chat carries those itself now, so a case is just
    * a conversation with a patient in it.
    */
-  const reopen = (thread: NinaConversation) => {
-    router.push({ pathname: '/nina', params: { conversationId: String(thread.id) } });
+  const reopen = (thread: MarkConversation) => {
+    router.push({ pathname: '/mark', params: { conversationId: String(thread.id) } });
   };
 
   const styles = StyleSheet.create({

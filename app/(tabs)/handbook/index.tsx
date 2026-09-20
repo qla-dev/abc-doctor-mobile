@@ -5,13 +5,11 @@ import { router } from 'expo-router';
 import { FallbackTabHeader, useTabScrollPadding } from '@/components/common/TabHeader';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useDayControl } from '@/hooks/useDayControl';
-import { BookOpen, ClipboardList, Layers, MessagesSquare, Search, Settings } from 'lucide-react-native';
+import { BookOpen, MessagesSquare, Search, Settings } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
 import { GlassPanel } from '@/components/common/GlassPanel';
-import { FooterCta } from '@/components/common/Sheets';
-import { Pressable } from 'react-native';
 import { List } from '@/components/common/List';
 import { ListItem } from '@/components/common/ListItem';
 import { Badge } from '@/components/common/Badge';
@@ -56,12 +54,6 @@ export default function HandbookScreen() {
     searchRow: { flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 13, paddingVertical: 11 },
     input: { flex: 1, color: colors.text, fontSize: 15, padding: 0 },
     count: { color: colors.muted, fontSize: 12.5 },
-    ctaRow: { flexDirection: 'row', gap: 10 },
-    cta: {
-      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-      gap: 8, paddingVertical: 12, borderRadius: 14, borderWidth: 1,
-    },
-    ctaLabel: { fontSize: 13.5, fontWeight: '700' },
   });
 
   return (
@@ -126,26 +118,9 @@ export default function HandbookScreen() {
           )}
         </View>
       </ScrollView>
-      <FooterCta>
-        <View style={styles.ctaRow}>
-          <Pressable
-            onPress={() => router.push({ pathname: '/chat', params: { skill: 'quiz' } })}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.cta, { backgroundColor: colors.blue + '1A', borderColor: colors.blue, opacity: pressed ? 0.75 : 1 }]}
-          >
-            <ClipboardList size={18} color={colors.blue} />
-            <Text style={[styles.ctaLabel, { color: colors.blue }]} numberOfLines={1}>{t('handbook.makeQuiz')}</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push({ pathname: '/chat', params: { skill: 'cards' } })}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.cta, { backgroundColor: colors.green + '1A', borderColor: colors.green, opacity: pressed ? 0.75 : 1 }]}
-          >
-            <Layers size={18} color={colors.green} />
-            <Text style={[styles.ctaLabel, { color: colors.green }]} numberOfLines={1}>{t('handbook.makeCards')}</Text>
-          </Pressable>
-        </View>
-      </FooterCta>
+      {/* No footer here. A quiz or a set of cards is made OF something, and on this screen
+          nothing has been chosen yet — the same two commands sit at the foot of every topic,
+          where they know what they are about. */}
       {day.sheet}
     </View>
   );

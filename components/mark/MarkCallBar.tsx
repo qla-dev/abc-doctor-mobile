@@ -10,7 +10,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { darkColors } from '@/theme/colors';
 import { useLanguage } from '@/context/LanguageContext';
 import { ApiError } from '@/lib/api';
-import { Nina } from '@/services/nina';
+import { Mark } from '@/services/mark';
 import { startVoiceSession, type VoiceSession } from '@/lib/realtimeVoice';
 
 /** One breath of the dot. Slow enough to read as an open line, not as a spinner. */
@@ -27,7 +27,7 @@ const BREATH_MS = 1600;
  * Unmounting the bar is hanging up. The connection, the microphone and the data channel all live
  * in the session below, and the cleanup ends all three.
  */
-export function NinaCallBar({ conversationId, onTurn, onClose, forceDark = false }: {
+export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false }: {
   conversationId: number;
   /** Each completed turn, both sides, the moment it comes back transcribed. */
   onTurn: (role: 'user' | 'assistant', text: string) => void;
@@ -66,7 +66,7 @@ export function NinaCallBar({ conversationId, onTurn, onClose, forceDark = false
           shouldPlayInBackground: false,
         });
 
-        const secret = await Nina.realtimeSession(conversationId);
+        const secret = await Mark.realtimeSession(conversationId);
         if (cancelled) return;
 
         const live = await startVoiceSession({
@@ -123,8 +123,9 @@ export function NinaCallBar({ conversationId, onTurn, onClose, forceDark = false
       marginHorizontal: 16, marginBottom: 8,
       paddingHorizontal: 14, paddingVertical: 10,
       borderRadius: 18, backgroundColor: colors.card,
+      // Only a failed call draws an edge. At rest the bar is a card like any other card here.
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: status === 'error' ? colors.red : colors.separator,
+      borderColor: status === 'error' ? colors.red : 'transparent',
     },
     dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: status === 'error' ? colors.red : colors.blue },
     label: { flex: 1, color: colors.text, fontSize: 13.5, fontWeight: '600' },

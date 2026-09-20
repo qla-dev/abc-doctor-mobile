@@ -7,17 +7,17 @@ import { useLanguage } from '@/context/LanguageContext';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { CustomBottomSheet } from '@/components/common/Sheets';
 import { ApiError } from '@/lib/api';
-import { Nina, type NinaConversation } from '@/services/nina';
+import { Mark, type MarkConversation } from '@/services/mark';
 
 /**
- * Every thread Nina has held, over the one you are in — Lena keeps its history a tap from the
+ * Every thread Mark has held, over the one you are in — Lena keeps its history a tap from the
  * header for the same reason. Picking a skill always opens a new chat, so without this the
  * previous one is only reachable by leaving the conversation entirely.
  *
  * Fetched when it opens rather than held by the screen: it is a list that goes stale the moment
  * anyone says anything, and nothing behind the sheet needs it.
  */
-export function NinaHistorySheet({ open, onClose, activeId, onSelect }: {
+export function MarkHistorySheet({ open, onClose, activeId, onSelect }: {
   open: boolean;
   onClose: () => void;
   activeId: number | null;
@@ -26,14 +26,14 @@ export function NinaHistorySheet({ open, onClose, activeId, onSelect }: {
   const { colors } = useTheme();
   const { t } = useLanguage();
 
-  const [threads, setThreads] = useState<NinaConversation[] | null>(null);
+  const [threads, setThreads] = useState<MarkConversation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
     let alive = true;
     setThreads(null);
-    Nina.conversations()
+    Mark.conversations()
       .then(list => { if (alive) { setThreads(list); setError(null); } })
       .catch((e: ApiError) => { if (alive) setError(e.message); });
 

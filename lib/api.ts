@@ -10,7 +10,20 @@
  */
 const API_BACKENDS = {
   local: 'http://127.0.0.1:8000/api',
-  production: 'https://abc.qla.dev/api',
+  /**
+   * A folder of the qla.dev account rather than a subdomain: the repository sits at
+   * `public_html/abc`, so the API is a path rather than a host.
+   *
+   * `/public` is in there on purpose. `backend/.htaccess` does rewrite `/abc/backend/api/…`
+   * into `public/`, and Apache serves it — but Laravel works out its own base path from
+   * `SCRIPT_NAME`, which stays `/abc/backend/public/index.php`. With `/public` missing from the
+   * URL that is no longer a prefix of the request, so nothing is stripped, the router is handed
+   * `/abc/backend/api/health` instead of `/api/health`, and every route 404s.
+   *
+   * The fix that removes this line is a subdomain whose document root IS `backend/public` —
+   * `https://abc.qla.dev/api`, which is what this constant said before anything was deployed.
+   */
+  production: 'https://qla.dev/abc/backend/public/api',
 } as const;
 
 type BackendName = keyof typeof API_BACKENDS;

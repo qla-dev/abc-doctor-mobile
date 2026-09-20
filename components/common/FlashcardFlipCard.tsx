@@ -28,7 +28,6 @@ export function FlashcardFlipCard({ front, back, hint, flipped, onFlip, hintLabe
     wrap: { minHeight: 300 },
     face: {
       position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.card, borderRadius: 24,
-      borderWidth: StyleSheet.hairlineWidth, borderColor: colors.separator,
       alignItems: 'center', justifyContent: 'center', padding: 28, gap: 14,
     },
     prompt: { color: colors.text, fontSize: 21, fontWeight: '700', textAlign: 'center', lineHeight: 29 },

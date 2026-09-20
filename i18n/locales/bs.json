@@ -5,7 +5,7 @@
     "handbook": "Priručnik",
     "quiz": "Kviz",
     "simulator": "Simulator",
-    "ai": "NinaAI"
+    "ai": "MarkAI"
   },
   "home": {
     "greeting": "Dobro jutro doktore",
@@ -42,9 +42,12 @@
     "symptoms": "Simptomi",
     "signs": "Fizikalni znaci",
     "askAi": "Pitaj AI tutora",
-    "explainSimply": "Objasni jednostavno",
-    "quizMe": "Ispitaj me",
-    "makeCards": "Napravi kartice"
+    "explainSimply": "Objasni",
+    "quizMe": "Kviz",
+    "makeCards": "Kartice",
+    "seedExplain": "Objasni mi jednostavno temu",
+    "seedQuiz": "Ispitaj me iz teme",
+    "seedCards": "Napravi mi kartice za učenje iz teme"
   },
   "quiz": {
     "flashcardsHint": "Okreni karticu i ocijeni se",
@@ -114,15 +117,20 @@
     "pickSkill": "Izaberi vještinu",
     "freeTalk": "Započni",
     "subtitle": "Imate druga pitanja?",
-    "title": "NinaAI",
-    "placeholder": "Pitaj bilo šta Ninu AI…",
+    "title": "MarkAI",
+    "placeholder": "Pitaj bilo šta Marka AI…",
     "thinking": "Razmišljam…",
     "skills": "Vještine",
     "dictate": "Glasovna poruka",
     "stopRecording": "Zaustavi snimanje",
     "newChat": "Novi razgovor",
     "disclaimer": "Samo za edukaciju. Nikada za stvarne pacijente.",
-    "greeting": "Ja sam Nina. Pitaj me bilo šta — ili reci šta da budem."
+    "greeting": "Ja sam Mark. Pitaj me bilo šta — ili reci šta da budem.",
+    "usingSkill": "koristi vještinu",
+    "actThinking": "razmišlja",
+    "actAnalysing": "analizira",
+    "actReviewing": "provjerava",
+    "actPatience": "traži još malo strpljenja"
   },
   "progress": {
     "title": "Napredak",
@@ -145,7 +153,7 @@
     "tapToTalk": "Dodirni mikrofon za razgovor",
     "speaker": "Zvučnik",
     "connecting": "Povezujem…",
-    "ready": "Nina sluša",
+    "ready": "Mark sluša",
     "failed": "Glasovna sesija nije uspjela"
   },
   "history": {

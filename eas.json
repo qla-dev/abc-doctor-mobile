@@ -18,7 +18,10 @@
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_BACKEND": "production"
+      }
     },
     "production": {
       "distribution": "store",
@@ -26,6 +29,9 @@
       "channel": "production",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BACKEND": "production"
       }
     }
   },

@@ -4,7 +4,7 @@ import { Mic, MessageSquareText, Shuffle } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { AGE_BANDS, availableSpecialties, randomSetup, type CaseSetup } from '@/lib/caseGenerator';
-import type { Modality } from '@/services/nina';
+import type { Modality } from '@/services/mark';
 
 /**
  * The case, as one step inside the chat instead of a screen of its own.

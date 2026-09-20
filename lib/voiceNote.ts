@@ -7,7 +7,7 @@ import { File } from 'expo-file-system';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { ApiError } from '@/lib/api';
 import { startLiveTranscribe, type LiveTranscribe } from '@/lib/liveTranscribe';
-import { Nina } from '@/services/nina';
+import { Mark } from '@/services/mark';
 
 /**
  * A recording that becomes a turn: hold the microphone open, watch it hear you, read what you
@@ -29,7 +29,7 @@ import { Nina } from '@/services/nina';
  * One engine either way, chosen before anything starts recording: two things reading the same
  * microphone is how a recording comes back as silence.
  *
- * Deliberately not the call. A call is a session with Nina answering out loud as you speak; this
+ * Deliberately not the call. A call is a session with Mark answering out loud as you speak; this
  * is one message that happens to have been said rather than typed, and it is answered in the
  * thread like any other.
  */
@@ -110,6 +110,28 @@ function resample(samples: Int16Array, from: number, to: number): Int16Array {
 }
 
 /**
+ * Runs something that reaches into a native object, and swallows the one failure that is not a
+ * mistake in the calling.
+ *
+ * A recorder and a stream are handles onto objects expo owns and releases — when the screen
+ * holding them goes, when the hook's options change. From that moment every property on the JS
+ * handle throws `NotFoundException: Unable to find the native shared object`, including the
+ * plain getters. Reading `isRecording` off a released recorder took down the whole render tree
+ * on the way out of a conversation.
+ *
+ * Asking a microphone to stop twice is not worth an error boundary, so the answer is not to ask
+ * the native side anything it cannot be trusted to answer: what is running is tracked here, and
+ * every call that closes something is allowed to find it already closed.
+ */
+function safely<T>(run: () => T): T | undefined {
+  try {
+    return run();
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Whatever the native side handed over, as signed 16-bit samples. It is typed as an ArrayBuffer
  * and is one in practice, but a view over one would silently become a list of byte VALUES rather
  * than the samples those bytes spell — loud audio read as near-silence.
@@ -141,6 +163,12 @@ export function useVoiceNote({ onPartial, onText, onError, conversationId }: {
   const meter = useRef<ReturnType<typeof setInterval> | null>(null);
   /** The socket, while there is one. Its absence is what makes a turn the recorded kind. */
   const live = useRef<LiveTranscribe | null>(null);
+  /**
+   * Which engine is holding the microphone, kept here rather than asked of the engine. The
+   * recorder's own `isRecording` is a native getter, and a native getter is exactly what stops
+   * being answerable the moment the object behind it is released.
+   */
+  const using = useRef<'live' | 'file' | null>(null);
   /** Utterances already finished, and the one still being said. */
   const heard = useRef({ done: '', saying: '' });
   /**
@@ -201,27 +229,27 @@ export function useVoiceNote({ onPartial, onText, onError, conversationId }: {
   const shutDown = useCallback(async () => {
     clearTimers();
     const socket = live.current;
+    const engine = using.current;
     live.current = null;
-    if (socket) {
-      stream.stream.stop();
+    using.current = null;
+
+    if (engine === 'live') {
+      safely(() => stream.stream.stop());
       console.log('[voice] pushed', pushed.current, 'buffers, heard', JSON.stringify(said()));
       // The last sentence is usually still in flight: commit it, then give it a moment to land
       // before the socket goes. Cutting here is how a voice message loses its final clause.
-      socket.commit();
+      socket?.commit();
       await new Promise(resolve => setTimeout(resolve, COMMIT_MS));
-      socket.close();
-    } else {
-      try {
-        await recorder.stop();
-      } catch {
-        // Already stopped, or never started.
-      }
+      socket?.close();
+    } else if (engine === 'file') {
+      await safely(() => recorder.stop())?.catch(() => {});
     }
+
     await release();
   }, [clearTimers, recorder, release, stream]);
 
   const finish = useCallback(async (send: boolean) => {
-    const wasLive = live.current !== null;
+    const wasLive = using.current === 'live';
     setState('sending');
     try {
       await shutDown();
@@ -235,13 +263,13 @@ export function useVoiceNote({ onPartial, onText, onError, conversationId }: {
         return;
       }
 
-      const uri = recorder.uri;
+      const uri = safely(() => recorder.uri);
       if (!uri) { setState('idle'); return; }
       // The preset records m4a on both platforms, but the format is read off the file rather
       // than assumed: a build that changes the preset should not silently mislabel the upload.
       const format = (uri.split('.').pop() ?? 'm4a').toLowerCase();
       const audio = await new File(uri).base64();
-      const { text } = await Nina.transcribe(audio, format);
+      const { text } = await Mark.transcribe(audio, format);
       setState('idle');
       const spoken = text.trim();
       if (spoken) handlers.current.onText(spoken, send);
@@ -271,7 +299,7 @@ export function useVoiceNote({ onPartial, onText, onError, conversationId }: {
        */
       let socket: LiveTranscribe | null = null;
       try {
-        const session = await Nina.realtimeTranscription(conversationId);
+        const session = await Mark.realtimeTranscription(conversationId);
         socket = await startLiveTranscribe({
           url: session.url,
           key: session.value,
@@ -310,11 +338,13 @@ export function useVoiceNote({ onPartial, onText, onError, conversationId }: {
 
       if (socket) {
         live.current = socket;
+        using.current = 'live';
         await stream.stream.start();
         // What the hardware actually gave, which is what decides whether anything is resampled.
         console.log('[voice] stream at', stream.stream.sampleRate, 'Hz,',
           stream.stream.channels, 'ch');
       } else {
+        using.current = 'file';
         await recorder.prepareToRecordAsync();
         recorder.record();
         // No PCM to measure on this path, so the level comes from the recorder's own metering.
@@ -345,29 +375,36 @@ export function useVoiceNote({ onPartial, onText, onError, conversationId }: {
     clearTimers();
     setState('idle');
     const socket = live.current;
+    const engine = using.current;
     live.current = null;
-    if (socket) {
-      stream.stream.stop();
-      socket.close();
-    } else {
-      try {
-        if (recorder.isRecording) await recorder.stop();
-      } catch {
-        // Already stopped, or never started. Either way there is nothing to throw away.
-      }
+    using.current = null;
+
+    if (engine === 'live') {
+      safely(() => stream.stream.stop());
+      socket?.close();
+    } else if (engine === 'file') {
+      // Stopping writes the file. Nothing reads it, which is what throwing it away means here.
+      await safely(() => recorder.stop())?.catch(() => {});
     }
+
     await release();
   }, [clearTimers, recorder, release, stream]);
 
   useEffect(() => () => {
     // Leaving the screen mid-recording: end it and give the microphone back, but say nothing —
     // whoever navigated away is not waiting for a transcript.
+    //
+    // Everything here is best-effort by design. This runs while the screen is being taken apart,
+    // and expo may already have released the recorder and the stream by the time it does; asking
+    // a released object anything throws, and a throw in a cleanup takes the tree down with it.
     clearTimers();
     live.current?.close();
     live.current = null;
-    if (recorder.isRecording) void recorder.stop().catch(() => {});
+    if (using.current === 'live') safely(() => stream.stream.stop());
+    if (using.current === 'file') safely(() => recorder.stop())?.catch(() => {});
+    using.current = null;
     void setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(() => {});
-  }, [clearTimers, recorder]);
+  }, [clearTimers, recorder, stream]);
 
   return {
     state,

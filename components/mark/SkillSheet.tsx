@@ -6,9 +6,9 @@ import { Brain, ChevronDown, Ear, Mic, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { CustomBottomSheet } from '@/components/common/Sheets';
-import { CaseForm } from '@/components/nina/CaseForm';
+import { CaseForm } from '@/components/mark/CaseForm';
 import type { CaseSetup } from '@/lib/caseGenerator';
-import type { Modality, NinaSkill } from '@/services/nina';
+import type { Modality, MarkSkill } from '@/services/mark';
 
 type Tone = 'indigo' | 'blue' | 'green' | 'orange' | 'red' | 'cyan';
 
@@ -22,7 +22,7 @@ const LOOK: Record<string, { icon: typeof Brain; tone: Tone }> = {
 };
 
 /**
- * What Nina can be, reached from the plus inside the composer.
+ * What Mark can be, reached from the plus inside the composer.
  *
  * It opens over the conversation rather than replacing it, and the one skill with something to
  * configure — the simulated patient — unfolds its case here too. Both used to be screens you
@@ -31,10 +31,10 @@ const LOOK: Record<string, { icon: typeof Brain; tone: Tone }> = {
 export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting }: {
   open: boolean;
   onClose: () => void;
-  skills: NinaSkill[];
+  skills: MarkSkill[];
   activeKey?: string | null;
   /** The case comes with it when the skill is the simulator, and never otherwise. */
-  onStart: (skill: NinaSkill, modality: Modality, setup?: CaseSetup) => void;
+  onStart: (skill: MarkSkill, modality: Modality, setup?: CaseSetup) => void;
   starting: boolean;
 }) {
   const { colors } = useTheme();
@@ -62,7 +62,7 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
     orange: colors.orange, red: colors.red, cyan: colors.cyan,
   })[tone];
 
-  const start = (skill: NinaSkill, modality: Modality) => {
+  const start = (skill: MarkSkill, modality: Modality) => {
     void Haptics.selectionAsync();
     if (skill.key === 'patient_simulator') {
       onStart(skill, modality, setup);

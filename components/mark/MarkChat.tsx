@@ -2,9 +2,12 @@ import {
   forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState,
   type ReactNode,
 } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View,
+  type StyleProp, type TextStyle,
+} from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { ChevronLeft, MessageSquare } from 'lucide-react-native';
+import { ChevronLeft, MessageSquare, Sparkles } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
@@ -14,23 +17,24 @@ import { useNativeIOSHeadersActive } from '@/lib/nativeTabBarPreference';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { TypingText } from '@/components/common/TypingText';
-import { NinaCallBar } from '@/components/nina/NinaCallBar';
+import { MarkCallBar } from '@/components/mark/MarkCallBar';
 import {
-  NinaComposer, useKeyboardHeight, type NinaComposerHandle,
-} from '@/components/nina/NinaComposer';
-import { SimulatorTools } from '@/components/nina/SimulatorTools';
-import { SkillSheet } from '@/components/nina/SkillSheet';
+  MarkComposer, useKeyboardHeight, type MarkComposerHandle,
+} from '@/components/mark/MarkComposer';
+import { SimulatorTools } from '@/components/mark/SimulatorTools';
+import { MarkThinking } from '@/components/mark/MarkThinking';
+import { SkillSheet } from '@/components/mark/SkillSheet';
 import {
   generateCase,
   type AgeBand, type CaseSetup, type Difficulty, type GenderChoice,
 } from '@/lib/caseGenerator';
-import { NinaHistorySheet } from '@/components/nina/NinaHistorySheet';
+import { MarkHistorySheet } from '@/components/mark/MarkHistorySheet';
 import { ApiError } from '@/lib/api';
 import { useVoiceNote } from '@/lib/voiceNote';
 import {
-  introFor, Nina,
-  type Modality, type NinaConversation, type NinaMessage, type NinaSkill,
-} from '@/services/nina';
+  introFor, Mark,
+  type Modality, type MarkConversation, type MarkMessage, type MarkSkill,
+} from '@/services/mark';
 
 /**
  * A turn that is on screen before it is on the server.
@@ -40,29 +44,29 @@ import {
  * appear at all until something thought to refetch. Negative ids keep these apart from stored
  * rows, which are always positive, so the two can share one list without colliding.
  */
-type Pending = NinaMessage & { pending: 'sending' | 'failed' | 'local' };
+type Pending = MarkMessage & { pending: 'sending' | 'failed' | 'local' };
 
 /** How far off the end still counts as being at it, before the thread stops following itself. */
 const AT_BOTTOM = 60;
 
 /** Appends stored messages, skipping any already held — a reload can race a save in flight. */
-function merge(current: NinaMessage[], arriving: NinaMessage[]): NinaMessage[] {
+function merge(current: MarkMessage[], arriving: MarkMessage[]): MarkMessage[] {
   const held = new Set(current.map(message => message.id));
 
   return [...current, ...arriving.filter(message => !held.has(message.id))];
 }
 
 /** What a screen hosting the chat can ask it to do, for the inputs the chat does not own. */
-export type NinaChatHandle = {
+export type MarkChatHandle = {
   /** Put a thread on screen. `seed` is its first turn, `call` opens the line as it lands. */
-  open: (thread: NinaConversation, options?: { seed?: string; call?: boolean }) => void;
+  open: (thread: MarkConversation, options?: { seed?: string; call?: boolean }) => void;
   /** Send a turn from an input somewhere else — the tab bar's search field is one. */
   send: (text: string) => void;
   /** Back to no conversation, so the host can show whatever it shows instead. */
   reset: () => void;
 };
 
-export type NinaChatProps = {
+export type MarkChatProps = {
   /** A thread to open on mount, for a screen that is reached with one already chosen. */
   conversationId?: string;
   /** '1' when whoever handed the thread over has already asked for the call. */
@@ -85,16 +89,16 @@ export type NinaChatProps = {
 /**
  * One conversation, whatever it is being held in and wherever it is being held.
  *
- * The skill and the mode are chosen before a thread reaches this: by the Nina tab, by history,
+ * The skill and the mode are chosen before a thread reaches this: by the Mark tab, by history,
  * by the mic on another screen. A skill that opens has spoken by the time it arrives, so the
- * first bubble is hers.
+ * first bubble is his.
  *
  * Everything a conversation can be lives here — turns typed and spoken, the call over the top of
  * them, the history behind the corner of the header, the vitals and actions of a simulated
  * patient — which is why it is a component and not a screen: the tab is the same conversation
  * before it has started, and it would otherwise have to build all of it a second time.
  */
-export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaChat({
+export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkChat({
   conversationId,
   autoVoice,
   seed,
@@ -110,14 +114,14 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
   const { t, language } = useLanguage();
   const g = createGlobalStyles(colors);
 
-  const [conversation, setConversation] = useState<NinaConversation | null>(null);
-  const [messages, setMessages] = useState<NinaMessage[]>([]);
+  const [conversation, setConversation] = useState<MarkConversation | null>(null);
+  const [messages, setMessages] = useState<MarkMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   /**
-   * Nina's turns are revealed as they land; a thread you are re-opening is not. Lena draws the
+   * Mark's turns are revealed as they land; a thread you are re-opening is not. Lena draws the
    * line in the same place — replaying a week-old consultation character by character is a wait,
    * not an effect. `seen` is every message id this screen has already rendered, and exactly one
    * message types at a time: the one that just arrived.
@@ -133,8 +137,8 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
   const [calling, setCalling] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  /** What Nina can be, for the sheet behind the plus in the composer. */
-  const [skills, setSkills] = useState<NinaSkill[]>([]);
+  /** What Mark can be, for the sheet behind the plus in the composer. */
+  const [skills, setSkills] = useState<MarkSkill[]>([]);
   const [skillsOpen, setSkillsOpen] = useState(false);
   const [starting, setStarting] = useState(false);
   /** The case a simulated patient was started with here, when it was started here. */
@@ -147,7 +151,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
    * about the other: raising the skills over a keyboard that is already up puts the sheet behind
    * it, with the title showing above the keys and the skills themselves unreachable.
    */
-  const bar = useRef<NinaComposerHandle>(null);
+  const bar = useRef<MarkComposerHandle>(null);
   /** True when the skill being started is a spoken one, so the keyboard stays down for the call. */
   const spokenSkill = useRef(false);
 
@@ -221,7 +225,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
    */
   const reload = useCallback(async (id: number) => {
     try {
-      const thread = await Nina.conversation(id);
+      const thread = await Mark.conversation(id);
       setConversation(thread);
       const loaded = thread.messages ?? [];
       seen.current = new Set(loaded.map(message => message.id));
@@ -260,7 +264,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
    * and have no endpoint behind them, so those findings are on screen and nowhere else.
    */
   const queue = useCallback((
-    role: NinaMessage['role'],
+    role: MarkMessage['role'],
     body: string,
     modality: Modality,
     state: Pending['pending'] = 'sending',
@@ -297,7 +301,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
     setPending(current => current.map(m => (m.id === bubble.id ? { ...m, pending: 'sending' } : m)));
     setBusy(true);
     try {
-      const { sent, reply } = await Nina.send(bubble.conversation_id, bubble.body, bubble.modality);
+      const { sent, reply } = await Mark.send(bubble.conversation_id, bubble.body, bubble.modality);
       setPending(current => current.filter(m => m.id !== bubble.id));
       setMessages(current => merge(current, [sent, reply]));
       setError(null);
@@ -318,7 +322,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
     if (id === null) return;
     setPending(current => current.map(m => (m.id === bubble.id ? { ...m, pending: 'sending' } : m)));
     try {
-      const saved = await Nina.saveTranscript(id, bubble.role === 'assistant' ? 'assistant' : 'user', bubble.body);
+      const saved = await Mark.saveTranscript(id, bubble.role === 'assistant' ? 'assistant' : 'user', bubble.body);
       // Heard, not read: the stored copy must not type itself out after the fact.
       seen.current.add(saved.id);
       setPending(current => current.filter(m => m.id !== bubble.id));
@@ -338,7 +342,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
    * A thread, from wherever it came: the skills sheet here, or a host screen that opened one.
    * Everything it says is new, so it types, and a spoken one arrives with its line already open.
    */
-  const adopt = useCallback((thread: NinaConversation, options?: { seed?: string; call?: boolean }) => {
+  const adopt = useCallback((thread: MarkConversation, options?: { seed?: string; call?: boolean }) => {
     setConversation(thread);
     seen.current = new Set();
     atBottom.current = true;
@@ -351,12 +355,12 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
   }, [deliver, queue]);
 
   useEffect(() => {
-    Nina.skills().then(setSkills).catch((e: ApiError) => setError(e.message));
+    Mark.skills().then(setSkills).catch((e: ApiError) => setError(e.message));
   }, []);
 
   /**
    * Opening a conversation from the composer. The case, when there is one, goes over as the
-   * thread's context so Nina plays the patient that was asked for rather than inventing one —
+   * thread's context so Mark plays the patient that was asked for rather than inventing one —
    * and stays here as well, for the vitals and the two actions above the composer.
    */
   const startSkill = useCallback(async (
@@ -378,7 +382,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
         `težina slučaja: ${t('setup.' + setup.difficulty)}`,
       ].filter(Boolean).join(', ') + '.' : undefined;
 
-      const thread = await Nina.startConversation(key, modality, undefined, context, setup?.gender);
+      const thread = await Mark.startConversation(key, modality, undefined, context, setup?.gender);
       setCaseSetup(setup ?? null);
       adopt(thread, { seed, call: modality === 'voice' });
     } catch (e) {
@@ -423,7 +427,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
    * transcript is words either way, so a skill that cannot be called can still be spoken to.
    *
    * The bar hides it outright while a call is up: the line already holds the microphone, and a
-   * recording made during one would be Nina's own voice coming back at her.
+   * recording made during one would be Mark's own voice coming back at him.
    */
   const dictation = useVoiceNote({
     conversationId: conversation?.id,
@@ -501,8 +505,8 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
   }), [adopt, conversation, deliver, queue]);
 
   const retry = useCallback((bubble: Pending) => {
-    // A spoken turn was answered inside the call already; sending it again would ask Nina for a
-    // second answer to something she has said her piece about.
+    // A spoken turn was answered inside the call already; sending it again would ask Mark for a
+    // second answer to something he has said his piece about.
     if (bubble.modality === 'voice') { void saveSpoken(bubble); return; }
     void deliver(bubble);
   }, [deliver, saveSpoken]);
@@ -566,8 +570,6 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
     talk();
   }, [autoVoice, conversation, opened, talk]);
 
-  const title = conversation?.skill?.name ?? t('ai.title');
-
   // Only for the inset below: the bar itself is a child, so that a host with its own header can
   // simply not mount it.
   const usesNativeHeader = useNativeIOSHeadersActive();
@@ -575,9 +577,22 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
   const styles = StyleSheet.create({
     error: { color: colors.red, fontSize: 13.5 },
     empty: { color: colors.muted, fontSize: 14, lineHeight: 20 },
-    bubble: { padding: 11, borderRadius: 14, maxWidth: '85%' },
+    // Claude's shape on a phone: a softer corner, tighter than a card, and never wider than it
+    // needs to be.
+    bubble: { paddingHorizontal: 13, paddingVertical: 9, borderRadius: 18, maxWidth: '85%' },
     mine: { alignSelf: 'flex-end', backgroundColor: colors.blue },
-    hers: { alignSelf: 'flex-start', backgroundColor: colors.card },
+    /**
+     * His answers are not bubbles. Lena's web chat draws exactly this line: what you said is a
+     * bubble, because a bubble is a thing you handed over, and what she answers is the page —
+     * full width, no fill, no padding of its own.
+     *
+     * It is not only a look. An answer can run to a paragraph or a list of steps, and a bubble
+     * capped at 85% of the screen turns that into a narrow column with a coloured margin down
+     * one side, which is the shape of a chat message and not the shape of something to read.
+     */
+    answer: { alignSelf: 'stretch', maxWidth: '100%' },
+    /** Without a bubble the only thing separating a turn from the answer to it is air. */
+    turn: { marginTop: 14 },
     aside: {
       alignSelf: 'center', maxWidth: '94%', backgroundColor: 'transparent',
       borderWidth: StyleSheet.hairlineWidth, borderColor: colors.separator,
@@ -587,12 +602,13 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
     failed: { borderWidth: StyleSheet.hairlineWidth, borderColor: colors.red },
     unsent: { color: colors.red, fontSize: 11, fontWeight: '700', marginTop: 4 },
     mineText: { color: '#FFFFFF', fontSize: 14.5 },
-    hersText: { color: colors.text, fontSize: 14.5 },
+    // A line with the width of the screen behind it can afford the size a bubble could not.
+    hisText: { color: colors.text, fontSize: 15.5, lineHeight: 22 },
   });
 
   return (
     <View style={g.screen}>
-      {header ? <ChatHeader title={title} onHistory={openHistory} /> : null}
+      {header ? <ChatHeader onHistory={openHistory} /> : null}
       <ScrollView
         ref={scroller}
         onLayout={event => {
@@ -630,12 +646,15 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
             {thread.length === 0 ? (
               <TypingText text={intro} style={styles.empty} />
             ) : null}
-            {thread.map(message => {
+            {thread.map((message, index) => {
               // You wrote your own turns, so there is nothing left to reveal about them.
               const mine = message.role === 'user';
               // A finding is not a turn. It is what you saw, so it sits down the middle.
               const aside = message.role === 'system';
               const state = 'pending' in message ? message.pending : null;
+              // Who spoke before this, so a change of speaker can be given room.
+              const before = thread[index - 1];
+              const turned = Boolean(before) && before.role !== message.role;
 
               return (
                 <Pressable
@@ -644,21 +663,24 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
                   disabled={state !== 'failed'}
                   onPress={() => retry(message as Pending)}
                   style={[
-                    styles.bubble,
-                    aside ? styles.aside : mine ? styles.mine : styles.hers,
+                    aside || mine ? styles.bubble : styles.answer,
+                    aside ? styles.aside : mine ? styles.mine : null,
+                    turned ? styles.turn : null,
                     state === 'sending' ? styles.sending : null,
                     state === 'failed' ? styles.failed : null,
                   ]}
                 >
-                  {typing === message.id ? (
+                  {mine ? (
+                    <Hugging body={message.body} style={styles.mineText} />
+                  ) : typing === message.id ? (
                     <TypingText
                       text={message.body}
-                      style={styles.hersText}
+                      style={styles.hisText}
                       startDelay={120}
                       onDone={() => setTypingId(current => (current === message.id ? null : current))}
                     />
                   ) : (
-                    <Text style={aside ? styles.asideText : mine ? styles.mineText : styles.hersText}>
+                    <Text style={aside ? styles.asideText : styles.hisText}>
                       {message.body}
                     </Text>
                   )}
@@ -669,6 +691,14 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
           </>
         ) : null}
 
+        {/* The wait, said out loud. It goes after the last turn rather than inside a bubble:
+            nothing has been said yet, and a bubble would be a message that never arrives.
+
+            Not during a call. On the line there is nothing to wait for — he answers out loud as
+            you speak, and a line saying he is thinking would be describing the silence between
+            two people talking. */}
+        {(busy || starting) && !calling ? <MarkThinking skill={conversation?.skill?.name} /> : null}
+
         <Animated.View style={tail} />
       </ScrollView>
 
@@ -676,7 +706,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
           live call, and the bar you write in. It is here before there is a conversation too —
           the first thing typed is what opens one. */}
       {composer ? (
-        <NinaComposer
+        <MarkComposer
           value={draft}
           onChangeText={setDraft}
           onSend={send}
@@ -699,7 +729,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
                 <SimulatorTools patient={patient} onExamine={examine} onInvestigate={investigate} />
               ) : null}
               {conversation && calling ? (
-                <NinaCallBar
+                <MarkCallBar
                   conversationId={conversation.id}
                   onTurn={spoken}
                   onClose={() => setCalling(false)}
@@ -724,7 +754,7 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
         starting={starting}
       />
 
-      <NinaHistorySheet
+      <MarkHistorySheet
         open={historyOpen}
         onClose={() => setHistoryOpen(false)}
         activeId={conversation?.id ?? null}
@@ -739,13 +769,55 @@ export const NinaChat = forwardRef<NinaChatHandle, NinaChatProps>(function NinaC
 });
 
 /**
+ * Your own words, in a line exactly as wide as the longest of them.
+ *
+ * React Native lays a wrapped `Text` out at the full width it was offered, not at the width it
+ * actually used. A bubble capped at 85% of the screen is therefore 85% wide from the moment the
+ * text runs past one line — so every message longer than a few words comes out the same width,
+ * whatever it says, which is what reads as a fixed width.
+ *
+ * `onTextLayout` reports each line as it is laid out. The widest of them is the width the text
+ * really needs, and setting it makes the bubble hug — the way it does everywhere a bubble is a
+ * bubble. It settles in one pass: the same lines measure the same way, so the second layout
+ * produces the same number and the state stops changing. `Math.ceil` is what guarantees that —
+ * a width rounded down by a fraction of a point would re-wrap the last word and shrink again.
+ */
+function Hugging({ body, style }: { body: string; style: StyleProp<TextStyle> }) {
+  const [width, setWidth] = useState<number>();
+
+  return (
+    <Text
+      style={[style, width === undefined ? null : { width }]}
+      onTextLayout={event => {
+        const lines = event.nativeEvent.lines;
+        if (!lines.length) return;
+        const widest = Math.ceil(Math.max(...lines.map(line => line.width)));
+        setWidth(current => (current === widest ? current : widest));
+      }}
+    >
+      {body}
+    </Text>
+  );
+}
+
+/**
  * The bar, as a child rather than a hook in the chat itself: a host that already has a header —
- * the Nina tab has one — must not have a second `useScreenHeader` writing over its options, and
+ * the Mark tab has one — must not have a second `useScreenHeader` writing over its options, and
  * a hook cannot be skipped while a child can simply not be mounted.
  */
-function ChatHeader({ title, onHistory }: { title: string; onHistory: () => void }) {
+function ChatHeader({ onHistory }: { onHistory: () => void }) {
   const { colors } = useTheme();
   const { t } = useLanguage();
+
+  /**
+   * Always his name, never the skill's.
+   *
+   * The bar used to carry whichever skill the thread was opened in, which made the same
+   * conversation look like five different screens — and named the role rather than the one
+   * playing it. The skill is already on the chip in the composer, where it can be changed;
+   * up here it is only ever the same person answering.
+   */
+  const title = t('ai.title');
 
   /**
    * The button goes through the app's own header plumbing rather than `headerRight`: on the
@@ -763,7 +835,21 @@ function ChatHeader({ title, onHistory }: { title: string; onHistory: () => void
     }],
     // A conversation is not a large-title screen: the name belongs in the bar, next to the back
     // chevron, with the thread starting at the top.
-    nativeOptions: { headerLargeTitleEnabled: false },
+    nativeOptions: {
+      headerLargeTitleEnabled: false,
+      /**
+       * The glyph has to come with the title, and a title is the one slot on the native bar that
+       * does take a view — the buttons beside it do not, which is why they go through the items
+       * API instead. If a build ever renders this empty, dropping `headerTitle` puts the plain
+       * string back.
+       */
+      headerTitle: () => (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Sparkles size={17} color={colors.blue} />
+          <Text style={{ color: colors.text, fontSize: 17, fontWeight: '600' }}>{title}</Text>
+        </View>
+      ),
+    },
   });
 
   if (usesNativeHeader) return null;
@@ -771,6 +857,7 @@ function ChatHeader({ title, onHistory }: { title: string; onHistory: () => void
   return (
     <FallbackTabHeader
       title={title}
+      titleIcon={<Sparkles size={17} color={colors.blue} />}
       left={[{
         icon: <ChevronLeft size={21} color={colors.blue} />,
         accessibilityLabel: t('common.cancel'),

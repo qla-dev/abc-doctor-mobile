@@ -40,7 +40,6 @@ export function SpecialtySearchField({ placeholder, onPress }: {
       flexDirection: 'row', alignItems: 'center', gap: 10,
       backgroundColor: colors.card, borderRadius: 16,
       paddingHorizontal: 14, minHeight: 50,
-      borderWidth: StyleSheet.hairlineWidth, borderColor: colors.separator,
     },
     label: { color: colors.muted, fontSize: 15 },
   });
@@ -68,7 +67,6 @@ export function SpecialtyCards({ onSelect }: { onSelect: (category: string) => v
       width: 104, minHeight: 96, borderRadius: 18,
       backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center',
       gap: 9, paddingHorizontal: 8, paddingVertical: 12,
-      borderWidth: StyleSheet.hairlineWidth, borderColor: colors.separator,
     },
     label: { color: colors.text, fontSize: 12, fontWeight: '700', textAlign: 'center' },
   });

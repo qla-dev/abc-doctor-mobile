@@ -32,7 +32,9 @@ export function ChoiceCards<T extends string>({ options, value, onChange }: {
     card: {
       width: 132, minHeight: 112, borderRadius: 18, padding: 12,
       backgroundColor: colors.card, gap: 7, justifyContent: 'flex-start',
-      borderWidth: 1, borderColor: colors.separator,
+      // The ring is kept in the layout and only coloured in when the card is chosen: a border
+      // that appears on selection would nudge everything beside it by a point.
+      borderWidth: 1, borderColor: 'transparent',
     },
     iconWrap: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
     label: { color: colors.text, fontSize: 13.5, fontWeight: '700' },

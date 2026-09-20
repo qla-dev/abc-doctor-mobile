@@ -1,7 +1,7 @@
 import type { MediaStream, RTCPeerConnection as RTCPeerConnectionType } from 'react-native-webrtc';
 
 /**
- * A spoken session with Nina, over WebRTC.
+ * A spoken session with Mark, over WebRTC.
  *
  * The phone never sees the account key. It gets an `ek_…` from our backend that lives about a
  * minute, and trades an SDP offer for an answer with OpenAI directly — audio then flows peer to
@@ -198,7 +198,7 @@ export async function startVoiceSession({
     setSpeaker: (on: boolean) => router?.setForceSpeakerphoneOn(on),
     speakerOn,
     canRoute: router !== null,
-    // Muting stops sending without tearing the call down, so Nina keeps talking while you listen.
+    // Muting stops sending without tearing the call down, so Mark keeps talking while you listen.
     setMuted: (muted: boolean) => {
       localStream?.getAudioTracks().forEach(track => { track.enabled = !muted; });
     },

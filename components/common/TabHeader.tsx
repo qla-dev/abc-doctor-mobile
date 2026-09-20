@@ -32,6 +32,8 @@ export interface TabHeaderAction {
 interface TabHeaderProps {
   /** Centered title — the screen's own name. */
   title: string;
+  /** A glyph set immediately before the title, for a screen that has a face as well as a name. */
+  titleIcon?: ReactNode;
   /**
    * Left slot: the day this screen is showing, already formatted. Tapping it opens the picker.
    * Omitted on tabs that are not scoped to a day — fitness's TabHeader states the same rule.
@@ -52,6 +54,7 @@ interface TabHeaderProps {
  */
 const TabHeader: React.FC<TabHeaderProps> = ({
   title,
+  titleIcon,
   dateLabel,
   onDatePress,
   chooseDateLabel,
@@ -126,7 +129,8 @@ const TabHeader: React.FC<TabHeaderProps> = ({
         {leftActions.map(renderAction)}
       </View>
 
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        {titleIcon}
         <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
           {title}
         </Text>

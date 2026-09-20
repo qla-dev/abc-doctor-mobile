@@ -11,7 +11,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { GlassPanel } from '@/components/common/GlassPanel';
 import type { VoiceNote } from '@/lib/voiceNote';
-import { VoiceWave } from '@/components/nina/VoiceWave';
+import { VoiceWave } from '@/components/mark/VoiceWave';
 
 /** One line to start with, six before the text scrolls inside the pill instead of growing it. */
 const LINE = 21;
@@ -35,14 +35,14 @@ export function useKeyboardHeight() {
   return height;
 }
 
-export type NinaComposerHandle = {
+export type MarkComposerHandle = {
   /** Put the keyboard back up — whatever took the field's place is gone. */
   focus: () => void;
   /** Take it down, for a sheet that shares the bottom of the screen with it. */
   blur: () => void;
 };
 
-export type NinaComposerProps = {
+export type MarkComposerProps = {
   value: string;
   onChangeText: (text: string) => void;
   onSend: () => void;
@@ -54,7 +54,7 @@ export type NinaComposerProps = {
    */
   dictation?: VoiceNote;
   onSkills: () => void;
-  /** What Nina is being asked to be right now, as the chip says it. */
+  /** What Mark is being asked to be right now, as the chip says it. */
   skillLabel: string;
   busy?: boolean;
   canSpeak?: boolean;
@@ -82,10 +82,10 @@ export type NinaComposerProps = {
  * full-width field has room to put them.
  *
  * The card grows with what is being written, one line to six, and shrinks back when it is sent.
- * Everything the conversation can be told to do is in this bar: the plus opens what Nina can be
- * (and the case behind the simulated patient), the chip says which of those she is right now.
+ * Everything the conversation can be told to do is in this bar: the plus opens what Mark can be
+ * (and the case behind the simulated patient), the chip says which of those he is right now.
  */
-export const NinaComposer = forwardRef<NinaComposerHandle, NinaComposerProps>(function NinaComposer({
+export const MarkComposer = forwardRef<MarkComposerHandle, MarkComposerProps>(function MarkComposer({
   value, onChangeText, onSend, onTalk, dictation, onSkills, skillLabel,
   busy = false, canSpeak = false, onHeight, above,
 }, handle) {
@@ -244,7 +244,7 @@ export const NinaComposer = forwardRef<NinaComposerHandle, NinaComposerProps>(fu
                 <Plus size={22} color={colors.text} />
               </Pressable>
 
-              {/* Who she is being, where a chat app puts the model it is talking to. */}
+              {/* Who he is being, where a chat app puts the model it is talking to. */}
               <Pressable
                 onPress={tap(onSkills)}
                 accessibilityRole="button"

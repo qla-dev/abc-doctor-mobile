@@ -13,9 +13,9 @@ import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
 import { AppCard } from '@/components/common/AppCard';
 import { TypingText } from '@/components/common/TypingText';
-import { CaseForm } from '@/components/nina/CaseForm';
-import { Nina, type Modality, type NinaSkill } from '@/services/nina';
-import { API_BACKEND, API_BASE_URL, ApiError } from '@/lib/api';
+import { CaseForm } from '@/components/mark/CaseForm';
+import { Mark, type Modality, type MarkSkill } from '@/services/mark';
+import { ApiError } from '@/lib/api';
 import { type CaseSetup } from '@/lib/caseGenerator';
 
 type Tone = 'indigo' | 'blue' | 'green' | 'orange' | 'red' | 'cyan';
@@ -33,7 +33,7 @@ const LOOK: Record<string, { icon: typeof Brain; tone: Tone }> = {
  * Where a conversation is chosen, not where it is held.
  *
  * The field in the tab bar — this is the search tab, and on iOS 26 the bar becomes that field —
- * starts a consultation from whatever is typed into it. The cards below say what else Nina can
+ * starts a consultation from whatever is typed into it. The cards below say what else Mark can
  * be, and the one that needs deciding first, the simulated patient, unfolds its case here
  * rather than on a screen of its own. Every one of them opens the same chat screen, already
  * holding a thread and ready to be spoken to.
@@ -44,7 +44,7 @@ export default function AiScreen() {
   const g = createGlobalStyles(colors);
   const clearance = useTabBarClearance();
 
-  const [skills, setSkills] = useState<NinaSkill[]>([]);
+  const [skills, setSkills] = useState<MarkSkill[]>([]);
   const [skillsError, setSkillsError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
@@ -60,7 +60,7 @@ export default function AiScreen() {
   const patch = (next: Partial<CaseSetup>) => setSetup(current => ({ ...current, ...next }));
 
   useEffect(() => {
-    Nina.skills().then(setSkills).catch((e: ApiError) => setSkillsError(e.message));
+    Mark.skills().then(setSkills).catch((e: ApiError) => setSkillsError(e.message));
   }, []);
 
   /**
@@ -78,9 +78,9 @@ export default function AiScreen() {
     setStarting(true);
     setSkillsError(null);
     try {
-      const thread = await Nina.startConversation(key, modality, undefined, context, sex);
+      const thread = await Mark.startConversation(key, modality, undefined, context, sex);
       router.push({
-        pathname: '/nina',
+        pathname: '/mark',
         params: {
           conversationId: String(thread.id),
           // A spoken thread arrives with the line already open; a written one does not.
@@ -95,14 +95,14 @@ export default function AiScreen() {
     }
   };
 
-  /** A question typed into the tab's field. Nina is not a list to search, so it opens one. */
+  /** A question typed into the tab's field. Mark is not a list to search, so it opens one. */
   const ask = (text: string) => {
     const question = text.trim();
     if (question) void begin('consultant', 'text', { seed: question });
   };
 
   /** A skill card. The simulator opens its four choices in place; the rest just start. */
-  const open = (skill: NinaSkill) => {
+  const open = (skill: MarkSkill) => {
     if (skill.key === 'patient_simulator') {
       setCaseOpen(current => !current);
 
@@ -113,7 +113,7 @@ export default function AiScreen() {
 
   /**
    * The setup only matters if it reaches the patient, so it goes over as the thread's context —
-   * Nina plays the case that was asked for rather than inventing one — and rides along as params
+   * Mark plays the case that was asked for rather than inventing one — and rides along as params
    * for the vitals and the two actions the chat keeps with its composer.
    */
   const startCase = (modality: Modality) => {
@@ -148,13 +148,12 @@ export default function AiScreen() {
     skillError: { color: colors.red, fontSize: 13.5 },
     modeIcons: { flexDirection: 'row', alignItems: 'center', gap: 7 },
     greeting: { color: colors.text, fontSize: 15.5, lineHeight: 21 },
-    backend: { color: colors.muted, fontSize: 11 },
   });
 
   return (
     <View style={g.screen} collapsable={false}>
       {/* The tab bar is the field: iOS 26 turns a search tab's bar into one, and it is focused
-          the moment you get here, so asking Nina something is a tap and then typing. */}
+          the moment you get here, so asking Mark something is a tap and then typing. */}
       <Stack.SearchBar
         placeholder={t('ai.placeholder')}
         autoFocus
@@ -222,9 +221,6 @@ export default function AiScreen() {
               <CaseForm setup={setup} onChange={patch} onStart={startCase} starting={starting} />
             </AppCard>
           ) : null}
-
-          {/* The first question when nothing answers is which backend it was talking to. */}
-          <Text style={styles.backend}>{API_BACKEND} · {API_BASE_URL}</Text>
         </View>
       </ScrollView>
       {day.sheet}

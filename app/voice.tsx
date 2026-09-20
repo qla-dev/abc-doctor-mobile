@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Nina } from '@/services/nina';
+import { Mark } from '@/services/mark';
 import { startVoiceSession, type VoiceSession } from '@/lib/realtimeVoice';
 import { setAudioModeAsync } from 'expo-audio';
 import { ApiError } from '@/lib/api';
@@ -61,7 +61,7 @@ export default function VoiceScreen() {
           shouldPlayInBackground: false,
         });
 
-        const secret = await Nina.realtimeSession(id);
+        const secret = await Mark.realtimeSession(id);
         if (cancelled) return;
 
         const live = await startVoiceSession({
@@ -71,7 +71,7 @@ export default function VoiceScreen() {
           // Each completed turn is stored as it lands, not batched at hang-up: a call that
           // drops mid-sentence should still leave behind everything said before it.
           onTranscript: (role, text) => {
-            void Nina.saveTranscript(id, role, text).catch(() => {});
+            void Mark.saveTranscript(id, role, text).catch(() => {});
           },
           onStateChange: state => {
             if (cancelled) return;

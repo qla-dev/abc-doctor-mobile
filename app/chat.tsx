@@ -11,7 +11,7 @@ import { darkColors } from '@/theme/colors';
 import { useLanguage } from '@/context/LanguageContext';
 import { GlassPanel } from '@/components/common/GlassPanel';
 import { ApiError } from '@/lib/api';
-import { Nina } from '@/services/nina';
+import { Mark } from '@/services/mark';
 import { playClickSound } from '@/lib/sound';
 
 type Message = { id: string; role: 'user' | 'assistant'; text: string };
@@ -43,10 +43,10 @@ export default function ChatScreen() {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setPlacing(true);
     try {
-      const thread = await Nina.startConversation('consultant', 'voice');
+      const thread = await Mark.startConversation('consultant', 'voice');
       // replace, not push: nothing here survives the call, and a back chevron onto an empty
       // prototype chat is not a destination.
-      router.replace({ pathname: '/nina', params: { conversationId: String(thread.id), autoVoice: '1' } });
+      router.replace({ pathname: '/mark', params: { conversationId: String(thread.id), autoVoice: '1' } });
     } catch (e) {
       setError((e as ApiError).message);
     } finally {

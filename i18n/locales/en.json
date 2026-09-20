@@ -5,7 +5,7 @@
     "handbook": "Handbook",
     "quiz": "Quiz",
     "simulator": "Simulator",
-    "ai": "NinaAI"
+    "ai": "MarkAI"
   },
   "home": {
     "greeting": "Good morning doctor",
@@ -40,9 +40,12 @@
     "symptoms": "Symptoms",
     "signs": "Physical signs",
     "askAi": "Ask the AI tutor",
-    "explainSimply": "Explain simply",
-    "quizMe": "Quiz me",
-    "makeCards": "Make flashcards"
+    "explainSimply": "Explain",
+    "quizMe": "Quiz",
+    "makeCards": "Flashcards",
+    "seedExplain": "Explain this topic simply:",
+    "seedQuiz": "Quiz me on the topic",
+    "seedCards": "Make me study cards for the topic"
   },
   "quiz": {
     "flashcardsHint": "Flip the card and grade yourself",
@@ -112,15 +115,20 @@
     "pickSkill": "Pick a skill",
     "freeTalk": "Start",
     "subtitle": "Other questions?",
-    "title": "NinaAI",
-    "placeholder": "Ask Nina AI anything…",
+    "title": "MarkAI",
+    "placeholder": "Ask Mark AI anything…",
     "thinking": "Thinking…",
     "skills": "Skills",
     "dictate": "Voice message",
     "stopRecording": "Stop recording",
     "newChat": "New chat",
     "disclaimer": "Educational use only. Never for real patient care.",
-    "greeting": "I'm Nina. Ask me anything — or say what I should be."
+    "greeting": "I'm Mark. Ask me anything — or say what I should be.",
+    "usingSkill": "is using skill",
+    "actThinking": "is thinking",
+    "actAnalysing": "is analysing",
+    "actReviewing": "is reviewing",
+    "actPatience": "asks for your patience"
   },
   "progress": {
     "title": "Progress",
@@ -143,7 +151,7 @@
     "tapToTalk": "Tap the mic to talk",
     "speaker": "Speaker",
     "connecting": "Connecting…",
-    "ready": "Nina is listening",
+    "ready": "Mark is listening",
     "failed": "Voice session failed"
   },
   "history": {

@@ -37,9 +37,9 @@ function IosTabs() {
           <NativeTabs.Trigger.Icon sf={{ default: 'book', selected: 'book.fill' } as any} />
           <NativeTabs.Trigger.Label>{t('tabs.handbook')}</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
-        {/* Nina is the search tab, and `role="search"` is what sets her apart from the rest:
+        {/* Mark is the search tab, and `role="search"` is what sets him apart from the rest:
             iOS 26 gives a search tab its own place at the end of the bar and, as the bar
-            minimises, turns it into the search field itself. Asking her something IS the search
+            minimises, turns it into the search field itself. Asking him something IS the search
             here, so that field opens a consultation — see the ai tab's Stack.SearchBar. */}
         <NativeTabs.Trigger name="ai" role="search">
           <NativeTabs.Trigger.Icon sf={{ default: 'sparkles', selected: 'sparkles' } as any} />
@@ -70,7 +70,7 @@ function FallbackTabs() {
       <Tabs.Screen name="(home)" options={{ title: t('tabs.home'), tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }} />
       <Tabs.Screen name="quiz" options={{ title: t('tabs.tests'), tabBarIcon: ({ color, size }) => <ListChecks color={color} size={size} /> }} />
       <Tabs.Screen name="handbook" options={{ title: t('tabs.handbook'), tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size} /> }} />
-      {/* Last here too: this bar has no separate slot to give her, and the order is the only
+      {/* Last here too: this bar has no separate slot to give him, and the order is the only
           thing that can say the same. */}
       <Tabs.Screen name="ai" options={{ title: t('tabs.ai'), tabBarIcon: ({ color, size }) => <Sparkles color={color} size={size} /> }} />
     </Tabs>

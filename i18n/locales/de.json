@@ -5,7 +5,7 @@
     "handbook": "Handbuch",
     "quiz": "Quiz",
     "simulator": "Simulator",
-    "ai": "NinaAI"
+    "ai": "MarkAI"
   },
   "home": {
     "greeting": "Guten Morgen Doktor",
@@ -40,9 +40,12 @@
     "symptoms": "Symptome",
     "signs": "Körperliche Befunde",
     "askAi": "KI-Tutor fragen",
-    "explainSimply": "Einfach erklären",
-    "quizMe": "Frag mich ab",
-    "makeCards": "Karten erstellen"
+    "explainSimply": "Erklären",
+    "quizMe": "Quiz",
+    "makeCards": "Karten",
+    "seedExplain": "Erkläre mir einfach das Thema",
+    "seedQuiz": "Frage mich zum Thema ab",
+    "seedCards": "Mach mir Lernkarten zum Thema"
   },
   "quiz": {
     "flashcardsHint": "Karte umdrehen und selbst bewerten",
@@ -112,15 +115,20 @@
     "pickSkill": "Fähigkeit wählen",
     "freeTalk": "Starten",
     "subtitle": "Weitere Fragen?",
-    "title": "NinaAI",
-    "placeholder": "Fragen Sie Nina AI alles…",
+    "title": "MarkAI",
+    "placeholder": "Fragen Sie Mark AI alles…",
     "thinking": "Denkt nach…",
     "skills": "Fähigkeiten",
     "dictate": "Sprachnachricht",
     "stopRecording": "Aufnahme stoppen",
     "newChat": "Neuer Chat",
     "disclaimer": "Nur zu Lernzwecken. Nie für echte Patienten.",
-    "greeting": "Ich bin Nina. Fragen Sie mich etwas — oder sagen Sie, was ich sein soll."
+    "greeting": "Ich bin Mark. Fragen Sie mich etwas — oder sagen Sie, was ich sein soll.",
+    "usingSkill": "nutzt die Fähigkeit",
+    "actThinking": "denkt nach",
+    "actAnalysing": "analysiert",
+    "actReviewing": "prüft",
+    "actPatience": "bittet um etwas Geduld"
   },
   "progress": {
     "title": "Fortschritt",
@@ -143,7 +151,7 @@
     "tapToTalk": "Mikrofon antippen zum Sprechen",
     "speaker": "Lautsprecher",
     "connecting": "Verbinde…",
-    "ready": "Nina hört zu",
+    "ready": "Mark hört zu",
     "failed": "Sprachsitzung fehlgeschlagen"
   },
   "history": {

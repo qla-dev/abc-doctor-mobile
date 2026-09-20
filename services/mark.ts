@@ -3,7 +3,7 @@ import { apiRequest } from '@/lib/api';
 /** How a turn was spoken. A skill declares which of these it will take. */
 export type Modality = 'text' | 'voice';
 
-export type NinaSkill = {
+export type MarkSkill = {
   id: number;
   parent_id: number | null;
   key: string;
@@ -13,14 +13,14 @@ export type NinaSkill = {
   intro_texts: Record<string, string[]> | null;
   supports_text: boolean;
   supports_voice: boolean;
-  /** Whether Nina speaks first — the patient is sitting there before anyone asks. */
+  /** Whether Mark speaks first — the patient is sitting there before anyone asks. */
   opens_conversation: boolean;
   position: number;
   is_active: boolean;
-  children?: NinaSkill[];
+  children?: MarkSkill[];
 };
 
-export type NinaMessage = {
+export type MarkMessage = {
   id: number;
   conversation_id: number;
   role: 'user' | 'assistant' | 'system';
@@ -30,9 +30,9 @@ export type NinaMessage = {
   sent_at: string;
 };
 
-export type NinaConversation = {
+export type MarkConversation = {
   id: number;
-  nina_skill_id: number;
+  mark_skill_id: number;
   /** Chosen when the thread opens and fixed for its life. */
   modality: Modality;
   /** The OpenAI voice this patient speaks in, resolved from their sex when the thread opened. */
@@ -41,21 +41,21 @@ export type NinaConversation = {
   context: string | null;
   title: string | null;
   last_message_at: string | null;
-  skill?: NinaSkill;
-  messages?: NinaMessage[];
+  skill?: MarkSkill;
+  messages?: MarkMessage[];
 };
 
-export const Nina = {
+export const Mark = {
   health: () => apiRequest<{ status: string; timestamp: string }>('/health'),
 
-  skills: () => apiRequest<NinaSkill[]>('/nina/skills'),
+  skills: () => apiRequest<MarkSkill[]>('/mark/skills'),
 
   /**
    * A thread is opened in a skill, in one mode, and stays in both. It comes back with its
    * messages already, because a skill that opens has spoken by the time this returns.
    */
   startConversation: (skill: string, modality: Modality = 'text', title?: string, context?: string, sex?: string) =>
-    apiRequest<NinaConversation>('/conversations', {
+    apiRequest<MarkConversation>('/conversations', {
       method: 'POST',
       body: JSON.stringify({ skill, modality, title, context, sex }),
     }),
@@ -66,7 +66,7 @@ export const Nina = {
    */
   realtimeSession: (conversationId: number) =>
     apiRequest<{ value: string; expires_at: number; model: string; voice: string; call_url: string }>(
-      '/nina/realtime/session',
+      '/mark/realtime/session',
       { method: 'POST', body: JSON.stringify({ conversation_id: conversationId }) }
     ),
 
@@ -77,24 +77,24 @@ export const Nina = {
    */
   realtimeTranscription: (conversationId?: number) =>
     apiRequest<{ value: string; expires_at: number; model: string; url: string }>(
-      '/nina/realtime/transcription',
+      '/mark/realtime/transcription',
       { method: 'POST', body: JSON.stringify({ conversation_id: conversationId ?? null }) }
     ),
 
   /** Newest first, with the skill loaded — what the history screen lists. */
-  conversations: () => apiRequest<NinaConversation[]>('/conversations'),
+  conversations: () => apiRequest<MarkConversation[]>('/conversations'),
 
-  conversation: (id: number) => apiRequest<NinaConversation>(`/conversations/${id}`),
+  conversation: (id: number) => apiRequest<MarkConversation>(`/conversations/${id}`),
 
   messages: (conversationId: number) =>
-    apiRequest<NinaMessage[]>(`/conversations/${conversationId}/messages`),
+    apiRequest<MarkMessage[]>(`/conversations/${conversationId}/messages`),
 
   /**
    * One side of a spoken turn, stored without asking the text model to answer it — it has already
    * been answered inside the call.
    */
   saveTranscript: (conversationId: number, role: 'user' | 'assistant', body: string) =>
-    apiRequest<NinaMessage>('/nina/realtime/transcript', {
+    apiRequest<MarkMessage>('/mark/realtime/transcript', {
       method: 'POST',
       body: JSON.stringify({ conversation_id: conversationId, role, body }),
     }),
@@ -107,17 +107,17 @@ export const Nina = {
    * encoding is fewer moving parts than a multipart body assembled in React Native.
    */
   transcribe: (audio: string, format: string) =>
-    apiRequest<{ text: string }>('/nina/transcribe', {
+    apiRequest<{ text: string }>('/mark/transcribe', {
       method: 'POST',
       body: JSON.stringify({ audio, format }),
     }),
 
   /**
    * One turn in, one turn back — the API returns both, so nothing here has to poll to find out
-   * when Nina has answered.
+   * when Mark has answered.
    */
   send: (conversationId: number, body: string, modality: Modality = 'text') =>
-    apiRequest<{ sent: NinaMessage; reply: NinaMessage }>('/messages', {
+    apiRequest<{ sent: MarkMessage; reply: MarkMessage }>('/messages', {
       method: 'POST',
       body: JSON.stringify({ conversation_id: conversationId, body, modality }),
     }),
@@ -127,14 +127,14 @@ export const Nina = {
  * One of the skill's opening lines, in the app's language. Falls back to Bosnian, then to the
  * description — a skill added on the server with no intro should still say something.
  */
-export function introFor(skill: NinaSkill | undefined, language: string): string {
+export function introFor(skill: MarkSkill | undefined, language: string): string {
   const lines = skill?.intro_texts?.[language] ?? skill?.intro_texts?.bs ?? [];
 
   return lines.length ? lines[Math.floor(Math.random() * lines.length)] : (skill?.description ?? '');
 }
 
 /** The three states the two booleans make, as one word for the UI. */
-export function modesOf(skill: NinaSkill): 'text' | 'voice' | 'both' | 'none' {
+export function modesOf(skill: MarkSkill): 'text' | 'voice' | 'both' | 'none' {
   if (skill.supports_text && skill.supports_voice) return 'both';
   if (skill.supports_text) return 'text';
   if (skill.supports_voice) return 'voice';

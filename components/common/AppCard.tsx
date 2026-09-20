@@ -11,7 +11,6 @@ export function AppCard({ children, onPress, style, padded = true }: {
   const styles = StyleSheet.create({
     card: {
       backgroundColor: colors.card, borderRadius: 18, padding: padded ? 16 : 0,
-      borderWidth: StyleSheet.hairlineWidth, borderColor: colors.separator,
     },
   });
   if (!onPress) return <View style={[styles.card, style]}>{children}</View>;
