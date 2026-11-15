@@ -1,3 +1,6 @@
+import { ModePicker } from '@/components/mark/ModePicker';
+import { currentMode } from '@/stores/conversationPreferences';
+import { resolveMode } from '@/lib/conversationMode';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, Stack } from 'expo-router';
@@ -85,7 +88,7 @@ export default function AiScreen() {
         params: {
           conversationId: String(thread.id),
           // A spoken thread arrives with the line already open; a written one does not.
-          ...(modality === 'voice' ? { autoVoice: '1' } : {}),
+          ...(currentMode() === 'high_quality_voice' ? { autoVoice: '1' } : {}),
           ...extra,
         },
       });
@@ -99,6 +102,7 @@ export default function AiScreen() {
   /** A question typed into the tab's field. Mark is not a list to search, so it opens one. */
   const ask = (text: string) => {
     const question = text.trim();
+    if (question && resolveMode(currentMode()).input !== 'text') { setSkillsError('Select Type → read or Type → hear to send a typed question.'); return; }
     if (question) void begin('consultant', 'text', { seed: question });
   };
 
@@ -109,7 +113,8 @@ export default function AiScreen() {
 
       return;
     }
-    void begin(skill.key, skill.supports_text ? 'text' : 'voice');
+    if (!resolveMode(currentMode(), skill).compatible) { setSkillsError('This role requires voice input. Select a voice mode.'); return; }
+    void begin(skill.key, resolveMode(currentMode(), skill).input);
   };
 
   /**
@@ -175,7 +180,8 @@ export default function AiScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={g.scrollContent}>
-          <AppCard onPress={() => router.push('/practice')}><Text style={styles.skillLabel}>Voice practice</Text><Text style={styles.skillDesc}>Choose a workflow. Meet an unexpected patient.</Text></AppCard>
+          <ModePicker />
+          <AppCard onPress={() => router.push('/practice')}><Text style={styles.skillLabel}>Practice</Text><Text style={styles.skillDesc}>Choose a workflow. Meet an unexpected patient.</Text></AppCard>
           <TypingText text={t('ai.greeting')} style={styles.greeting} />
           {skillsError ? <Text style={styles.skillError}>{skillsError}</Text> : null}
 

@@ -25,12 +25,36 @@ the patient story, visible facts, information to discover, and hidden clinical e
 Save edits, use **Review with AI**, and **Publish saved draft** when ready. Existing attempts
 keep their original case snapshot.
 
-Playwright checks on 2026-11-15 covered the Expo browser UI against the production API:
-invalid/valid login, refresh persistence, workflow preferences and selection, encounter and
-feedback display, logout/token revocation, and admin-triggered session revocation. The admin
-login and case editor were also checked visually. Voice conversation was not verified: the
-production OpenAI key returned an expired-key response. Expo voice currently uses native
-WebRTC modules and requires a development build; the Laravel admin preview uses browser WebRTC.
+## Conversation modes
+
+Settings and conversation controls share one remembered mode per signed-in user on this device/browser.
+The selection applies to new and reopened conversations; it does not replace their saved case or history.
+High-quality voice uses OpenAI Realtime. Low-quality voice, Speak → read, Type → hear, and Type → read
+use backend/OpenRouter replies, with device/browser recognition and synthesis where selected.
+Dictaphone requires speech input. Tihi sufler always returns text, including in OpenAI mode.
+
+Native apps need a new development/release build for `expo-speech-recognition` and its permissions.
+Web uses browser WebRTC, Web Speech recognition and speech synthesis. Availability and languages depend
+on the browser/platform; recognition may use platform network services. Missing voices/permissions are
+reported without switching providers. Replies remain readable when playback fails.
+
+Completed transcripts and backend turns enter a user-scoped persistent outbox before upload. Stable IDs
+make retry safe after a lost response. Reopening flushes pending turns before loading history. Backend
+input and reply commit atomically under a conversation lock, so a retry returns the original pair.
+Mode changes drain an active call before switching engines. Backgrounding stops audio; reopening starts
+idle and requires an explicit microphone tap. Speech interrupted before a final transcript cannot be recovered.
+Typed drafts survive reload. Preferences do not synchronize between devices.
+
+Browser verification (2026-11-16), using a temporary SQLite database and real OpenRouter replies:
+- Visually inspected phone-width catalogue/chat and desktop layout; mode controls, speech-only composer,
+  visible error messages and retry controls.
+- Real text messages, remembered mode after reload, and lost HTTP response recovery without duplicated turns.
+- Started/stopped browser recognition; injected final recognition events to verify both STT modes through
+  the real backend. This validates integration, not recognition accuracy.
+- Type → hear and low-quality voice reach device TTS; this Chromium installation has no speech voices,
+  so verified the bounded failure message and retained written replies. Audible output remains unverified.
+- OpenAI Realtime connection/reconnect is blocked by the configured expired API key. Live high-quality
+  audio still needs verification after rotating that key. Native microphone/playback need device checks.
 
 ## Patient simulation and voice continuity
 

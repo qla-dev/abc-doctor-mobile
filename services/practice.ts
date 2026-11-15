@@ -1,3 +1,4 @@
+import { currentMode } from '@/stores/conversationPreferences';
 import { apiRequest } from "@/lib/api";
 import { Mark, type MarkConversation } from "./mark";
 export type Workflow = {
@@ -37,7 +38,7 @@ export const Practice = {
   start: (workflow_id?: number) =>
     apiRequest<MarkConversation>("/practice/start", {
       method: "POST",
-      body: JSON.stringify({ workflow_id }),
+      body: JSON.stringify({ workflow_id, mode: currentMode() }),
     }),
   attempt: (id: number) => apiRequest<Attempt>(`/practice/${id}`),
   event: (id: number, event_key: string, args: Record<string, unknown>) =>

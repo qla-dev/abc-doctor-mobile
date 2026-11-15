@@ -1,3 +1,4 @@
+import { ModePicker } from '@/components/mark/ModePicker';
 import { useCallback, useEffect, useState } from "react";
 import { Button, ScrollView, Switch, Text, View } from "react-native";
 import {
@@ -69,7 +70,7 @@ export default function PracticeScreen() {
       contentContainerStyle={{ padding: 24, gap: 20, paddingBottom: 60 }}
     >
       <Stack.Screen
-        options={{ title: id ? "Practice encounter" : "Voice practice" }}
+        options={{ title: id ? "Practice encounter" : "Practice" }}
       />
       {error ? (
         <>
@@ -79,6 +80,7 @@ export default function PracticeScreen() {
           <Button title="Retry" onPress={() => void refresh()} />
         </>
       ) : null}
+      <ModePicker />
       {!id ? (
         <>
           <Text style={{ color: colors.text, fontSize: 25, fontWeight: "700" }}>
@@ -161,10 +163,10 @@ export default function PracticeScreen() {
           {attempt.status === "active" ? (
             <>
               <Button
-                title="Start / resume voice encounter"
+                title="Open conversation"
                 onPress={() =>
                   router.push({
-                    pathname: "/voice",
+                    pathname: "/mark",
                     params: { conversationId: String(id), practice: "1" },
                   })
                 }

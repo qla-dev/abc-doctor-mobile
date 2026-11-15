@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef, type ReactNode } from 'react';
 import {
-  ActivityIndicator, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions,
 } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useKeyboardHandler } from 'react-native-keyboard-controller';
@@ -57,6 +57,7 @@ export type MarkComposerProps = {
   /** What Mark is being asked to be right now, as the chip says it. */
   skillLabel: string;
   busy?: boolean;
+  disabled?: boolean;
   canSpeak?: boolean;
   /** Its measured height, so the thread above can keep its last turn clear of it. */
   onHeight?: (height: number) => void;
@@ -66,6 +67,7 @@ export type MarkComposerProps = {
    * over it.
    */
   above?: ReactNode;
+  allowText?: boolean;
 };
 
 /**
@@ -87,9 +89,10 @@ export type MarkComposerProps = {
  */
 export const MarkComposer = forwardRef<MarkComposerHandle, MarkComposerProps>(function MarkComposer({
   value, onChangeText, onSend, onTalk, dictation, onSkills, skillLabel,
-  busy = false, canSpeak = false, onHeight, above,
+  busy = false, disabled = false, canSpeak = false, onHeight, above, allowText = true,
 }, handle) {
   const { colors } = useTheme();
+  const sideInset = Math.max(0, (useWindowDimensions().width - 860) / 2);
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardHeight();
@@ -114,7 +117,7 @@ export const MarkComposer = forwardRef<MarkComposerHandle, MarkComposerProps>(fu
    */
   const calling = !ready && canSpeak;
   /** Solid only when it has something to do — otherwise it is a send with nothing to send. */
-  const live = (calling || ready) && !busy;
+  const live = (calling || ready) && !busy && !disabled;
   /**
    * A recording takes the whole row. Everything on it is about the recording — throw it away,
    * stop it, send it — so the plus and the chip step aside until the turn is over rather than
@@ -131,7 +134,7 @@ export const MarkComposer = forwardRef<MarkComposerHandle, MarkComposerProps>(fu
   }));
 
   const styles = StyleSheet.create({
-    bar: { position: 'absolute', left: 0, right: 0 },
+    bar: { position: 'absolute', left: sideInset, right: sideInset },
     row: { paddingHorizontal: 12, paddingVertical: 8 },
     card: { paddingTop: 2, paddingBottom: 8 },
     input: {
@@ -175,7 +178,7 @@ export const MarkComposer = forwardRef<MarkComposerHandle, MarkComposerProps>(fu
       {above}
       <View style={styles.row}>
         <GlassPanel radius={26} style={styles.card}>
-          <TextInput
+          {allowText && <TextInput
             ref={input}
             value={value}
             onChangeText={onChangeText}
@@ -186,7 +189,7 @@ export const MarkComposer = forwardRef<MarkComposerHandle, MarkComposerProps>(fu
             // Past six lines the card stops growing and the text moves inside it.
             scrollEnabled
             submitBehavior={Platform.OS === 'ios' ? 'newline' : undefined}
-          />
+          />}
 
           {taping && dictation ? (
             <View style={styles.controls}>
@@ -274,7 +277,7 @@ export const MarkComposer = forwardRef<MarkComposerHandle, MarkComposerProps>(fu
                   written, and the send the moment there is. */}
               <Pressable
                 onPress={tap(calling ? onTalk : onSend)}
-                disabled={busy || (!calling && !ready)}
+                disabled={disabled || busy || (!calling && !ready)}
                 accessibilityRole="button"
                 accessibilityLabel={calling ? t('simulator.voiceCall') : t('common.done')}
                 style={({ pressed }) => [

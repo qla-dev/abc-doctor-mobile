@@ -1,3 +1,4 @@
+import { ModePicker } from '@/components/mark/ModePicker';
 import { useAuth } from '@/context/AuthContext';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -62,6 +63,8 @@ export default function SettingsScreen() {
 
       <SectionHeader title={user?.email ?? 'Account'} />
       <AppButton label="Sign out" onPress={() => void signOut().catch(e => Alert.alert('Could not sign out', e.message))} full />
+      <SectionHeader title="Conversation mode" />
+      <ModePicker />
       <SectionHeader title={t('common.theme')} />
       <List>
         {themeOptions.map((option, index) => {

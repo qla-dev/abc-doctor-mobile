@@ -1,3 +1,4 @@
+import { setConversationUser } from '@/stores/conversationPreferences';
 import { apiRequest, setAccessToken, setUnauthorizedHandler } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { authStorage } from '@/lib/authStorage';
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
-      setToken(null); setUser(null); queryClient.clear();
+      setConversationUser(null); setToken(null); setUser(null); queryClient.clear();
       void authStorage.remove(TOKEN_KEY); void authStorage.remove(USER_KEY);
     });
     return () => setUnauthorizedHandler(null);
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ]);
         if (!active) return;
         if (storedToken) { setAccessToken(storedToken); setToken(storedToken); }
-        if (storedUser) setUser(JSON.parse(storedUser) as User);
+        if (storedUser) { const restored = JSON.parse(storedUser) as User; setConversationUser(restored.id); setUser(restored); }
       } catch {
         // A keychain read can fail on a restored device; treat it as signed out rather than
         // blocking the app behind an error it cannot resolve.
@@ -67,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authStorage.set(TOKEN_KEY, nextToken),
       authStorage.set(USER_KEY, JSON.stringify(nextUser)),
     ]);
+    setConversationUser(nextUser.id);
     setAccessToken(nextToken);
     setToken(nextToken);
     setUser(nextUser);
@@ -74,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try { await apiRequest('/auth/logout', { method: 'POST' }); } catch (e) { if ((e as {status?:number}).status !== 401) throw e; }
+    setConversationUser(null);
     setAccessToken(null);
     queryClient.clear();
     setToken(null);

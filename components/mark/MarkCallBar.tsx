@@ -1,3 +1,4 @@
+import { Practice } from '@/services/practice';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -27,11 +28,13 @@ const BREATH_MS = 1600;
  * Unmounting the bar is hanging up. The connection, the microphone and the data channel all live
  * in the session below, and the cleanup ends all three.
  */
-export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false }: {
+export function MarkCallBar({ conversationId, onTurn, onClose, onDrainReady, practice = false, forceDark = false }: {
   conversationId: number;
+  practice?: boolean;
   /** Each completed turn, both sides, the moment it comes back transcribed. */
   onTurn: (role: 'user' | 'assistant', text: string, itemId?: string) => void;
   onClose: () => void;
+  onDrainReady?: (drain: (() => Promise<void>) | null) => void;
   /** For a screen that is dark whatever the system theme says — the simulator is one. */
   forceDark?: boolean;
 }) {
@@ -39,6 +42,7 @@ export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false
   const colors = forceDark ? darkColors : theme.colors;
   const { t } = useLanguage();
 
+  const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<'connecting' | 'ready' | 'error'>('connecting');
   const [detail, setDetail] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
@@ -51,9 +55,21 @@ export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false
   const turn = useRef(onTurn);
   useEffect(() => { turn.current = onTurn; });
 
+  const closeNow = useRef(onClose);
+  closeNow.current = onClose;
+  useEffect(() => {
+    onDrainReady?.(async () => {
+      const complete = session.current ? await session.current.finish() : true;
+      await Mark.flushTranscripts(conversationId);
+      if (!complete && practice) await Practice.event(conversationId, `gap_${Date.now()}`, { kind: 'action', description: 'Audio ended before its full transcription was available.' });
+      closeNow.current();
+    });
+    return () => onDrainReady?.(null);
+  }, [conversationId, onDrainReady, practice]);
   const breath = useSharedValue(0);
 
   useEffect(() => {
+    setStatus('connecting');
     let cancelled = false;
     const abort = new AbortController();
 
@@ -76,11 +92,16 @@ export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false
           history: secret.history,
           opensConversation: secret.opens_conversation,
           signal: abort.signal,
+          onToolCall: practice ? async (name, args, callId) => {
+            if (name !== 'record_practice_event') throw new Error('Unknown practice action');
+            return Practice.event(conversationId, callId, args);
+          } : undefined,
           onTranscript: (role, text, itemId) => turn.current(role, text, itemId),
           onStateChange: state => {
             if (cancelled) return;
             if (state === 'connected') setStatus('ready');
-            if (state === 'failed' || state === 'closed') setStatus('error');
+            if (state === 'playback-blocked') { setDetail('Audio playback was blocked. Reconnect to enable sound.'); setStatus('error'); }
+            if (state === 'failed' || state === 'closed') { session.current?.hangUp(); session.current = null; setStatus('error'); }
           },
         });
 
@@ -103,7 +124,7 @@ export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false
       session.current?.hangUp();
       session.current = null;
     };
-  }, [conversationId]);
+  }, [conversationId, attempt, practice]);
 
   useEffect(() => {
     if (muted || status !== 'ready') {
@@ -151,6 +172,7 @@ export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false
         {status === 'ready' && detail ? <Text style={styles.detail} numberOfLines={1}>{detail}</Text> : null}
       </View>
 
+      {status === 'error' ? <Pressable accessibilityRole="button" onPress={() => setAttempt(value => value + 1)}><Text style={{ color: colors.blue }}>Reconnect</Text></Pressable> : null}
       <Pressable
         onPress={() => {
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -186,7 +208,7 @@ export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false
       ) : null}
 
       <Pressable
-        onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); onClose(); }}
+        onPress={async () => { try { await session.current?.finish(); await Mark.flushTranscripts(conversationId); onClose(); } catch (e) { setStatus('error'); setDetail((e as Error).message); } }}
         accessibilityRole="button"
         accessibilityLabel={t('common.done')}
         style={({ pressed }) => [styles.button, styles.hangUp, { opacity: pressed ? 0.6 : 1 }]}

@@ -46,6 +46,9 @@ type Router = typeof import('react-native-incall-manager').default;
 
 /** WebRTC is required; without it there is no call at all. */
 function loadWebrtc(): Webrtc {
+  if (typeof window !== 'undefined' && globalThis.RTCPeerConnection && navigator.mediaDevices) {
+    return { RTCPeerConnection: globalThis.RTCPeerConnection, RTCSessionDescription: globalThis.RTCSessionDescription, mediaDevices: navigator.mediaDevices } as unknown as Webrtc;
+  }
   try {
     const webrtc = require('react-native-webrtc') as Webrtc;
     if (!webrtc?.RTCPeerConnection || !webrtc?.mediaDevices) throw new Error('incomplete');
@@ -58,6 +61,7 @@ function loadWebrtc(): Webrtc {
 
 /** Routing is optional: without it the call runs, it just comes out of wherever iOS chose. */
 function loadRouter(): Router | null {
+  if (typeof window !== 'undefined' && globalThis.RTCPeerConnection) return null;
   try {
     const router = require('react-native-incall-manager').default as Router;
 
@@ -142,6 +146,15 @@ export async function startVoiceSession({
    * words exist: the audio itself never reaches our server. Both completed transcripts are lifted
    * out of it here.
    */
+  const remoteAudio = typeof document !== 'undefined' ? document.createElement('audio') : null;
+  if (remoteAudio) {
+    remoteAudio.autoplay = true;
+    // @ts-expect-error RN's event types do not include the browser track event.
+    pc.addEventListener('track', (event: RTCTrackEvent) => {
+      remoteAudio.srcObject = event.streams[0] ?? new globalThis.MediaStream([event.track]);
+      void remoteAudio.play().catch(() => onStateChange?.('playback-blocked'));
+    });
+  }
   const events = pc.createDataChannel('oai-events');
   const restoration = restoreConversation({ history, opensConversation, send: event => events.send(JSON.stringify(event)) });
   const transcripts = transcriptBuffer((role, text, id) => onTranscript?.(role, text, id));
@@ -196,6 +209,7 @@ export async function startVoiceSession({
     stream?.getTracks().forEach(track => track.stop());
     pc.close();
     router?.stop();
+    if (remoteAudio) { remoteAudio.pause(); remoteAudio.srcObject = null; }
     signal?.removeEventListener('abort', close);
   };
   signal?.addEventListener('abort', close);

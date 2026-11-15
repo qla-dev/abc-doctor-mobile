@@ -1,7 +1,10 @@
+import { currentMode } from '@/stores/conversationPreferences';
+import { resolveMode, type ConversationMode } from '@/lib/conversationMode';
+import { enqueue, deliverEntry, flushOutbox, readOutbox } from '@/lib/conversationOutbox';
+import { randomUUID } from 'expo-crypto';
 import { apiRequest } from '@/lib/api';
 import type { CaseSetup } from '@/lib/caseGenerator';
 import type { PatientCase } from '@/types';
-import { TranscriptQueue } from '@/lib/transcriptQueue';
 import type { RealtimeHistory } from '@/lib/realtimeConversation';
 
 /** How a turn was spoken. A skill declares which of these it will take. */
@@ -15,6 +18,7 @@ export type MarkSkill = {
   description: string | null;
   /** Empty-thread lines, keyed by language. One is picked at random. */
   intro_texts: Record<string, string[]> | null;
+  reply_modality?: 'text' | 'voice' | null;
   supports_text: boolean;
   supports_voice: boolean;
   /** Whether Mark speaks first — the patient is sitting there before anyone asks. */
@@ -31,6 +35,7 @@ export type MarkMessage = {
   body: string;
   modality: Modality;
   meta: Record<string, unknown> | null;
+  realtime_item_id?: string | null;
   sent_at: string;
 };
 
@@ -38,7 +43,7 @@ export type MarkConversation = {
   id: number;
   is_practice?: boolean;
   mark_skill_id: number;
-  /** Chosen when the thread opens and fixed for its life. */
+  /** Original input modality; the global preference controls the current interaction. */
   modality: Modality;
   /** The OpenAI voice this patient speaks in, resolved from their sex when the thread opened. */
   voice: string | null;
@@ -60,11 +65,10 @@ export type PatientPresentation = {
   source: Pick<PatientCase, 'vitals' | 'physicalExamFindings' | 'investigations'>;
 };
 
-const transcriptQueue = new TranscriptQueue<MarkMessage>();
-let transcriptSequence = 0;
 
 export const Mark = {
-  flushTranscripts: (id: number) => transcriptQueue.flush(id),
+  flushTranscripts: flushOutbox,
+  pending: readOutbox,
   health: () => apiRequest<{ status: string; timestamp: string }>('/health'),
 
   skills: () => apiRequest<MarkSkill[]>('/mark/skills'),
@@ -76,7 +80,7 @@ export const Mark = {
   startConversation: (skill: string, modality: Modality = 'text', title?: string, context?: string, sex?: string, caseSetup?: CaseSetup) =>
     apiRequest<MarkConversation>('/conversations', {
       method: 'POST',
-      body: JSON.stringify({ skill, modality, title, context, sex, case_setup: caseSetup }),
+      body: JSON.stringify({ skill, modality: resolveMode(currentMode()).input, mode: currentMode(), title, context, sex, case_setup: caseSetup }),
     }),
 
   /**
@@ -84,10 +88,10 @@ export const Mark = {
    * in about a minute and can only start the session it was cut for.
    */
   realtimeSession: async (conversationId: number) => {
-    await transcriptQueue.flush(conversationId);
+    await flushOutbox(conversationId);
     return apiRequest<{ value: string; expires_at: number; model: string; voice: string; call_url: string; history: RealtimeHistory[]; opens_conversation: boolean }>(
       '/mark/realtime/session',
-      { method: 'POST', body: JSON.stringify({ conversation_id: conversationId }) }
+      { method: 'POST', body: JSON.stringify({ conversation_id: conversationId, mode: currentMode() }) }
     );
   },
 
@@ -115,11 +119,10 @@ export const Mark = {
    * been answered inside the call.
    */
   saveTranscript: (conversationId: number, role: 'user' | 'assistant', body: string, itemId?: string) => {
-    const id = itemId ?? `local_${Date.now()}_${++transcriptSequence}`;
-    return transcriptQueue.save(conversationId, `${conversationId}:${id}`, () => apiRequest<MarkMessage>('/mark/realtime/transcript', {
-      method: 'POST',
-      body: JSON.stringify({ conversation_id: conversationId, role, body, item_id: id }),
-    }));
+    const id = itemId ?? randomUUID();
+    const entry = { key: id, conversation_id: conversationId, path: '/mark/realtime/transcript', payload: { conversation_id: conversationId, role, body, item_id: id } };
+    enqueue(entry);
+    return deliverEntry<MarkMessage>(entry);
   },
 
   /**
@@ -139,11 +142,11 @@ export const Mark = {
    * One turn in, one turn back — the API returns both, so nothing here has to poll to find out
    * when Mark has answered.
    */
-  send: (conversationId: number, body: string, modality: Modality = 'text') =>
-    apiRequest<{ sent: MarkMessage; reply: MarkMessage }>('/messages', {
-      method: 'POST',
-      body: JSON.stringify({ conversation_id: conversationId, body, modality }),
-    }),
+  send: (conversationId: number, body: string, modality: Modality = 'text', turnId = randomUUID(), mode: ConversationMode = currentMode()) => {
+    const entry = { key: turnId, conversation_id: conversationId, path: '/messages', payload: { conversation_id: conversationId, body, modality, mode, client_turn_id: turnId } };
+    enqueue(entry);
+    return deliverEntry<{ sent: MarkMessage; reply: MarkMessage; opening?: MarkMessage | null }>(entry);
+  },
 };
 
 /**

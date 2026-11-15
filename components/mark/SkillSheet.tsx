@@ -1,3 +1,6 @@
+import { ModePicker } from './ModePicker';
+import { resolveMode } from '@/lib/conversationMode';
+import { useConversationPreferences } from '@/stores/conversationPreferences';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -39,6 +42,7 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
   starting: boolean;
 }) {
   const { colors } = useTheme();
+  const mode = useConversationPreferences(state => state.mode);
   const { t } = useLanguage();
 
   const [setup, setSetup] = useState<CaseSetup>({
@@ -76,6 +80,7 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
   return (
     <CustomBottomSheet open={open} onClose={onClose} title={t('ai.skills')}>
       <BottomSheetScrollView contentContainerStyle={{ gap: 4, paddingBottom: 8 }}>
+        <ModePicker />
         {skills.map(skill => {
           const look = LOOK[skill.key] ?? { icon: Brain, tone: 'blue' as Tone };
           const Icon = look.icon;
@@ -85,11 +90,12 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
           return (
             <View key={skill.id}>
               <Pressable
+                disabled={starting || !resolveMode(mode, skill).compatible}
                 onPress={() => {
                   // The case is a choice before it is a conversation, so this one unfolds
                   // instead of starting.
                   if (configurable) { onClose(); router.push('/practice'); return; }
-                  start(skill, skill.supports_text ? 'text' : 'voice');
+                  start(skill, resolveMode(mode, skill).input);
                 }}
                 style={({ pressed }) => [
                   styles.row,
@@ -106,23 +112,7 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
                   ) : null}
                 </View>
 
-                {/* Spoken is a second way in, not a second skill, so it rides on the same row. */}
-                {configurable ? (
-                  <ChevronDown
-                    size={16}
-                    color={colors.muted}
-                    style={{ transform: [{ rotate: caseOpen ? '180deg' : '0deg' }] }}
-                  />
-                ) : skill.supports_voice ? (
-                  <Pressable
-                    onPress={() => start(skill, 'voice')}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('simulator.voiceCall')}
-                    style={styles.voice}
-                  >
-                    <Mic size={15} color={colors.indigo} />
-                  </Pressable>
-                ) : null}
+                {!resolveMode(mode, skill).compatible ? <Text style={styles.desc}>Select a voice mode</Text> : null}
               </Pressable>
 
               {configurable && caseOpen ? (

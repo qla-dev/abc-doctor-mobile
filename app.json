@@ -109,7 +109,14 @@
           }
         }
       ],
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow ABC Doctor to hear spoken conversation turns.",
+          "speechRecognitionPermission": "Allow ABC Doctor to transcribe spoken conversation turns."
+        }
+      ]
     ],
     "scheme": "abcdoctor",
     "owner": "qla-dev",

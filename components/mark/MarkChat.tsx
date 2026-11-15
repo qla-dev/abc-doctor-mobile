@@ -1,3 +1,9 @@
+import { AppState } from 'react-native';
+import { randomUUID } from 'expo-crypto';
+import { ModePicker } from './ModePicker';
+import { resolveMode, type ConversationMode } from '@/lib/conversationMode';
+import { useConversationPreferences, currentMode, conversationKey, conversationStorage } from '@/stores/conversationPreferences';
+import { useDeviceSpeech } from '@/lib/deviceSpeech';
 import {
   forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState,
   type ReactNode,
@@ -27,7 +33,6 @@ import { SkillSheet } from '@/components/mark/SkillSheet';
 import type { CaseSetup } from '@/lib/caseGenerator';
 import { MarkHistorySheet } from '@/components/mark/MarkHistorySheet';
 import { ApiError } from '@/lib/api';
-import { useVoiceNote } from '@/lib/voiceNote';
 import {
   introFor, Mark,
   type Modality, type MarkConversation, type MarkMessage, type MarkSkill,
@@ -105,6 +110,20 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   const [conversation, setConversation] = useState<MarkConversation | null>(null);
   const [messages, setMessages] = useState<MarkMessage[]>([]);
   const [draft, setDraft] = useState('');
+  const mode = useConversationPreferences(state => state.mode);
+  const effective = resolveMode(mode, conversation?.skill);
+  const activeMode = useRef(mode);
+  activeMode.current = mode;
+  const activeScreen = useRef(true);
+  const speech = useDeviceSpeech({ mode, conversationId: conversation?.id, language,
+    onText: text => submit(text, 'voice'), onError: message => setError(message) });
+  const speechNow = useRef(speech);
+  speechNow.current = speech;
+  const changeDraft = (text: string) => {
+    setDraft(text);
+    if (threadId.current) conversationStorage.set(conversationKey(`draft:${threadId.current}`), text);
+  };
+
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -122,6 +141,8 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   const nextPendingId = useRef(-1);
 
   /** The call, when there is one. It runs over the thread rather than in place of it. */
+  const drainCall = useRef<(() => Promise<void>) | null>(null);
+  const registerDrain = useCallback((drain: (() => Promise<void>) | null) => { drainCall.current = drain; }, []);
   const [calling, setCalling] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -140,15 +161,6 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   const bar = useRef<MarkComposerHandle>(null);
   /** True when the skill being started is a spoken one, so the keyboard stays down for the call. */
   const spokenSkill = useRef(false);
-
-  /**
-   * What was already written when the microphone opened. A voice message adds to the sentence
-   * you had started rather than wiping it, and every partial transcript is measured from here —
-   * the live text rewrites itself as it is heard, and it must rewrite only its own half.
-   */
-  const typed = useRef('');
-  const draftNow = useRef(draft);
-  useEffect(() => { draftNow.current = draft; });
 
   const openSkills = useCallback(() => {
     spokenSkill.current = false;
@@ -197,6 +209,22 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
    * a send or a save that re-created itself on every message would be a new function mid-flight.
    */
   const threadId = useRef<number | null>(null);
+  const conversationNow = useRef(conversation);
+  conversationNow.current = conversation;
+  useEffect(() => { setCalling(false); setError(null); speechNow.current.stop(); }, [mode]);
+  useFocusEffect(useCallback(() => {
+    activeScreen.current = true;
+    return () => { activeScreen.current = false; setCalling(false); speechNow.current.stop(); };
+  }, []));
+  useEffect(() => {
+    const listener = AppState.addEventListener('change', state => {
+      activeScreen.current = state === 'active';
+      if (state !== 'active') { setCalling(false); speechNow.current.stop(); }
+      else if (threadId.current) void reload(threadId.current);
+    });
+    return () => listener.remove();
+  }, []);
+
 
   /**
    * Arriving with a thread means this screen is a chat, and it is a chat from the first frame.
@@ -209,9 +237,16 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
    * anyone speaks. Everything that comes back counts as seen: those turns were already said out
    * loud, and typing them out now would be a replay of the conversation you just had.
    */
+  const loadVersion = useRef(0);
   const reload = useCallback(async (id: number) => {
+    const version = ++loadVersion.current;
+    threadId.current = id;
     try {
+      try { await Mark.flushTranscripts(id); } catch { /* Keep unsent turns visible for retry. */ }
       const thread = await Mark.conversation(id);
+      if (version !== loadVersion.current) return;
+      threadId.current = id;
+      setDraft(conversationStorage.getString(conversationKey(`draft:${id}`)) ?? '');
       setConversation(thread);
       const loaded = thread.messages ?? [];
       seen.current = new Set(loaded.map(message => message.id));
@@ -221,7 +256,14 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
       // What came back is the thread. A bubble still queued against it is either in there
       // already or belongs to the thread being left behind — but a local note is neither: the
       // server has never heard of it, so a reload cannot bring it back and does not take it away.
-      setPending(current => current.filter(bubble => bubble.pending === 'local'));
+      setPending(Mark.pending().filter(entry => entry.conversation_id === id).map(entry => ({
+        id: nextPendingId.current--, conversation_id: id, body: String(entry.payload.body),
+        role: entry.payload.role === 'assistant' ? 'assistant' : 'user',
+        modality: entry.path === '/messages' ? resolveMode(entry.payload.mode as ConversationMode).input : 'voice',
+        sent_at: new Date().toISOString(), pending: 'failed',
+        meta: { turn_id: entry.key, mode: entry.payload.mode, transcript: entry.path !== '/messages', item_id: entry.key },
+      })));
+
     } catch (e) {
       setError((e as ApiError).message);
     }
@@ -264,7 +306,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
       role,
       body,
       modality,
-      meta,
+      meta: { turn_id: randomUUID(), mode: currentMode(), ...meta },
       sent_at: new Date().toISOString(),
       pending: state,
     };
@@ -288,9 +330,13 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
     setPending(current => current.map(m => (m.id === bubble.id ? { ...m, pending: 'sending' } : m)));
     setBusy(true);
     try {
-      const { sent, reply } = await Mark.send(bubble.conversation_id, bubble.body, bubble.modality);
+      const requestMode = bubble.meta?.mode as ConversationMode ?? currentMode();
+      const { sent, reply, opening } = await Mark.send(bubble.conversation_id, bubble.body, bubble.modality, bubble.meta?.turn_id as string, requestMode);
       setPending(current => current.filter(m => m.id !== bubble.id));
-      setMessages(current => merge(current, [sent, reply]));
+      if (threadId.current === bubble.conversation_id) {
+        setMessages(current => merge(current, [...(opening ? [opening] : []), sent, reply]));
+        if (activeScreen.current && activeMode.current === requestMode && resolveMode(requestMode, conversationNow.current?.skill).output === 'voice') void speechNow.current.speak(reply.body);
+      }
       setError(null);
     } catch (e) {
       setError((e as ApiError).message);
@@ -324,7 +370,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
 
   /** Each finished turn of the call, both sides, the moment the words come back. */
   const spoken = useCallback((id: number, role: 'user' | 'assistant', text: string, itemId?: string) => {
-    const bubble = queue(role, text, 'voice', 'sending', id, { item_id: itemId });
+    const bubble = queue(role, text, 'voice', 'sending', id, { item_id: itemId ?? randomUUID(), transcript: true });
     void saveSpoken(bubble);
   }, [queue, saveSpoken]);
 
@@ -333,6 +379,9 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
    * Everything it says is new, so it types, and a spoken one arrives with its line already open.
    */
   const adopt = useCallback((thread: MarkConversation, options?: { seed?: string; call?: boolean }) => {
+    loadVersion.current++;
+    threadId.current = thread.id;
+    setDraft(conversationStorage.getString(conversationKey(`draft:${thread.id}`)) ?? '');
     setConversation(thread);
     seen.current = new Set();
     atBottom.current = true;
@@ -340,8 +389,10 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
     setPending([]);
     setError(null);
     setOpened(Boolean(options?.call));
-    setCalling(Boolean(options?.call));
-    if (options?.seed) void deliver(queue('user', options.seed, thread.modality, 'sending', thread.id));
+    setCalling(Boolean(options?.call) && currentMode() === 'high_quality_voice');
+    const opening = thread.messages?.at(-1);
+    if (opening && currentMode() !== 'high_quality_voice' && resolveMode(currentMode(), thread.skill).output === 'voice') void speechNow.current.speak(opening.body);
+    if (options?.seed && currentMode() !== 'high_quality_voice') void deliver(queue('user', options.seed, thread.modality, 'sending', thread.id));
   }, [deliver, queue]);
 
   useEffect(() => {
@@ -379,7 +430,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
    * the answer do not care which one it was.
    */
   const submit = useCallback((body: string, modality: Modality) => {
-    if (!body || busy || starting) return;
+    if (!body || busy || starting || !effective.compatible || effective.realtime || pending.some(item => item.pending !== 'local')) return;
     if (conversation) {
       void deliver(queue('user', body, modality));
 
@@ -387,44 +438,17 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
     }
     // Nothing open yet: what you said opens a consultation and becomes its first turn, so the
     // empty chat does not make you pick something before it will listen.
-    void startSkill('consultant', 'text', undefined, body);
-  }, [busy, conversation, deliver, queue, startSkill, starting]);
+    void startSkill('consultant', modality, undefined, body);
+  }, [busy, conversation, deliver, queue, startSkill, starting, mode, pending]);
 
   const send = useCallback(() => {
     const body = draft.trim();
-    if (!body) return;
+    if (!body || busy || starting || pending.some(item => item.pending !== 'local')) return;
     // The box empties as the bubble appears. Holding the text until the server answers is the
     // same wait in a different place.
-    setDraft('');
-    submit(body, conversation?.modality ?? 'text');
-  }, [conversation, draft, submit]);
-
-  /**
-   * The microphone in the bar, which is not the call: one recording, transcribed on the server,
-   * sent as the turn it would have been if it had been typed.
-   *
-   * It goes in marked `voice` only where the skill takes voice at all — the modality records how
-   * the turn was made, and MessageController refuses one a text-only skill does not accept. A
-   * transcript is words either way, so a skill that cannot be called can still be spoken to.
-   *
-   * The bar hides it outright while a call is up: the line already holds the microphone, and a
-   * recording made during one would be Mark's own voice coming back at him.
-   */
-  const dictation = useVoiceNote({
-    conversationId: conversation?.id,
-    // The words arrive while they are still being said, so they are written into the box the
-    // same way they would be typed — after whatever was already in it.
-    onPartial: text => setDraft(typed.current ? typed.current + ' ' + text : text),
-    onText: (text, send) => {
-      const full = typed.current ? typed.current + ' ' + text : text;
-      // Stop keeps the words: they stay in the box, where a misheard term can be fixed before
-      // anyone answers it. Only the send button skips that.
-      if (!send) { setDraft(full); return; }
-      setDraft('');
-      submit(full, conversation?.skill?.supports_voice ? 'voice' : 'text');
-    },
-    onError: setError,
-  });
+    changeDraft('');
+    submit(body, 'text');
+  }, [conversation, draft, submit, busy, starting, pending]);
 
   // The server stores one case per conversation, including when reopened from history.
   const patient = conversation?.patient ?? null;
@@ -448,16 +472,19 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   useEffect(() => {
     if (!seed || seeded.current || !conversation) return;
     seeded.current = true;
-    void deliver(queue('user', seed, conversation.modality));
+    if (!effective.realtime && effective.input === 'text') void deliver(queue('user', seed, 'text'));
   }, [conversation, deliver, queue, seed]);
 
   useImperativeHandle(handle, () => ({
     open: (thread, options) => adopt(thread, options),
     send: text => {
       const body = text.trim();
-      if (body && conversation) void deliver(queue('user', body, conversation.modality));
+      if (body && conversation && !effective.realtime && effective.input === 'text') submit(body, 'text');
     },
     reset: () => {
+      loadVersion.current++;
+      threadId.current = null;
+      speechNow.current.stop();
       setConversation(null);
       setMessages([]);
       setPending([]);
@@ -470,14 +497,16 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   const retry = useCallback((bubble: Pending) => {
     // A spoken turn was answered inside the call already; sending it again would ask Mark for a
     // second answer to something he has said his piece about.
-    if (bubble.modality === 'voice') { void saveSpoken(bubble); return; }
+    if (bubble.meta?.transcript) { void saveSpoken(bubble); return; }
     void deliver(bubble);
   }, [deliver, saveSpoken]);
 
   /** The call opens over the thread, and its bar closes it. Nothing navigates away any more. */
   const talk = useCallback(() => {
-    if (conversation) setCalling(true);
-  }, [conversation]);
+    if (!effective.compatible || busy || pending.some(item => item.pending !== 'local')) return;
+    if (effective.realtime && conversation) setCalling(true);
+    else if (effective.input === 'voice') void speech.start();
+  }, [conversation, mode, busy, speech, pending]);
 
   /**
    * A voice thread opens talking. Nobody picks Diktafon in order to then be asked whether they
@@ -528,10 +557,10 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
     // Only `autoVoice` opens the line: whoever started the thread says so when they hand it
     // over. A thread picked out of history is being read, not resumed, and placing a call over
     // it is a session — and a bill — nobody asked for.
-    if (!conversation || conversation.modality !== 'voice' || opened || autoVoice !== '1') return;
+    if (!conversation || mode !== 'high_quality_voice' || opened || autoVoice !== '1') return;
     setOpened(true);
     talk();
-  }, [autoVoice, conversation, opened, talk]);
+  }, [autoVoice, conversation, opened, talk, mode]);
 
   // Only for the inset below: the bar itself is a child, so that a host with its own header can
   // simply not mount it.
@@ -595,9 +624,9 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
         scrollEventThrottle={16}
         // Only the native bar insets the content under itself; the fallback one takes real room.
         contentInsetAdjustmentBehavior={usesNativeHeader ? 'automatic' : 'never'}
-        contentContainerStyle={{ padding: 16, gap: 12 }}
+        contentContainerStyle={{ padding: 16, gap: 12, width: '100%', maxWidth: 860, alignSelf: 'center' }}
       >
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error && !composer ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
 
         {/* Before there is a thread: whatever the host puts here, or a wait if one is coming. */}
         {!conversation && !error ? (empty ?? (
@@ -671,31 +700,35 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
           the first thing typed is what opens one. */}
       {composer ? (
         <MarkComposer
-          value={draft}
-          onChangeText={setDraft}
+          value={effective.input === 'text' ? draft : ''}
+          onChangeText={changeDraft}
+          allowText={effective.input === 'text' && effective.compatible && (!conversationId || Boolean(conversation))}
           onSend={send}
           onTalk={talk}
-          dictation={calling ? undefined : {
-            ...dictation,
-            // Snapshotted here rather than inside the hook: the bar is what starts a recording,
-            // and this is the last moment at which the box holds only what was typed.
-            start: () => { typed.current = draftNow.current.trim(); dictation.start(); },
-          }}
           ref={bar}
           onSkills={openSkills}
           skillLabel={conversation?.skill?.name ?? t('ai.title')}
-          busy={busy || starting}
-          canSpeak={Boolean(conversation?.skill?.supports_voice) && !calling}
+          busy={busy || starting || Boolean(conversationId && !conversation)}
+          disabled={!effective.compatible || pending.some(item => item.pending !== 'local')}
+          canSpeak={effective.compatible && effective.input === 'voice' && !calling && !speech.listening}
           onHeight={setBarHeight}
           above={
             <>
+              {error ? <Text accessibilityRole="alert" style={[styles.error, { paddingHorizontal: 12, paddingBottom: 8 }]}>{error}</Text> : null}
+              <ModePicker skill={conversation?.skill} disabled={busy} beforeChange={async () => { speech.stop(); await drainCall.current?.(); if (conversation) { await Mark.flushTranscripts(conversation.id); await reload(conversation.id); } setCalling(false); }} />
+              {effective.input === 'voice' && !calling && !speech.listening && !speech.speaking ? <Text style={{ color: colors.muted, paddingHorizontal: 12, paddingBottom: 8 }}>Tap the microphone to speak.</Text> : null}
+              {!effective.realtime && effective.output === 'voice' && !speech.listening && !speech.speaking && messages.some(message => message.role === 'assistant') ? <ChatAction title="Hear last reply" onPress={() => { const reply = [...messages].reverse().find(message => message.role === 'assistant'); if (reply) void speech.speak(reply.body); }} /> : null}
+              {speech.listening || speech.speaking ? <ChatAction title={speech.listening ? 'Stop listening' : 'Stop playback'} onPress={speech.stop} /> : null}
+              {conversation?.is_practice ? <ChatAction title="Practice overview / finish" onPress={async () => { try { speech.stop(); await drainCall.current?.(); await Mark.flushTranscripts(conversation.id); setCalling(false); router.push({ pathname: '/practice', params: { conversationId: String(conversation.id) } }); } catch (e) { setError((e as Error).message); } }} /> : null}
               {patient ? (
                 <SimulatorTools patient={patient} onExamine={examine} onInvestigate={investigate} />
               ) : null}
-              {conversation && calling ? (
+              {conversation && calling && effective.realtime && effective.compatible ? (
                 <MarkCallBar
-                  key={conversation.id}
+                  key={`${conversation.id}:${mode}`}
                   conversationId={conversation.id}
+                  practice={conversation.is_practice}
+                  onDrainReady={registerDrain}
                   onTurn={(role, text, itemId) => spoken(conversation.id, role, text, itemId)}
                   onClose={() => setCalling(false)}
                 />
@@ -726,6 +759,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
         onSelect={id => {
           // The line was opened on the thread being left, so switching threads ends the call.
           setCalling(false);
+          speech.stop();
           void reload(id);
         }}
       />
@@ -835,4 +869,11 @@ function ChatHeader({ onHistory }: { onHistory: () => void }) {
       }]}
     />
   );
+}
+
+function ChatAction({ title, onPress }: { title: string; onPress: () => void }) {
+  const { colors } = useTheme();
+  return <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ alignSelf: 'flex-start', marginHorizontal: 10, marginBottom: 8, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 18, backgroundColor: colors.input, opacity: pressed ? 0.6 : 1 })}>
+    <Text style={{ color: colors.blue, fontSize: 14, fontWeight: '600' }}>{title}</Text>
+  </Pressable>;
 }
