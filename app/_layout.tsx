@@ -80,8 +80,9 @@ function RootStack() {
            * Screens under this stack scroll with `contentInsetAdjustmentBehavior="automatic"`, so
            * iOS insets them below the bar and lets the content pass under it.
            */
-          headerTransparent: true,
-          headerStyle: { backgroundColor: 'transparent' },
+          // Browser ScrollViews do not apply native automatic header insets.
+          headerTransparent: Platform.OS !== 'web',
+          headerStyle: { backgroundColor: Platform.OS === 'web' ? colors.background : 'transparent' },
         }}
         /**
          * The back chevron is drawn by the OS and has no press handler to hang a haptic on, so the

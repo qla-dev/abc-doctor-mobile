@@ -30,7 +30,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const resolvedMode = mode === 'system' ? (system === 'dark' ? 'dark' : 'light') : mode;
 
   useEffect(() => {
-    Appearance.setColorScheme(mode === 'system' ? 'unspecified' : mode);
+    Appearance.setColorScheme?.(mode === 'system' ? 'unspecified' : mode);
   }, [mode]);
 
   const setMode = (next: ThemeMode) => {

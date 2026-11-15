@@ -1,6 +1,6 @@
 import { apiRequest, setAccessToken, setUnauthorizedHandler } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
-import * as SecureStore from 'expo-secure-store';
+import { authStorage } from '@/lib/authStorage';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 export type User = {
@@ -25,9 +25,7 @@ const TOKEN_KEY = 'abc_doctor_token';
 const USER_KEY = 'abc_doctor_user';
 
 /**
- * Holds the Sanctum session. The backend does not exist yet, so nothing calls signIn — but the
- * token lives in SecureStore from the start rather than in MMKV, because moving a credential
- * to the keychain later means every already-installed copy keeps it in the clear.
+ * Holds the Sanctum session: device keychain on native, tab session storage on web.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -38,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setUnauthorizedHandler(() => {
       setToken(null); setUser(null); queryClient.clear();
-      void SecureStore.deleteItemAsync(TOKEN_KEY); void SecureStore.deleteItemAsync(USER_KEY);
+      void authStorage.remove(TOKEN_KEY); void authStorage.remove(USER_KEY);
     });
     return () => setUnauthorizedHandler(null);
   }, [queryClient]);
@@ -48,8 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         const [storedToken, storedUser] = await Promise.all([
-          SecureStore.getItemAsync(TOKEN_KEY),
-          SecureStore.getItemAsync(USER_KEY),
+          authStorage.get(TOKEN_KEY),
+          authStorage.get(USER_KEY),
         ]);
         if (!active) return;
         if (storedToken) { setAccessToken(storedToken); setToken(storedToken); }
@@ -65,13 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (nextToken: string, nextUser: User) => {
+    await Promise.all([
+      authStorage.set(TOKEN_KEY, nextToken),
+      authStorage.set(USER_KEY, JSON.stringify(nextUser)),
+    ]);
     setAccessToken(nextToken);
     setToken(nextToken);
     setUser(nextUser);
-    await Promise.all([
-      SecureStore.setItemAsync(TOKEN_KEY, nextToken),
-      SecureStore.setItemAsync(USER_KEY, JSON.stringify(nextUser)),
-    ]);
   }, []);
 
   const signOut = useCallback(async () => {
@@ -81,8 +79,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUser(null);
     await Promise.all([
-      SecureStore.deleteItemAsync(TOKEN_KEY),
-      SecureStore.deleteItemAsync(USER_KEY),
+      authStorage.remove(TOKEN_KEY),
+      authStorage.remove(USER_KEY),
     ]);
   }, [queryClient]);
 

@@ -146,11 +146,11 @@ export default function AiScreen() {
     <View style={g.screen} collapsable={false}>
       {/* The tab bar is the field: iOS 26 turns a search tab's bar into one, and it is focused
           the moment you get here, so asking Mark something is a tap and then typing. */}
-      <Stack.SearchBar
+      {usesNativeHeader ? <Stack.SearchBar
         placeholder={t('ai.placeholder')}
         autoFocus
         onSearchButtonPress={event => ask(event.nativeEvent.text)}
-      />
+      /> : null}
       <FallbackTabHeader
         title={t('tabs.ai')}
         dateLabel={day.dateLabel}
