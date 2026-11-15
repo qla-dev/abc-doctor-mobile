@@ -30,7 +30,7 @@ const BREATH_MS = 1600;
 export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false }: {
   conversationId: number;
   /** Each completed turn, both sides, the moment it comes back transcribed. */
-  onTurn: (role: 'user' | 'assistant', text: string) => void;
+  onTurn: (role: 'user' | 'assistant', text: string, itemId?: string) => void;
   onClose: () => void;
   /** For a screen that is dark whatever the system theme says — the simulator is one. */
   forceDark?: boolean;
@@ -55,6 +55,7 @@ export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false
 
   useEffect(() => {
     let cancelled = false;
+    const abort = new AbortController();
 
     (async () => {
       try {
@@ -72,7 +73,10 @@ export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false
         const live = await startVoiceSession({
           callUrl: secret.call_url,
           key: secret.value,
-          onTranscript: (role, text) => turn.current(role, text),
+          history: secret.history,
+          opensConversation: secret.opens_conversation,
+          signal: abort.signal,
+          onTranscript: (role, text, itemId) => turn.current(role, text, itemId),
           onStateChange: state => {
             if (cancelled) return;
             if (state === 'connected') setStatus('ready');
@@ -95,6 +99,7 @@ export function MarkCallBar({ conversationId, onTurn, onClose, forceDark = false
 
     return () => {
       cancelled = true;
+      abort.abort();
       session.current?.hangUp();
       session.current = null;
     };

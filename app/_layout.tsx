@@ -12,7 +12,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 import { LanguageProvider } from '@/context/LanguageContext';
-import { AuthProvider } from '@/context/AuthContext';
+import { PracticeLogin } from '@/components/mark/PracticeLogin';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import '@/i18n';
 
@@ -21,6 +22,7 @@ const queryClient = new QueryClient({
 });
 
 function RootStack() {
+  const { ready, authenticated } = useAuth();
   const { colors, resolvedMode } = useTheme();
   const isDark = resolvedMode === 'dark';
 
@@ -57,6 +59,8 @@ function RootStack() {
     void SystemUI.setBackgroundColorAsync(colors.background);
   }, [colors.background]);
 
+  if (!ready) return null;
+  if (!authenticated) return <PracticeLogin />;
   return (
     <NavigationThemeProvider value={navigationTheme}>
       <StatusBar style={isDark ? 'light' : 'dark'} />

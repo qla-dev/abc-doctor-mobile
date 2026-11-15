@@ -1,4 +1,5 @@
 import type { MediaStream, RTCPeerConnection as RTCPeerConnectionType } from 'react-native-webrtc';
+import { restoreConversation, transcriptBuffer, type RealtimeHistory, type RealtimeEvent } from './realtimeConversation';
 
 /**
  * A spoken session with Mark, over WebRTC.
@@ -18,6 +19,7 @@ import type { MediaStream, RTCPeerConnection as RTCPeerConnectionType } from 're
  */
 export type VoiceSession = {
   hangUp: () => void;
+  finish: () => Promise<boolean>;
   setMuted: (muted: boolean) => void;
   /**
    * iOS routes a `playAndRecord` session to the receiver — the earpiece you hold to your head —
@@ -88,17 +90,25 @@ function waitForIce(pc: RTCPeerConnectionType, timeoutMs = 3000): Promise<void> 
 export async function startVoiceSession({
   callUrl,
   key,
+  history,
+  opensConversation,
+  signal,
   speaker = true,
   onStateChange,
   onTranscript,
+  onToolCall,
 }: {
   callUrl: string;
   key: string;
+  history: RealtimeHistory[];
+  opensConversation: boolean;
+  signal?: AbortSignal;
   /** A consultation is held at arm's length, so the speaker is the sane default. */
   speaker?: boolean;
   onStateChange?: (state: string) => void;
   /** Fires as each side's turn is transcribed, so the call can be read back afterwards. */
-  onTranscript?: (role: 'user' | 'assistant', text: string) => void;
+  onToolCall?: (name: string, args: Record<string, unknown>, callId: string) => Promise<unknown>;
+  onTranscript?: (role: 'user' | 'assistant', text: string, itemId?: string) => void;
 }): Promise<VoiceSession> {
   const { RTCPeerConnection, RTCSessionDescription, mediaDevices } = loadWebrtc();
   const router = loadRouter();
@@ -127,25 +137,44 @@ export async function startVoiceSession({
     iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
   });
 
-  // @ts-expect-error RN types lag the DOM-style listener the library actually ships
-  pc.addEventListener('connectionstatechange', () => onStateChange?.(pc.connectionState));
-
   /**
    * The realtime API talks over a data channel named `oai-events`, and that is the only place the
    * words exist: the audio itself never reaches our server. Both completed transcripts are lifted
    * out of it here.
    */
   const events = pc.createDataChannel('oai-events');
+  const restoration = restoreConversation({ history, opensConversation, send: event => events.send(JSON.stringify(event)) });
+  const transcripts = transcriptBuffer((role, text, id) => onTranscript?.(role, text, id));
+  let ready = false;
+  // @ts-expect-error RN types lag the DOM-style listener the library actually ships
+  pc.addEventListener('connectionstatechange', () => {
+    if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+      restoration.fail(new Error('Veza je prekinuta.'));
+      close();
+    }
+    if (pc.connectionState !== 'connected' || ready) onStateChange?.(pc.connectionState);
+  });
+  events.onopen = () => restoration.start();
+  events.onclose = () => {
+    restoration.fail(new Error('Veza je prekinuta.'));
+    close();
+    onStateChange?.('closed');
+  };
   events.onmessage = (event: { data: string }) => {
     try {
-      const payload = JSON.parse(event.data) as { type?: string; transcript?: string };
-      if (!payload.transcript) return;
-
-      if (payload.type === 'conversation.item.input_audio_transcription.completed') {
-        onTranscript?.('user', payload.transcript);
-      }
-      if (payload.type === 'response.output_audio_transcript.done') {
-        onTranscript?.('assistant', payload.transcript);
+      const payload = JSON.parse(event.data) as RealtimeEvent;
+      restoration.receive(payload);
+      transcripts.receive(payload);
+      const tool = payload as RealtimeEvent & {name?:string;arguments?:string;call_id?:string};
+      if (tool.type === 'response.function_call_arguments.done' && tool.call_id && tool.name && onToolCall) {
+        const callId=tool.call_id;
+        let args: Record<string, unknown>;
+        try { args=JSON.parse(tool.arguments ?? '{}'); } catch { args={}; }
+        void onToolCall(tool.name,args,callId).then(result=>{
+          if(closed)return;
+          events.send(JSON.stringify({type:'conversation.item.create',item:{type:'function_call_output',call_id:callId,output:JSON.stringify(result)}}));
+          events.send(JSON.stringify({type:'response.create'}));
+        }).catch(()=>{if(!closed){events.send(JSON.stringify({type:'conversation.item.create',item:{type:'function_call_output',call_id:callId,output:JSON.stringify({error:'Action was not recorded. Retry or clarify.'})}}));events.send(JSON.stringify({type:'response.create'}));}});
       }
     } catch {
       // A frame that is not JSON is not a transcript; nothing to salvage.
@@ -153,16 +182,42 @@ export async function startVoiceSession({
   };
 
   let stream: MediaStream | null = null;
+  let closed = false;
+  let completeAtClose = true;
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    events.onmessage = null;
+    events.onopen = null;
+    events.onclose = null;
+    restoration.fail(new Error('Poziv je zatvoren.'));
+    completeAtClose = transcripts.isComplete();
+    transcripts.close();
+    stream?.getTracks().forEach(track => track.stop());
+    pc.close();
+    router?.stop();
+    signal?.removeEventListener('abort', close);
+  };
+  signal?.addEventListener('abort', close);
 
   try {
+    if (signal?.aborted) throw new Error('Poziv je zatvoren.');
     stream = (await mediaDevices.getUserMedia({ audio: true })) as MediaStream;
-    stream.getTracks().forEach(track => pc.addTrack(track, stream as MediaStream));
+    if (closed || signal?.aborted) {
+      stream.getTracks().forEach(track => track.stop());
+      throw new Error('Poziv je zatvoren.');
+    }
+    stream.getTracks().forEach(track => {
+      track.enabled = false;
+      pc.addTrack(track, stream as MediaStream);
+    });
 
     const offer = await pc.createOffer({});
     await pc.setLocalDescription(offer);
     await waitForIce(pc);
 
     const response = await fetch(callUrl, {
+      signal,
       method: 'POST',
       headers: {
         Authorization: `Bearer ${key}`,
@@ -179,21 +234,30 @@ export async function startVoiceSession({
     }
 
     await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: answer }));
+    const connectionTimer = setTimeout(() => restoration.fail(new Error('Veza nije spremna. Pokušajte ponovo.')), 20000);
+    try { await restoration.ready; } finally { clearTimeout(connectionTimer); }
+    if (closed) throw new Error('Poziv je zatvoren.');
+    ready = true;
+    stream.getAudioTracks().forEach(track => { track.enabled = true; });
+    onStateChange?.('connected');
   } catch (error) {
-    stream?.getTracks().forEach(track => track.stop());
-    pc.close();
-    router?.stop();
+    close();
     throw error;
   }
 
   const localStream = stream;
 
   return {
-    hangUp: () => {
-      localStream?.getTracks().forEach(track => track.stop());
-      pc.close();
-      // Hands the route back; without this the phone stays in call mode after the screen closes.
-      router?.stop();
+    hangUp: close,
+    finish: async () => {
+      if (closed) return completeAtClose;
+      localStream?.getAudioTracks().forEach(track => { track.enabled = false; });
+      // Let final transcription events arrive before closing the data channel.
+      await new Promise(resolve => setTimeout(resolve, 750));
+      const deadline = Date.now() + 4000;
+      while (!closed && !transcripts.isComplete() && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 100));
+      close();
+      return completeAtClose;
     },
     setSpeaker: (on: boolean) => router?.setForceSpeakerphoneOn(on),
     speakerOn,

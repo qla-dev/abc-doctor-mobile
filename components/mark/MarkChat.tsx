@@ -24,10 +24,7 @@ import {
 import { SimulatorTools } from '@/components/mark/SimulatorTools';
 import { MarkThinking } from '@/components/mark/MarkThinking';
 import { SkillSheet } from '@/components/mark/SkillSheet';
-import {
-  generateCase,
-  type AgeBand, type CaseSetup, type Difficulty, type GenderChoice,
-} from '@/lib/caseGenerator';
+import type { CaseSetup } from '@/lib/caseGenerator';
 import { MarkHistorySheet } from '@/components/mark/MarkHistorySheet';
 import { ApiError } from '@/lib/api';
 import { useVoiceNote } from '@/lib/voiceNote';
@@ -73,11 +70,6 @@ export type MarkChatProps = {
   autoVoice?: string;
   /** A question asked before the thread existed, delivered as its first turn. */
   seed?: string;
-  /** The case behind a simulated patient, for the vitals and actions above the composer. */
-  difficulty?: string;
-  specialty?: string;
-  gender?: string;
-  ageBand?: string;
   /** False when the text comes from somewhere else, such as the tab bar's search field. */
   composer?: boolean;
   /** False when the host screen already owns the bar — two hooks cannot write the same one. */
@@ -102,10 +94,6 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   conversationId,
   autoVoice,
   seed,
-  difficulty,
-  specialty,
-  gender,
-  ageBand,
   composer = true,
   header = true,
   empty,
@@ -141,8 +129,6 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   const [skills, setSkills] = useState<MarkSkill[]>([]);
   const [skillsOpen, setSkillsOpen] = useState(false);
   const [starting, setStarting] = useState(false);
-  /** The case a simulated patient was started with here, when it was started here. */
-  const [caseSetup, setCaseSetup] = useState<CaseSetup | null>(null);
 
   /**
    * The bar, for the keyboard rather than for the text.
@@ -270,6 +256,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
     state: Pending['pending'] = 'sending',
     /** The thread it belongs to, for a turn queued in the same breath as the thread opening. */
     thread: number | null = null,
+    meta: MarkMessage['meta'] = null,
   ): Pending => {
     const bubble: Pending = {
       id: nextPendingId.current--,
@@ -277,7 +264,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
       role,
       body,
       modality,
-      meta: null,
+      meta,
       sent_at: new Date().toISOString(),
       pending: state,
     };
@@ -318,15 +305,17 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
    * before this ran, so the bubble is the record and the saved copy only takes its place.
    */
   const saveSpoken = useCallback(async (bubble: Pending) => {
-    const id = threadId.current;
-    if (id === null) return;
+    const id = bubble.conversation_id;
+    if (!id) return;
     setPending(current => current.map(m => (m.id === bubble.id ? { ...m, pending: 'sending' } : m)));
     try {
-      const saved = await Mark.saveTranscript(id, bubble.role === 'assistant' ? 'assistant' : 'user', bubble.body);
+      const saved = await Mark.saveTranscript(id, bubble.role === 'assistant' ? 'assistant' : 'user', bubble.body, bubble.meta?.item_id as string | undefined);
       // Heard, not read: the stored copy must not type itself out after the fact.
-      seen.current.add(saved.id);
       setPending(current => current.filter(m => m.id !== bubble.id));
-      setMessages(current => merge(current, [saved]));
+      if (threadId.current === id) {
+        seen.current.add(saved.id);
+        setMessages(current => merge(current, [saved]));
+      }
     } catch {
       // The call is still up; the turn stays on screen as what was said, marked unsaved.
       setPending(current => current.map(m => (m.id === bubble.id ? { ...m, pending: 'failed' } : m)));
@@ -334,8 +323,9 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   }, []);
 
   /** Each finished turn of the call, both sides, the moment the words come back. */
-  const spoken = useCallback((role: 'user' | 'assistant', text: string) => {
-    void saveSpoken(queue(role, text, 'voice'));
+  const spoken = useCallback((id: number, role: 'user' | 'assistant', text: string, itemId?: string) => {
+    const bubble = queue(role, text, 'voice', 'sending', id, { item_id: itemId });
+    void saveSpoken(bubble);
   }, [queue, saveSpoken]);
 
   /**
@@ -359,9 +349,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   }, []);
 
   /**
-   * Opening a conversation from the composer. The case, when there is one, goes over as the
-   * thread's context so Mark plays the patient that was asked for rather than inventing one —
-   * and stays here as well, for the vitals and the two actions above the composer.
+   * Send setup choices once. The server selects and saves the case, and returns its display data.
    */
   const startSkill = useCallback(async (
     /** The skill's key rather than the row: the first thing typed opens a consultation whether
@@ -371,19 +359,12 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
     setup?: CaseSetup,
     seed?: string,
   ) => {
+    if (key === 'patient_simulator') { router.push('/practice'); return; }
     if (starting) return;
     setStarting(true);
     setError(null);
     try {
-      const context = setup ? [
-        `Pacijent: ${setup.ageBand} godina`,
-        setup.gender === 'any' ? null : setup.gender === 'M' ? 'muškarac' : 'žena',
-        setup.specialty === 'any' ? null : `oblast: ${setup.specialty}`,
-        `težina slučaja: ${t('setup.' + setup.difficulty)}`,
-      ].filter(Boolean).join(', ') + '.' : undefined;
-
-      const thread = await Mark.startConversation(key, modality, undefined, context, setup?.gender);
-      setCaseSetup(setup ?? null);
+      const thread = await Mark.startConversation(key, modality, undefined, undefined, undefined, setup);
       adopt(thread, { seed, call: modality === 'voice' });
     } catch (e) {
       setError((e as ApiError).message);
@@ -445,25 +426,8 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
     onError: setError,
   });
 
-  /**
-   * The simulated patient, when the thread is one. Generated once from the setup that opened it:
-   * re-rolling per render would hand the doctor a different patient mid-consultation.
-   *
-   * It is still generated on the device rather than read back from the thread, which is why a
-   * case reopened from history comes back with the same setup but a new patient behind it. The
-   * separate simulator screen had exactly this limitation; folding it in here did not add it.
-   */
-  const caseDifficulty = caseSetup?.difficulty ?? (difficulty as Difficulty) ?? 'medium';
-  const caseSpecialty = caseSetup?.specialty ?? specialty ?? 'any';
-  const caseGender = caseSetup?.gender ?? (gender as GenderChoice) ?? 'any';
-  const caseAge = caseSetup?.ageBand ?? (ageBand as AgeBand) ?? '35-54';
-
-  const patient = useMemo(() => (conversation?.skill?.key === 'patient_simulator' ? generateCase({
-    difficulty: caseDifficulty,
-    specialty: caseSpecialty,
-    gender: caseGender,
-    ageBand: caseAge,
-  }) : null), [caseAge, caseDifficulty, caseGender, caseSpecialty, conversation?.skill?.key]);
+  // The server stores one case per conversation, including when reopened from history.
+  const patient = conversation?.patient ?? null;
 
   const examine = useCallback(() => {
     const finding = patient?.source.physicalExamFindings.find(item => item.isAbnormal)
@@ -499,7 +463,6 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
       setPending([]);
       setCalling(false);
       setOpened(false);
-      setCaseSetup(null);
       setError(null);
     },
   }), [adopt, conversation, deliver, queue]);
@@ -531,7 +494,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
    * after the effect below has written the id into `seen`.
    */
   /** What is on screen: everything stored, then everything still on its way. */
-  const thread = useMemo(() => [...messages, ...pending], [messages, pending]);
+  const thread = useMemo(() => [...messages, ...pending.filter(message => message.conversation_id === conversation?.id)], [messages, pending, conversation?.id]);
 
   const latest = messages[messages.length - 1];
   const landing = latest && latest.role !== 'user' && !seen.current.has(latest.id) ? latest.id : null;
@@ -697,6 +660,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
             Not during a call. On the line there is nothing to wait for — he answers out loud as
             you speak, and a line saying he is thinking would be describing the silence between
             two people talking. */}
+        {conversation?.is_practice ? <Pressable onPress={() => router.push({pathname:'/practice',params:{conversationId:String(conversation.id)}})}><Text style={{color:colors.blue,padding:16}}>Practice brief and feedback</Text></Pressable> : null}
         {(busy || starting) && !calling ? <MarkThinking skill={conversation?.skill?.name} /> : null}
 
         <Animated.View style={tail} />
@@ -730,8 +694,9 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
               ) : null}
               {conversation && calling ? (
                 <MarkCallBar
+                  key={conversation.id}
                   conversationId={conversation.id}
-                  onTurn={spoken}
+                  onTurn={(role, text, itemId) => spoken(conversation.id, role, text, itemId)}
                   onClose={() => setCalling(false)}
                 />
               ) : null}

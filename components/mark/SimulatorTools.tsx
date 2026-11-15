@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { Activity, HeartPulse, Search, Stethoscope, Wind } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
-import type { GeneratedCase } from '@/lib/caseGenerator';
+import type { PatientPresentation } from '@/services/mark';
 
 /**
  * What a consultation with a simulated patient needs and a written one does not: who is sitting
@@ -15,7 +15,7 @@ import type { GeneratedCase } from '@/lib/caseGenerator';
  * optimistic turns. Handing the case over as props is what let the other one go.
  */
 export function SimulatorTools({ patient, onExamine, onInvestigate }: {
-  patient: GeneratedCase;
+  patient: PatientPresentation;
   onExamine: () => void;
   onInvestigate: () => void;
 }) {

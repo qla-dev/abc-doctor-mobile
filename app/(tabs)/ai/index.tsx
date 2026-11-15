@@ -73,12 +73,13 @@ export default function AiScreen() {
     extra: Record<string, string> = {},
     context?: string,
     sex?: string,
+    caseSetup?: CaseSetup,
   ) => {
     if (starting) return;
     setStarting(true);
     setSkillsError(null);
     try {
-      const thread = await Mark.startConversation(key, modality, undefined, context, sex);
+      const thread = await Mark.startConversation(key, modality, undefined, context, sex, caseSetup);
       router.push({
         pathname: '/mark',
         params: {
@@ -104,7 +105,7 @@ export default function AiScreen() {
   /** A skill card. The simulator opens its four choices in place; the rest just start. */
   const open = (skill: MarkSkill) => {
     if (skill.key === 'patient_simulator') {
-      setCaseOpen(current => !current);
+      router.push('/practice');
 
       return;
     }
@@ -112,19 +113,10 @@ export default function AiScreen() {
   };
 
   /**
-   * The setup only matters if it reaches the patient, so it goes over as the thread's context —
-   * Mark plays the case that was asked for rather than inventing one — and rides along as params
-   * for the vitals and the two actions the chat keeps with its composer.
+   * The server resolves these choices into a saved case shared by the AI and the display.
    */
   const startCase = (modality: Modality) => {
-    const context = [
-      `Pacijent: ${setup.ageBand} godina`,
-      setup.gender === 'any' ? null : setup.gender === 'M' ? 'muškarac' : 'žena',
-      setup.specialty === 'any' ? null : `oblast: ${setup.specialty}`,
-      `težina slučaja: ${t('setup.' + setup.difficulty)}`,
-    ].filter(Boolean).join(', ') + '.';
-
-    void begin('patient_simulator', modality, { ...setup }, context, setup.gender);
+    void begin('patient_simulator', modality, {}, undefined, undefined, { ...setup });
   };
 
   const day = useDayControl();
@@ -183,6 +175,7 @@ export default function AiScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={g.scrollContent}>
+          <AppCard onPress={() => router.push('/practice')}><Text style={styles.skillLabel}>Voice practice</Text><Text style={styles.skillDesc}>Choose a workflow. Meet an unexpected patient.</Text></AppCard>
           <TypingText text={t('ai.greeting')} style={styles.greeting} />
           {skillsError ? <Text style={styles.skillError}>{skillsError}</Text> : null}
 

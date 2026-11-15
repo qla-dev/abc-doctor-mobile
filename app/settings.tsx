@@ -1,3 +1,4 @@
+import { useAuth } from '@/context/AuthContext';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack } from 'expo-router';
@@ -16,6 +17,7 @@ import type { ThemeMode } from '@/theme/colors';
 import type { Language } from '@/i18n';
 
 export default function SettingsScreen() {
+  const { user, signOut } = useAuth();
   const { colors, mode, setMode } = useTheme();
   const { t, language, setLanguage, languages } = useLanguage();
   const g = createGlobalStyles(colors);
@@ -58,6 +60,8 @@ export default function SettingsScreen() {
       style={g.screen} contentContainerStyle={g.scrollContent} showsVerticalScrollIndicator={false}>
       <Stack.Screen options={{ title: t('common.settings') }} />
 
+      <SectionHeader title={user?.email ?? 'Account'} />
+      <AppButton label="Sign out" onPress={() => void signOut().catch(e => Alert.alert('Could not sign out', e.message))} full />
       <SectionHeader title={t('common.theme')} />
       <List>
         {themeOptions.map((option, index) => {

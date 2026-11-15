@@ -11,10 +11,6 @@ export default function MarkScreen() {
     conversationId?: string;
     autoVoice?: string;
     seed?: string;
-    difficulty?: string;
-    specialty?: string;
-    gender?: string;
-    ageBand?: string;
   }>();
 
   return <MarkChat {...params} />;

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -65,7 +66,7 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
   const start = (skill: MarkSkill, modality: Modality) => {
     void Haptics.selectionAsync();
     if (skill.key === 'patient_simulator') {
-      onStart(skill, modality, setup);
+      onClose(); router.push('/practice'); return;
     } else {
       onStart(skill, modality);
     }
@@ -87,7 +88,7 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
                 onPress={() => {
                   // The case is a choice before it is a conversation, so this one unfolds
                   // instead of starting.
-                  if (configurable) { void Haptics.selectionAsync(); setCaseOpen(value => !value); return; }
+                  if (configurable) { onClose(); router.push('/practice'); return; }
                   start(skill, skill.supports_text ? 'text' : 'voice');
                 }}
                 style={({ pressed }) => [

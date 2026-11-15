@@ -1,3 +1,4 @@
+import { Practice } from '@/services/practice';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -24,7 +25,7 @@ const BREATH_MS = 2200;
 const HALO_MS = 2600;
 
 export default function VoiceScreen() {
-  const { skill, patient, conversationId } = useLocalSearchParams<{ skill?: string; patient?: string; conversationId?: string }>();
+  const { skill, patient, conversationId, practice } = useLocalSearchParams<{ skill?: string; patient?: string; conversationId?: string; practice?: string }>();
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const [muted, setMuted] = useState(false);
@@ -36,6 +37,13 @@ export default function VoiceScreen() {
   const [canRoute, setCanRoute] = useState(true);
   const [reduceMotion, setReduceMotion] = useState(false);
 
+  const finishing = useRef(false);
+  const finishPractice = async () => {
+    if(finishing.current)return; finishing.current=true;
+    const complete = session.current ? await session.current.finish() : false;
+    try { await Practice.finish(Number(conversationId), complete); router.replace({pathname:'/practice',params:{conversationId:String(conversationId)}}); }
+    catch(e){setStatus('error');setDetail((e as Error).message);finishing.current=false;}
+  };
   const breath = useSharedValue(0);
   const halo = useSharedValue(0);
 
@@ -49,6 +57,7 @@ export default function VoiceScreen() {
     if (id === null) return;
 
     let cancelled = false;
+    const abort = new AbortController();
     setStatus('connecting');
 
     (async () => {
@@ -67,11 +76,20 @@ export default function VoiceScreen() {
         const live = await startVoiceSession({
           callUrl: secret.call_url,
           key: secret.value,
+          history: secret.history,
+          opensConversation: secret.opens_conversation,
+          signal: abort.signal,
           speaker,
           // Each completed turn is stored as it lands, not batched at hang-up: a call that
           // drops mid-sentence should still leave behind everything said before it.
-          onTranscript: (role, text) => {
-            void Mark.saveTranscript(id, role, text).catch(() => {});
+          onTranscript: (role, text, itemId) => {
+            void Mark.saveTranscript(id, role, text, itemId).catch(() => {});
+          },
+          onToolCall: async (name,args,callId) => {
+            if(name!=='record_practice_event')throw new Error('Unknown action');
+            const result=await Practice.event(id,callId,args);
+            if(result.kind==='finish_requested')setTimeout(()=>void finishPractice(),500);
+            return result;
           },
           onStateChange: state => {
             if (cancelled) return;
@@ -95,6 +113,7 @@ export default function VoiceScreen() {
 
     return () => {
       cancelled = true;
+      abort.abort();
       session.current?.hangUp();
       session.current = null;
     };
@@ -181,6 +200,7 @@ export default function VoiceScreen() {
           : muted ? t('common.retry') : t('ai.thinking')}
       </Text>
 
+      {practice==='1'?<Pressable accessibilityRole="button" onPress={()=>void finishPractice()} style={{position:'absolute',bottom:insets.bottom+125,padding:16}}><Text style={{color:c.text,fontWeight:'700'}}>Finish and review</Text></Pressable>:null}
       <View style={styles.controls}>
         <Pressable
           onPress={() => {

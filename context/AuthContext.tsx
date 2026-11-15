@@ -1,3 +1,5 @@
+import { apiRequest, setAccessToken, setUnauthorizedHandler } from '@/lib/api';
+import { useQueryClient } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
@@ -28,9 +30,18 @@ const USER_KEY = 'abc_doctor_user';
  * to the keychain later means every already-installed copy keeps it in the clear.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setToken(null); setUser(null); queryClient.clear();
+      void SecureStore.deleteItemAsync(TOKEN_KEY); void SecureStore.deleteItemAsync(USER_KEY);
+    });
+    return () => setUnauthorizedHandler(null);
+  }, [queryClient]);
 
   useEffect(() => {
     let active = true;
@@ -41,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           SecureStore.getItemAsync(USER_KEY),
         ]);
         if (!active) return;
-        if (storedToken) setToken(storedToken);
+        if (storedToken) { setAccessToken(storedToken); setToken(storedToken); }
         if (storedUser) setUser(JSON.parse(storedUser) as User);
       } catch {
         // A keychain read can fail on a restored device; treat it as signed out rather than
@@ -54,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (nextToken: string, nextUser: User) => {
+    setAccessToken(nextToken);
     setToken(nextToken);
     setUser(nextUser);
     await Promise.all([
@@ -63,13 +75,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    try { await apiRequest('/auth/logout', { method: 'POST' }); } catch (e) { if ((e as {status?:number}).status !== 401) throw e; }
+    setAccessToken(null);
+    queryClient.clear();
     setToken(null);
     setUser(null);
     await Promise.all([
       SecureStore.deleteItemAsync(TOKEN_KEY),
       SecureStore.deleteItemAsync(USER_KEY),
     ]);
-  }, []);
+  }, [queryClient]);
 
   const value = useMemo(
     () => ({ user, token, ready, authenticated: Boolean(token), signIn, signOut }),
