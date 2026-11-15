@@ -203,7 +203,7 @@ export default function PracticeScreen() {
           </Text>
           <Text style={{ color: colors.text }}>{report.summary}</Text>
           {(["strengths", "improvements", "critical_errors"] as const).map(
-            (key) => (
+            (key) => report[key].length ? (
               <View key={key} style={{ gap: 8 }}>
                 <Text style={{ color: colors.text, fontWeight: "700" }}>
                   {key.replace("_", " ").toUpperCase()}
@@ -214,7 +214,7 @@ export default function PracticeScreen() {
                   </Text>
                 ))}
               </View>
-            ),
+            ) : null,
           )}
           {report.criteria.map((c, i) => (
             <View key={i} style={{ gap: 5 }}>
