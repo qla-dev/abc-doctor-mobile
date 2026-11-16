@@ -107,8 +107,7 @@ export default function AiScreen() {
   /** A skill card. The simulator opens its four choices in place; the rest just start. */
   const open = (skill: MarkSkill) => {
     if (skill.key === 'patient_simulator') {
-      router.push('/practice');
-
+      setCaseOpen(o => !o);
       return;
     }
     if (!resolveMode(currentMode(), skill).compatible) { setSkillsError('This role requires voice input. Select a voice mode.'); return; }
