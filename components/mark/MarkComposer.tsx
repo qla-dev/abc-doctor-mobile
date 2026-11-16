@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef, type ReactNode } from 'react';
 import {
   ActivityIndicator, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions,
+  type TextInputInstance,
 } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useKeyboardHandler } from 'react-native-keyboard-controller';
@@ -102,7 +103,7 @@ export const MarkComposer = forwardRef<MarkComposerHandle, MarkComposerProps>(fu
    * bottom of the screen, and whichever arrives second opens behind the first — so the screen
    * that raises a sheet takes the keyboard down first and hands it back afterwards.
    */
-  const input = useRef<TextInput>(null);
+  const input = useRef<TextInputInstance>(null);
   useImperativeHandle(handle, () => ({
     focus: () => input.current?.focus(),
     // Both: blurring a field the system still considers focused leaves the keyboard up.

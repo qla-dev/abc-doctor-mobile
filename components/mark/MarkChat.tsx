@@ -10,7 +10,7 @@ import {
 } from 'react';
 import {
   ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View,
-  type StyleProp, type TextStyle,
+  type ScrollViewInstance, type StyleProp, type TextStyle,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { ChevronLeft, MessageSquare, Sparkles } from 'lucide-react-native';
@@ -181,7 +181,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   }, []);
 
   /** Typing grows the thread a character at a time, so the list has to follow it down. */
-  const scroller = useRef<ScrollView>(null);
+  const scroller = useRef<ScrollViewInstance>(null);
 
   /**
    * What following has to know first: how tall the list is, how tall the thread in it is, and

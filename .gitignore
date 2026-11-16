@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+# Windows reserved device names
+NUL
+
 # Expo
 .expo/
 dist/

@@ -14,7 +14,10 @@ import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { PracticeLogin } from '@/components/mark/PracticeLogin';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthScreen } from '@/components/auth/AuthScreen';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { configureRevenueCat, hasRevenueCatConfig, identifyRevenueCatUser } from '@/lib/revenueCat';
+import { useOTAUpdate } from '@/hooks/useOTAUpdate';
 import '@/i18n';
 
 const queryClient = new QueryClient({
@@ -106,6 +109,32 @@ function RootStack() {
   );
 }
 
+function AuthGate() {
+  const { authenticated, ready, user } = useAuth();
+  useOTAUpdate();
+
+  useEffect(() => {
+    if (hasRevenueCatConfig()) configureRevenueCat();
+  }, []);
+
+  useEffect(() => {
+    if (authenticated && user && hasRevenueCatConfig()) {
+      void identifyRevenueCatUser(user.id);
+    }
+  }, [authenticated, user]);
+
+  if (!ready) return null;
+  if (!authenticated) return <AuthScreen />;
+
+  return (
+    <BottomSheetModalProvider>
+      <ErrorBoundary>
+        <RootStack />
+      </ErrorBoundary>
+    </BottomSheetModalProvider>
+  );
+}
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -115,14 +144,7 @@ export default function RootLayout() {
             <ThemeProvider>
               <LanguageProvider>
                 <AuthProvider>
-                  {/* Sheet content renders into this provider's portal, so the provider has to sit
-                      BELOW every context that content reads — ours are React contexts, and a portal
-                      host above them puts the sheet outside their reach. */}
-                  <BottomSheetModalProvider>
-                    <ErrorBoundary>
-                      <RootStack />
-                    </ErrorBoundary>
-                  </BottomSheetModalProvider>
+                  <AuthGate />
                 </AuthProvider>
               </LanguageProvider>
             </ThemeProvider>

@@ -60,12 +60,19 @@ export class ApiError extends Error {
   }
 }
 
+let _authToken: string | null = null;
+
+export function setApiAuthToken(token: string | null) {
+  _authToken = token;
+}
+
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
   const headers = new Headers(options.headers);
   headers.set('Accept', 'application/json');
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
   if (options.body) headers.set('Content-Type', 'application/json');
+  if (_authToken) headers.set('Authorization', `Bearer ${_authToken}`);
 
   let response: Response;
   try {

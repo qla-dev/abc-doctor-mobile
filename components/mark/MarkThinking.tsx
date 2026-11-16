@@ -103,6 +103,7 @@ export function MarkThinking({ skill }: {
 
   return (
     <ReanimatedAnimated.View style={[{ alignSelf: 'flex-start', paddingVertical: 2 }, entering]}>
+      {/* @ts-expect-error MaskedView class types predate RN 0.88 JSX */}
       <MaskedView
         maskElement={
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>

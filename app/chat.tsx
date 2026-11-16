@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView, Platform, Pressable, ScrollView,
+  KeyboardAvoidingView, Platform, Pressable, ScrollView, type ScrollViewInstance,
   StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -24,7 +24,7 @@ export default function ChatScreen() {
   const { skill, seed } = useLocalSearchParams<{ skill?: string; seed?: string }>();
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
-  const scroller = useRef<ScrollView>(null);
+  const scroller = useRef<ScrollViewInstance>(null);
 
   const [draft, setDraft] = useState(seed ?? '');
   const [messages, setMessages] = useState<Message[]>([]);

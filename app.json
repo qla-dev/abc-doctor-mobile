@@ -10,6 +10,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "abc.qla.dev",
       "userInterfaceStyle": "automatic",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "The camera is used to capture lecture slides and textbook pages to turn into flashcards.",
@@ -21,7 +22,7 @@
           "group.abc.qla.dev"
         ]
       },
-      "buildNumber": "3"
+      "buildNumber": "4"
     },
     "android": {
       "adaptiveIcon": {
@@ -41,6 +42,14 @@
         "SCHEDULE_EXACT_ALARM",
         "INTERNET"
       ]
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/323d1cfb-6bdb-4145-ab71-06be95eca9ff",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 5000
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -109,6 +118,8 @@
           }
         }
       ],
+      "expo-apple-authentication",
+      "expo-updates",
       "@bacons/apple-targets",
       [
         "expo-speech-recognition",
@@ -124,6 +135,17 @@
       "router": {},
       "eas": {
         "projectId": "323d1cfb-6bdb-4145-ab71-06be95eca9ff"
+      },
+      "googleAuth": {
+        "webClientId": "338186716107-j8ifac27k51mlucgmjd9d4hohaarpsef.apps.googleusercontent.com",
+        "iosClientId": "338186716107-kcqu0kisks6ir0hjp0kbj4d544fouupt.apps.googleusercontent.com",
+        "androidClientId": "338186716107-hbl7oa630j5ir50eu1tmt36b4ojr1tk2.apps.googleusercontent.com"
+      },
+      "revenueCat": {
+        "iosApiKey": "appl_XvLvuCqeciwhjJTzMqKnqqgNZFi",
+        "androidApiKey": "goog_mArwiVdtqvrfQpPRLmgLSSyFfIm",
+        "entitlementIdentifier": "ABC Doctor Pro",
+        "offeringIdentifier": "tokens"
       }
     }
   }
