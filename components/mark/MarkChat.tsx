@@ -416,7 +416,6 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
     setup?: CaseSetup,
     seed?: string,
   ) => {
-    if (key === 'patient_simulator') { router.push('/practice'); return; }
     if (starting) return;
     setStarting(true);
     setError(null);

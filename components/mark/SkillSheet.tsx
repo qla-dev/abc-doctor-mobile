@@ -69,11 +69,7 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
 
   const start = (skill: MarkSkill, modality: Modality) => {
     void Haptics.selectionAsync();
-    if (skill.key === 'patient_simulator') {
-      onClose(); router.push('/practice'); return;
-    } else {
-      onStart(skill, modality);
-    }
+    onStart(skill, modality, skill.key === 'patient_simulator' ? setup : undefined);
     onClose();
   };
 
@@ -92,9 +88,7 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
               <Pressable
                 disabled={starting || !resolveMode(mode, skill).compatible}
                 onPress={() => {
-                  // The case is a choice before it is a conversation, so this one unfolds
-                  // instead of starting.
-                  if (configurable) { onClose(); router.push('/practice'); return; }
+                  if (configurable) { setCaseOpen(o => !o); return; }
                   start(skill, resolveMode(mode, skill).input);
                 }}
                 style={({ pressed }) => [
