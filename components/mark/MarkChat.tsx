@@ -13,6 +13,7 @@ import {
   type ScrollViewInstance, type StyleProp, type TextStyle,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { ChevronLeft, MessageSquare, Sparkles } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -27,7 +28,7 @@ import { MarkCallBar } from '@/components/mark/MarkCallBar';
 import {
   MarkComposer, useKeyboardHeight, type MarkComposerHandle,
 } from '@/components/mark/MarkComposer';
-import { SimulatorTools } from '@/components/mark/SimulatorTools';
+import { SymptomsSheet } from '@/components/mark/SymptomsSheet';
 import { MarkThinking } from '@/components/mark/MarkThinking';
 import { SkillSheet } from '@/components/mark/SkillSheet';
 import type { CaseSetup } from '@/lib/caseGenerator';
@@ -155,6 +156,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   /** What Mark can be, for the sheet behind the plus in the composer. */
   const [skills, setSkills] = useState<MarkSkill[]>([]);
   const [skillsOpen, setSkillsOpen] = useState(false);
+  const [symptomsOpen, setSymptomsOpen] = useState(false);
   const [starting, setStarting] = useState(false);
 
   /**
@@ -605,7 +607,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
 
   return (
     <View style={g.screen}>
-      {header ? <ChatHeader onHistory={openHistory} /> : null}
+      {header ? <ChatHeader onHistory={openHistory} patientName={patient?.name} /> : null}
       <ScrollView
         ref={scroller}
         onLayout={event => {
@@ -711,8 +713,8 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
           onSend={send}
           onTalk={talk}
           ref={bar}
-          onSkills={openSkills}
-          skillLabel={conversation?.skill?.name ?? t('ai.title')}
+          onSkills={patient ? () => setSymptomsOpen(true) : openSkills}
+          skillLabel={patient ? t('sim.symptoms') : (conversation?.skill?.name ?? t('ai.title'))}
           busy={busy || starting || Boolean(conversationId && !conversation)}
           disabled={!effective.compatible || noMessages || pending.some(item => item.pending !== 'local')}
           canSpeak={effective.compatible && effective.input === 'voice' && !noVoice && !calling && !speech.listening}
@@ -721,14 +723,11 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
             <>
               {creditLimit ? <CreditLimitNotice kind={creditLimit} /> : null}
               {error ? <Text accessibilityRole="alert" style={[styles.error, { paddingHorizontal: 12, paddingBottom: 8 }]}>{error}</Text> : null}
-              <ModePicker skill={conversation?.skill} disabled={busy} beforeChange={async () => { speech.stop(); await drainCall.current?.(); if (conversation) { await Mark.flushTranscripts(conversation.id); await reload(conversation.id); } setCalling(false); }} />
+              {!patient ? <ModePicker skill={conversation?.skill} disabled={busy} beforeChange={async () => { speech.stop(); await drainCall.current?.(); if (conversation) { await Mark.flushTranscripts(conversation.id); await reload(conversation.id); } setCalling(false); }} /> : null}
               {effective.input === 'voice' && !calling && !speech.listening && !speech.speaking ? <Text style={{ color: colors.muted, paddingHorizontal: 12, paddingBottom: 8 }}>Tap the microphone to speak.</Text> : null}
               {!effective.realtime && effective.output === 'voice' && !speech.listening && !speech.speaking && messages.some(message => message.role === 'assistant') ? <ChatAction title="Hear last reply" onPress={() => { const reply = [...messages].reverse().find(message => message.role === 'assistant'); if (reply) void speech.speak(reply.body); }} /> : null}
               {speech.listening || speech.speaking ? <ChatAction title={speech.listening ? 'Stop listening' : 'Stop playback'} onPress={speech.stop} /> : null}
               {conversation?.is_practice ? <ChatAction title="Practice overview / finish" onPress={async () => { try { speech.stop(); await drainCall.current?.(); await Mark.flushTranscripts(conversation.id); setCalling(false); router.push({ pathname: '/practice', params: { conversationId: String(conversation.id) } }); } catch (e) { setError((e as Error).message); } }} /> : null}
-              {patient ? (
-                <SimulatorTools patient={patient} onExamine={examine} onInvestigate={investigate} />
-              ) : null}
               {conversation && calling && effective.realtime && effective.compatible ? (
                 <MarkCallBar
                   key={`${conversation.id}:${mode}`}
@@ -755,6 +754,16 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
         }}
         starting={starting}
       />
+
+      {patient ? (
+        <SymptomsSheet
+          open={symptomsOpen}
+          onClose={() => setSymptomsOpen(false)}
+          patient={patient}
+          onExamine={examine}
+          onInvestigate={investigate}
+        />
+      ) : null}
 
       <MarkHistorySheet
         open={historyOpen}
@@ -808,19 +817,11 @@ function Hugging({ body, style }: { body: string; style: StyleProp<TextStyle> })
  * the Mark tab has one — must not have a second `useScreenHeader` writing over its options, and
  * a hook cannot be skipped while a child can simply not be mounted.
  */
-function ChatHeader({ onHistory }: { onHistory: () => void }) {
+function ChatHeader({ onHistory, patientName }: { onHistory: () => void; patientName?: string | null }) {
   const { colors } = useTheme();
   const { t } = useLanguage();
 
-  /**
-   * Always his name, never the skill's.
-   *
-   * The bar used to carry whichever skill the thread was opened in, which made the same
-   * conversation look like five different screens — and named the role rather than the one
-   * playing it. The skill is already on the chip in the composer, where it can be changed;
-   * up here it is only ever the same person answering.
-   */
-  const title = t('ai.title');
+  const title = patientName ?? t('ai.title');
 
   /**
    * The button goes through the app's own header plumbing rather than `headerRight`: on the
