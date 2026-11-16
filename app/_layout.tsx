@@ -16,7 +16,7 @@ import { PracticeLogin } from '@/components/mark/PracticeLogin';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { AuthScreen } from '@/components/auth/AuthScreen';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
-import { configureRevenueCat, hasRevenueCatConfig, identifyRevenueCatUser } from '@/lib/revenueCat';
+import { configurePurchases, purchasesAvailable, identifyUser } from '@/lib/purchases';
 import { useOTAUpdate } from '@/hooks/useOTAUpdate';
 import '@/i18n';
 
@@ -114,12 +114,12 @@ function AuthGate() {
   useOTAUpdate();
 
   useEffect(() => {
-    if (hasRevenueCatConfig()) configureRevenueCat();
+    if (purchasesAvailable()) configurePurchases();
   }, []);
 
   useEffect(() => {
-    if (authenticated && user && hasRevenueCatConfig()) {
-      void identifyRevenueCatUser(user.id);
+    if (authenticated && user && purchasesAvailable()) {
+      void identifyUser(user.id);
     }
   }, [authenticated, user]);
 
