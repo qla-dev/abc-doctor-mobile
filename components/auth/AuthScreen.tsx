@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Easing, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
 import * as Haptics from 'expo-haptics';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
@@ -47,13 +48,16 @@ export function AuthScreen() {
   const [signingInProvider, setSigningInProvider] = useState<'apple' | 'google' | null>(null);
   const processedGoogleToken = useRef<string | null>(null);
   const transitionX = useRef(new Animated.Value(width)).current;
+  const googleRedirectUri = Platform.OS === 'ios' && reversedGoogleClientId
+    ? `${reversedGoogleClientId}:/oauthredirect`
+    : Platform.OS === 'android' && reversedAndroidGoogleClientId
+      ? `${reversedAndroidGoogleClientId}:/oauthredirect`
+      : Platform.OS === 'web'
+        ? makeRedirectUri({ path: 'oauthredirect' })
+        : undefined;
   const [, googleResponse, promptGoogleSignIn] = Google.useIdTokenAuthRequest({
     ...googleRequestConfig,
-    redirectUri: Platform.OS === 'ios' && reversedGoogleClientId
-      ? `${reversedGoogleClientId}:/oauthredirect`
-      : Platform.OS === 'android' && reversedAndroidGoogleClientId
-        ? `${reversedAndroidGoogleClientId}:/oauthredirect`
-        : undefined,
+    redirectUri: googleRedirectUri,
     selectAccount: true,
   });
   const primaryProvider = Platform.OS === 'ios' ? 'apple' : 'google';

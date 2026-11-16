@@ -5,6 +5,7 @@ import Constants from 'expo-constants';
 const rc = Constants.expoConfig?.extra?.revenueCat ?? {};
 
 export function hasRevenueCatConfig(): boolean {
+  if (Platform.OS === 'web') return false;
   const key = Platform.OS === 'ios' ? rc.iosApiKey : rc.androidApiKey;
   return Boolean(key);
 }
