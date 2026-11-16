@@ -22,7 +22,7 @@
           "group.abc.qla.dev"
         ]
       },
-      "buildNumber": "4"
+      "buildNumber": "5"
     },
     "android": {
       "adaptiveIcon": {
@@ -130,11 +130,32 @@
       ]
     ],
     "scheme": "abcdoctor",
-    "owner": "qla-dev",
+    "owner": "kulasinn",
     "extra": {
-      "router": {},
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
       "eas": {
-        "projectId": "323d1cfb-6bdb-4145-ab71-06be95eca9ff"
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "bundleIdentifier": "abc.qla.dev.widget",
+                  "targetName": "ABCDoctorWidget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.abc.qla.dev"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "2ee99cf3-4493-4d83-a927-cd3c76c190fe"
       },
       "googleAuth": {
         "webClientId": "338186716107-j8ifac27k51mlucgmjd9d4hohaarpsef.apps.googleusercontent.com",
