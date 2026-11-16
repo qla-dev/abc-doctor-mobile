@@ -33,7 +33,7 @@ const API_BACKENDS = {
 
 type BackendName = keyof typeof API_BACKENDS;
 
-const configured = String(process.env.EXPO_PUBLIC_API_BACKEND ?? 'local').toLowerCase();
+const configured = String(process.env.EXPO_PUBLIC_API_BACKEND ?? 'production').toLowerCase();
 
 export const API_BACKEND: BackendName =
   configured in API_BACKENDS ? (configured as BackendName) : 'local';
