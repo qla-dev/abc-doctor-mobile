@@ -33,6 +33,8 @@ import { SkillSheet } from '@/components/mark/SkillSheet';
 import type { CaseSetup } from '@/lib/caseGenerator';
 import { MarkHistorySheet } from '@/components/mark/MarkHistorySheet';
 import { ApiError } from '@/lib/api';
+import { usePurchaseState } from '@/hooks/usePurchases';
+import { CreditLimitNotice } from '@/components/mark/CreditLimitNotice';
 import {
   introFor, Mark,
   type Modality, type MarkConversation, type MarkMessage, type MarkSkill,
@@ -106,6 +108,10 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   const { colors } = useTheme();
   const { t, language } = useLanguage();
   const g = createGlobalStyles(colors);
+  const { data: purchaseState } = usePurchaseState();
+  const noMessages = purchaseState != null && purchaseState.messages <= 0;
+  const noVoice = purchaseState != null && purchaseState.voice_minutes <= 0;
+  const creditLimit = noMessages && noVoice ? 'both' : noMessages ? 'messages' : noVoice ? 'voice' : null;
 
   const [conversation, setConversation] = useState<MarkConversation | null>(null);
   const [messages, setMessages] = useState<MarkMessage[]>([]);
@@ -430,7 +436,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
    * the answer do not care which one it was.
    */
   const submit = useCallback((body: string, modality: Modality) => {
-    if (!body || busy || starting || !effective.compatible || effective.realtime || pending.some(item => item.pending !== 'local')) return;
+    if (!body || busy || starting || noMessages || !effective.compatible || effective.realtime || pending.some(item => item.pending !== 'local')) return;
     if (conversation) {
       void deliver(queue('user', body, modality));
 
@@ -503,7 +509,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
 
   /** The call opens over the thread, and its bar closes it. Nothing navigates away any more. */
   const talk = useCallback(() => {
-    if (!effective.compatible || busy || pending.some(item => item.pending !== 'local')) return;
+    if (!effective.compatible || busy || noVoice || pending.some(item => item.pending !== 'local')) return;
     if (effective.realtime && conversation) setCalling(true);
     else if (effective.input === 'voice') void speech.start();
   }, [conversation, mode, busy, speech, pending]);
@@ -709,11 +715,12 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
           onSkills={openSkills}
           skillLabel={conversation?.skill?.name ?? t('ai.title')}
           busy={busy || starting || Boolean(conversationId && !conversation)}
-          disabled={!effective.compatible || pending.some(item => item.pending !== 'local')}
-          canSpeak={effective.compatible && effective.input === 'voice' && !calling && !speech.listening}
+          disabled={!effective.compatible || noMessages || pending.some(item => item.pending !== 'local')}
+          canSpeak={effective.compatible && effective.input === 'voice' && !noVoice && !calling && !speech.listening}
           onHeight={setBarHeight}
           above={
             <>
+              {creditLimit ? <CreditLimitNotice kind={creditLimit} /> : null}
               {error ? <Text accessibilityRole="alert" style={[styles.error, { paddingHorizontal: 12, paddingBottom: 8 }]}>{error}</Text> : null}
               <ModePicker skill={conversation?.skill} disabled={busy} beforeChange={async () => { speech.stop(); await drainCall.current?.(); if (conversation) { await Mark.flushTranscripts(conversation.id); await reload(conversation.id); } setCalling(false); }} />
               {effective.input === 'voice' && !calling && !speech.listening && !speech.speaking ? <Text style={{ color: colors.muted, paddingHorizontal: 12, paddingBottom: 8 }}>Tap the microphone to speak.</Text> : null}

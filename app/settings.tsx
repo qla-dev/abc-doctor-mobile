@@ -19,7 +19,8 @@ import { QuizHistory, Reviews, Streak, resetAll } from '@/services/storage';
 import { Auth, type AccountInfo, type SignInMethod } from '@/services/auth';
 import { SignInMethodRow } from '@/components/auth/SignInMethodRow';
 import type { ThemeMode } from '@/theme/colors';
-import { usePurchaseState } from '@/hooks/usePurchases';
+import { usePurchaseState, useInvalidatePurchaseState } from '@/hooks/usePurchases';
+import { apiRequest } from '@/lib/api';
 import type { Language } from '@/i18n';
 
 function AccountRow({ label, value, onPress }: { label: string; value?: string | null; onPress?: () => void }) {
@@ -108,7 +109,9 @@ export default function SettingsScreen() {
   const { t, language, setLanguage, languages } = useLanguage();
   const router = useRouter();
   const { data: purchaseState } = usePurchaseState();
+  const invalidatePurchases = useInvalidatePurchaseState();
   const conversationMode = useConversationPreferences(s => s.mode);
+  const [recharging, setRecharging] = useState(false);
   const g = createGlobalStyles(colors);
   const [, forceRender] = useState(0);
   const [account, setAccount] = useState<AccountInfo | null>(null);
@@ -220,6 +223,29 @@ export default function SettingsScreen() {
           </View>
         </AppCard>
       )}
+      <AppCard onPress={async () => {
+        if (recharging) return;
+        setRecharging(true);
+        try {
+          await apiRequest('/purchases/recharge', { method: 'POST' });
+          invalidatePurchases();
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch (e) {
+          Alert.alert('Greška', e instanceof Error ? e.message : 'Recharge failed.');
+        } finally {
+          setRecharging(false);
+        }
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.red + '18', alignItems: 'center', justifyContent: 'center' }}>
+            {recharging ? <ActivityIndicator size="small" color={colors.red} /> : <Text style={{ fontSize: 18 }}>+</Text>}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.red, fontSize: 15, fontWeight: '700' }}>Quick Admin Recharge</Text>
+            <Text style={{ color: colors.muted, fontSize: 12 }}>+100 poruka, +100 minuta</Text>
+          </View>
+        </View>
+      </AppCard>
       <AppCard onPress={() => router.push('/store/messages')}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.blue + '18', alignItems: 'center', justifyContent: 'center' }}>

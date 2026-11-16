@@ -218,7 +218,16 @@ export function AuthScreen() {
 
           <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1, gap: 7 }}>
             <Image source={require('../../assets/icon.png')} style={a.logo} />
-            <Text style={a.brand}>ABC Doctor</Text>
+            <View style={{ alignItems: 'center', gap: 3 }}>
+              <Text style={a.brand}>ABC Doctor</Text>
+              <Text style={a.subtitle}>AI asistent za medicinsko učenje</Text>
+              <Text style={a.suiteText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.78}>
+                <Text style={a.cognipulseText}>Cognipulse.ai</Text>
+                <Text> · </Text>
+                <Text style={a.qlaText}>qla</Text>
+                <Text style={a.devText}>.dev</Text>
+              </Text>
+            </View>
           </View>
 
           <View style={[a.sheet, {
@@ -305,14 +314,19 @@ export function AuthScreen() {
           <Image source={require('../../assets/icon.png')} style={a.logo} />
           <View style={{ alignItems: 'center', gap: 3 }}>
             <Text style={a.brand}>ABC Doctor</Text>
+            <Text style={a.subtitle}>AI asistent za medicinsko učenje</Text>
             <Text style={a.suiteText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.78}>
+              <Text style={a.cognipulseText}>Cognipulse.ai</Text>
+              <Text> · </Text>
               <Text style={a.qlaText}>qla</Text>
               <Text style={a.devText}>.dev</Text>
-              <Text> · AI asistent za medicinsko učenje</Text>
             </Text>
           </View>
         </View>
         <View style={a.loginFooter}>
+          <Text style={a.freeText}>
+            Registracijom dobijate besplatne poruke i glasovne minute.
+          </Text>
           <Pressable
             accessibilityRole="link"
             accessibilityLabel="Otvori politiku privatnosti"
@@ -400,9 +414,11 @@ export function AuthScreen() {
 
 const a = StyleSheet.create({
   logo: { width: 84, height: 84, borderRadius: 18 },
-  brand: { color: '#fff', fontWeight: '800', fontSize: 30, letterSpacing: -.7 },
+  brand: { color: '#fff', fontFamily: 'FacebookSansBold', fontSize: 30, letterSpacing: -.7 },
+  subtitle: { color: '#8C93A3', fontSize: 13, marginTop: -2 },
   loginFooter: { gap: 4 },
   sheet: { backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 19, gap: 11, shadowColor: '#000', shadowOpacity: .3, shadowRadius: 28, shadowOffset: { width: 0, height: 15 } },
+  freeText: { color: '#8C93A3', textAlign: 'center', fontSize: 11, lineHeight: 16, paddingHorizontal: 12 },
   consentRow: { minHeight: 24, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
   consentText: { color: '#8C93A3', textAlign: 'center', fontSize: 10, lineHeight: 15 },
   consentLink: { fontWeight: '800' },
@@ -412,9 +428,10 @@ const a = StyleSheet.create({
   legalOptionText: { fontSize: 10, lineHeight: 14, fontWeight: '800' },
   transition: { zIndex: 100, alignItems: 'center', justifyContent: 'center', gap: 10 },
   transitionLogo: { width: 74, height: 74, borderRadius: 17 },
-  transitionText: { fontWeight: '800', fontSize: 24 },
-  suiteText: { color: '#8C93A3', fontSize: 13, marginTop: -7 },
-  qlaText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
-  devText: { color: '#0195F5', fontWeight: '800', fontSize: 13 },
+  transitionText: { fontFamily: 'FacebookSansBold', fontSize: 24 },
+  suiteText: { color: '#8C93A3', fontSize: 12, marginTop: 1 },
+  cognipulseText: { color: '#FF9500', fontFamily: 'FacebookSansBold', fontSize: 12 },
+  qlaText: { color: '#FFFFFF', fontFamily: 'FacebookSansBold', fontSize: 12 },
+  devText: { color: '#0195F5', fontFamily: 'FacebookSansBold', fontSize: 12 },
   input: { borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15 },
 });

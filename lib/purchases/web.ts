@@ -30,15 +30,7 @@ async function getPurchases() {
   if (!WEB_API_KEY) throw new PurchasesUnavailableError('Web billing key not configured');
   const { Purchases } = await import('@revenuecat/purchases-js');
   const userId = getOrCreateAppUserId();
-  console.log('[RC Web] key from Constants:', JSON.stringify(Constants.expoConfig?.extra?.revenueCat));
-  console.log('[RC Web] configuring with key:', WEB_API_KEY.slice(0, 8) + '…', 'userId:', userId);
-  try {
-    purchasesInstance = Purchases.configure(WEB_API_KEY, userId);
-    console.log('[RC Web] configure OK');
-  } catch (e: any) {
-    console.error('[RC Web] configure FAILED:', e?.message, e);
-    throw e;
-  }
+  purchasesInstance = Purchases.configure(WEB_API_KEY, userId);
   return purchasesInstance;
 }
 
@@ -69,25 +61,15 @@ export async function storePrices(): Promise<StorePrices> {
 
 async function buy(offeringId: OfferingId, productId: string, email?: string): Promise<void> {
   const purchases = await getPurchases();
-  console.log('[RC Web] getOfferings for', offeringId);
-  let offerings;
-  try {
-    offerings = await purchases.getOfferings();
-    console.log('[RC Web] offerings OK:', Object.keys(offerings.all));
-  } catch (e: any) {
-    console.error('[RC Web] getOfferings FAILED:', e?.message, e?.errorCode, e?.underlyingErrorMessage, e);
-    throw e;
-  }
+  const offerings = await purchases.getOfferings();
   const offering = offeringId === 'default' ? offerings.current : offerings.all[offeringId];
   if (!offering) throw new PurchasesUnavailableError(`Offering "${offeringId}" not found`);
   const pkg = offering.availablePackages.find((p: any) => p.rcBillingProduct?.identifier === productId);
   if (!pkg) throw new PurchasesUnavailableError(`Package for "${productId}" not found`);
   try {
-    console.log('[RC Web] purchase', pkg.identifier);
     await purchases.purchase({ rcPackage: pkg, customerEmail: email });
   } catch (e: any) {
     if (e?.errorCode === 1) throw new PurchaseCancelledError();
-    console.error('[RC Web] purchase FAILED:', e?.message, e?.errorCode, e?.underlyingErrorMessage, e);
     throw e;
   }
   await claim(email);

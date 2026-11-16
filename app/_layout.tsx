@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider as NavigationThemeProvider } from 'expo-router';
 import type { Theme } from 'expo-router';
@@ -138,6 +139,12 @@ function AuthGate() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    FacebookSansBold: require('../assets/fonts/FacebookSansBold.ttf'),
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
