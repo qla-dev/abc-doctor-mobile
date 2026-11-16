@@ -2,8 +2,8 @@ import { ModePicker } from '@/components/mark/ModePicker';
 import { useAuth } from '@/context/AuthContext';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Stack } from 'expo-router';
-import { ChevronRight, Moon, Smartphone, Sun } from 'lucide-react-native';
+import { Stack, useRouter } from 'expo-router';
+import { ChevronRight, Moon, ShoppingBag, Smartphone, Sun } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -104,6 +104,7 @@ export default function SettingsScreen() {
   const { user, signOut } = useAuth();
   const { colors, mode, setMode } = useTheme();
   const { t, language, setLanguage, languages } = useLanguage();
+  const router = useRouter();
   const g = createGlobalStyles(colors);
   const [, forceRender] = useState(0);
   const [account, setAccount] = useState<AccountInfo | null>(null);
@@ -190,6 +191,19 @@ export default function SettingsScreen() {
         )}
         <SignInMethodRow provider="google" methods={methods} onUpdated={() => void loadAccount()} />
       </List>
+
+      {/* ── Trgovina ────────────────────────────────────── */}
+      <SectionHeader title="Kupovina" />
+      <AppCard onPress={() => router.push('/store')}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <ShoppingBag size={20} color={colors.blue} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700' }}>Trgovina</Text>
+            <Text style={{ color: colors.muted, fontSize: 13 }}>Poruke, minute i pretplate</Text>
+          </View>
+          <ChevronRight size={16} color={colors.muted} />
+        </View>
+      </AppCard>
 
       <SectionHeader title="Conversation mode" />
       <ModePicker />

@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { apiRequest } from '@/lib/api';
 import { OFFERINGS, type OfferingId } from './products';
 import type { PurchaseState, StorePrices } from './revenueCat';
@@ -6,7 +7,7 @@ import { PurchaseCancelledError, PurchasesUnavailableError } from './revenueCat'
 export { PurchaseCancelledError, PurchasesUnavailableError };
 export type { PurchaseState, StorePrices };
 
-const WEB_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_WEB_BILLING_KEY ?? '';
+const WEB_API_KEY = Constants.expoConfig?.extra?.revenueCat?.webBillingKey ?? '';
 const APP_USER_ID_KEY = 'abc_rc_web_user_id';
 
 function getOrCreateAppUserId(): string {

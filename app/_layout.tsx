@@ -103,6 +103,7 @@ function RootStack() {
             an immersive full-bleed surface, not a themed screen with a tab bar under it. */}
         <Stack.Screen name="chat" options={{ headerShown: false, animation: "slide_from_bottom", animationDuration: 280 }} />
         <Stack.Screen name="settings" options={{ presentation: "modal" }} />
+        <Stack.Screen name="store" options={{ headerShown: false, presentation: "modal" }} />
         <Stack.Screen name="voice" options={{ headerShown: false, presentation: "fullScreenModal", animation: "fade" }} />
       </Stack>
     </NavigationThemeProvider>

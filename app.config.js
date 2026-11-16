@@ -51,6 +51,7 @@ module.exports = ({ config }) => {
         ...revenueCat,
         androidApiKey: process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY || backendEnv.REVENUECAT_GOOGLE_API_KEY || revenueCat.androidApiKey || '',
         iosApiKey: process.env.EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY || backendEnv.REVENUECAT_APPLE_API_KEY || revenueCat.iosApiKey || '',
+        webBillingKey: process.env.EXPO_PUBLIC_REVENUECAT_WEB_BILLING_KEY || backendEnv.REVENUECAT_WEB_BILLING_KEY || revenueCat.webBillingKey || '',
         entitlementIdentifier: process.env.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_IDENTIFIER || backendEnv.REVENUECAT_ENTITLEMENT_IDENTIFIER || revenueCat.entitlementIdentifier || 'ABC Doctor Pro',
       },
     },
