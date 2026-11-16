@@ -1,25 +1,30 @@
-import { ModePicker } from './ModePicker';
 import { resolveMode } from '@/lib/conversationMode';
 import { useConversationPreferences } from '@/stores/conversationPreferences';
-import { router } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
-import { Brain, Ear, Mic, Stethoscope } from 'lucide-react-native';
+import { Brain, Ear, Mic, Check } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { CustomBottomSheet } from '@/components/common/Sheets';
 import type { Modality, MarkSkill } from '@/services/mark';
 
 type Tone = 'indigo' | 'blue' | 'green' | 'orange' | 'red' | 'cyan';
+type Category = 'symptoms' | 'interpretation';
 
-/** Look per skill key. The server orders them; the patient simulator sits at position 1. */
 const LOOK: Record<string, { icon: typeof Brain; tone: Tone }> = {
-  patient_simulator: { icon: Stethoscope, tone: 'orange' },
   consultant: { icon: Brain, tone: 'indigo' },
   dictaphone: { icon: Mic, tone: 'green' },
   study_buddy: { icon: Brain, tone: 'blue' },
   whisperer: { icon: Ear, tone: 'cyan' },
+};
+
+const CATEGORY: Record<string, Category> = {
+  consultant: 'symptoms',
+  whisperer: 'symptoms',
+  study_buddy: 'interpretation',
+  dictaphone: 'interpretation',
 };
 
 export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting }: {
@@ -33,65 +38,101 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
   const { colors } = useTheme();
   const mode = useConversationPreferences(state => state.mode);
   const { t } = useLanguage();
+  const [category, setCategory] = useState<Category>('symptoms');
 
-  const styles = StyleSheet.create({
-    row: {
-      flexDirection: 'row', alignItems: 'center', gap: 11,
-      borderRadius: 14, paddingHorizontal: 12, paddingVertical: 11,
-    },
-    icon: { width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-    name: { color: colors.text, fontSize: 14, fontWeight: '700' },
-    desc: { color: colors.muted, fontSize: 12, marginTop: 2 },
-  });
+  const filtered = skills.filter(s => s.key !== 'patient_simulator' && CATEGORY[s.key] === category);
 
   const tintFor = (tone: Tone) => ({
     indigo: colors.indigo, blue: colors.blue, green: colors.green,
     orange: colors.orange, red: colors.red, cyan: colors.cyan,
   })[tone];
 
+  const styles = StyleSheet.create({
+    pills: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingBottom: 10 },
+    pill: { flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center' },
+    pillText: { fontSize: 14, fontWeight: '700' },
+    card: {
+      marginHorizontal: 12, marginBottom: 10, borderRadius: 16, padding: 14,
+      backgroundColor: colors.card, gap: 10,
+      borderWidth: 1, borderColor: 'transparent',
+    },
+    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+    icon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+    name: { color: colors.text, fontSize: 15, fontWeight: '700' },
+    desc: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+    tick: { position: 'absolute', top: 10, right: 10 },
+  });
+
   return (
     <CustomBottomSheet open={open} onClose={onClose} title={t('ai.skills')}>
-      <BottomSheetScrollView contentContainerStyle={{ gap: 4, paddingBottom: 8 }}>
-        <ModePicker />
-        {skills.map(skill => {
+      <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 8 }}>
+        <View style={styles.pills}>
+          {([
+            { key: 'symptoms' as Category, label: 'Simptomi' },
+            { key: 'interpretation' as Category, label: 'Interpretacija' },
+          ]).map(cat => {
+            const on = category === cat.key;
+            return (
+              <Pressable
+                key={cat.key}
+                onPress={() => { void Haptics.selectionAsync(); setCategory(cat.key); }}
+                style={[styles.pill, { backgroundColor: on ? colors.blue : colors.input }]}
+              >
+                <Text style={[styles.pillText, { color: on ? '#FFF' : colors.text }]}>
+                  {cat.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {filtered.map(skill => {
           const look = LOOK[skill.key] ?? { icon: Brain, tone: 'blue' as Tone };
           const Icon = look.icon;
+          const tint = tintFor(look.tone);
           const active = skill.key === activeKey;
+          const compatible = resolveMode(mode, skill).compatible;
 
           return (
             <Pressable
               key={skill.id}
-              disabled={starting || !resolveMode(mode, skill).compatible}
+              disabled={starting || !compatible}
               onPress={() => {
                 void Haptics.selectionAsync();
-                if (skill.key === 'patient_simulator') {
-                  onClose();
-                  router.push('/patient-simulator');
-                  return;
-                }
                 onStart(skill, resolveMode(mode, skill).input);
                 onClose();
               }}
               style={({ pressed }) => [
-                styles.row,
-                { backgroundColor: active || pressed ? colors.input : 'transparent' },
+                styles.card,
+                active && { borderColor: tint, backgroundColor: tint + '1A' },
+                pressed && { opacity: 0.75 },
+                !compatible && { opacity: 0.45 },
               ]}
             >
-              <View style={[styles.icon, { backgroundColor: tintFor(look.tone) + '22' }]}>
-                <Icon size={17} color={tintFor(look.tone)} />
+              <View style={styles.cardHeader}>
+                <View style={[styles.icon, { backgroundColor: tint + '22' }]}>
+                  <Icon size={19} color={tint} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.name} numberOfLines={1}>{skill.name}</Text>
+                </View>
               </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.name} numberOfLines={1}>{skill.name}</Text>
-                {skill.description ? (
-                  <Text style={styles.desc} numberOfLines={2}>{skill.description}</Text>
-                ) : null}
-              </View>
-
-              {!resolveMode(mode, skill).compatible ? <Text style={styles.desc}>Select a voice mode</Text> : null}
+              {skill.description ? (
+                <Text style={styles.desc} numberOfLines={3}>{skill.description}</Text>
+              ) : null}
+              {!compatible ? (
+                <Text style={[styles.desc, { color: colors.red }]}>Select a voice mode</Text>
+              ) : null}
+              {active ? <Check size={16} color={tint} style={styles.tick} /> : null}
             </Pressable>
           );
         })}
 
+        {filtered.length === 0 && skills.length > 0 ? (
+          <Text style={{ color: colors.muted, fontSize: 14, textAlign: 'center', paddingVertical: 24 }}>
+            No skills in this category
+          </Text>
+        ) : null}
         {skills.length === 0 ? <ActivityIndicator color={colors.blue} style={{ marginVertical: 24 }} /> : null}
       </BottomSheetScrollView>
     </CustomBottomSheet>

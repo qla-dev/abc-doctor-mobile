@@ -6,6 +6,7 @@ import { router, Stack } from 'expo-router';
 import {
   Stethoscope, ChevronRight, Shuffle, MessageSquareText, Mic,
   Shield, Zap, Flame, Heart, Scissors, Globe, User, Users,
+  PersonStanding, Briefcase, Clock, Armchair,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Mark, type Modality } from '@/services/mark';
@@ -70,13 +71,16 @@ export default function PatientSimulatorScreen() {
     })),
   ];
 
-  const ageBandLabels: Record<string, string> = {
-    '0-17': '0-17',
-    '18-34': '18-34',
-    '35-54': '35-54',
-    '55-74': '55-74',
-    '75+': '75+',
-  };
+  const ageBandOptions: Choice<AgeBand>[] = [
+    { value: '18-34', label: '18-34', hint: 'Young adult', tone: 'green',
+      icon: p => <PersonStanding {...p} /> },
+    { value: '35-54', label: '35-54', hint: 'Middle-aged', tone: 'blue',
+      icon: p => <Briefcase {...p} /> },
+    { value: '55-74', label: '55-74', hint: 'Senior', tone: 'indigo',
+      icon: p => <Clock {...p} /> },
+    { value: '75+', label: '75+', hint: 'Elderly', tone: 'orange',
+      icon: p => <Armchair {...p} /> },
+  ];
 
   const styles = StyleSheet.create({
     modeLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5, marginBottom: 2 },
@@ -85,9 +89,6 @@ export default function PatientSimulatorScreen() {
     heroIcon: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
     heroTitle: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
     heroDesc: { fontSize: 14, textAlign: 'center', lineHeight: 20, paddingHorizontal: 8 },
-    ageRow: { flexDirection: 'row', gap: 6 },
-    agePill: { flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-    agePillText: { fontSize: 13, fontWeight: '700' },
     actions: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
     randomBtn: { width: 50, height: 50, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
     startBtn: {
@@ -174,26 +175,7 @@ export default function PatientSimulatorScreen() {
       </AppCard>
 
       <SectionHeader title={t('setup.age')} />
-      <View style={styles.ageRow}>
-        {AGE_BANDS.map(band => {
-          const on = setup.ageBand === band;
-          return (
-            <Pressable
-              key={band}
-              onPress={() => { void Haptics.selectionAsync(); patch({ ageBand: band }); }}
-              style={[
-                styles.agePill,
-                { backgroundColor: on ? colors.blue : colors.card },
-                on && { shadowColor: colors.blue, shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
-              ]}
-            >
-              <Text style={[styles.agePillText, { color: on ? '#FFF' : colors.text }]}>
-                {ageBandLabels[band] ?? band}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <ChoiceCards options={ageBandOptions} value={setup.ageBand} onChange={v => patch({ ageBand: v })} />
 
       <View style={styles.actions}>
         <Pressable
