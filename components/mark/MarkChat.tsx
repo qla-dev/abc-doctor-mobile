@@ -594,13 +594,13 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
       alignSelf: 'center', maxWidth: '94%', backgroundColor: 'transparent',
       borderWidth: StyleSheet.hairlineWidth, borderColor: colors.separator,
     },
-    asideText: { color: colors.muted, fontSize: 13, lineHeight: 19, fontStyle: 'italic' },
+    asideText: { color: colors.muted, fontSize: 14.5, lineHeight: 21, fontStyle: 'italic' },
     sending: { opacity: 0.55 },
     failed: { borderWidth: StyleSheet.hairlineWidth, borderColor: colors.red },
     unsent: { color: colors.red, fontSize: 11, fontWeight: '700', marginTop: 4 },
-    mineText: { color: '#FFFFFF', fontSize: 14.5 },
+    mineText: { color: '#FFFFFF', fontSize: 16.5 },
     // A line with the width of the screen behind it can afford the size a bubble could not.
-    hisText: { color: colors.text, fontSize: 15.5, lineHeight: 22 },
+    hisText: { color: colors.text, fontSize: 17.5, lineHeight: 26 },
   });
 
   return (

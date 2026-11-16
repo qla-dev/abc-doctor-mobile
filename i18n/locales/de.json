@@ -202,7 +202,11 @@
     "vitals": "Vitalwerte",
     "end": "Fall beenden",
     "noAnswer": "Der Patient wirkt unsicher und antwortet darauf nicht.",
-    "opened": "Konsultation gestartet"
+    "opened": "Konsultation gestartet",
+    "setupDesc": "Konfiguriere deinen Patientenfall. Mark spielt den Patienten, du erhebst die Anamnese, untersuchst und stellst die Diagnose."
+  },
+  "skills": {
+    "patient_simulator": "Patientensimulator"
   },
   "settings": {
     "system": "System folgen",

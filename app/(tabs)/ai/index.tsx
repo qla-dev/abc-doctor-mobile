@@ -154,11 +154,11 @@ export default function AiScreen() {
         <View style={g.scrollContent}>
           {skillsError ? <Text style={styles.skillError}>{skillsError}</Text> : null}
 
-          {skills.map(skill => {
+          {skills.flatMap(skill => {
             const look = LOOK[skill.key] ?? { icon: Brain, tone: 'blue' as Tone };
             const Icon = look.icon;
 
-            return (
+            const card = (
               <AppCard key={skill.id} onPress={() => open(skill)}>
                 <View style={styles.skillRow}>
                   <View style={[styles.iconWrap, { backgroundColor: tintFor(look.tone) + '22' }]}>
@@ -178,20 +178,24 @@ export default function AiScreen() {
                 </View>
               </AppCard>
             );
-          })}
 
-          <AppCard onPress={() => router.push('/practice')}>
-            <View style={styles.skillRow}>
-              <View style={[styles.iconWrap, { backgroundColor: colors.red + '22' }]}>
-                <ClipboardList size={20} color={colors.red} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.skillLabel}>Practice</Text>
-                <Text style={styles.skillDesc} numberOfLines={2}>Structured workflows with evaluation and feedback.</Text>
-              </View>
-              <ChevronRight size={16} color={colors.muted} />
-            </View>
-          </AppCard>
+            if (skill.key !== 'patient_simulator') return [card];
+
+            return [card, (
+              <AppCard key="practice" onPress={() => router.push('/practice')}>
+                <View style={styles.skillRow}>
+                  <View style={[styles.iconWrap, { backgroundColor: colors.red + '22' }]}>
+                    <ClipboardList size={20} color={colors.red} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.skillLabel}>Procedure</Text>
+                    <Text style={styles.skillDesc} numberOfLines={2}>Strukturirane vježbe s evaluacijom i povratnom informacijom.</Text>
+                  </View>
+                  <ChevronRight size={16} color={colors.muted} />
+                </View>
+              </AppCard>
+            )];
+          })}
         </View>
       </ScrollView>
       {day.sheet}

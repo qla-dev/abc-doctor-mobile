@@ -204,7 +204,11 @@
     "vitals": "Vitalni znaci",
     "end": "Završi slučaj",
     "noAnswer": "Pacijent djeluje nesigurno i ne odgovara na to.",
-    "opened": "Konsultacija je počela"
+    "opened": "Konsultacija je počela",
+    "setupDesc": "Prilagodi slučaj pacijenta. Mark glumi pacijenta, ti uzimaš anamnezu, pregledaš i postavljaš dijagnozu."
+  },
+  "skills": {
+    "patient_simulator": "Simulator pacijenta"
   },
   "settings": {
     "system": "Prati sistem",

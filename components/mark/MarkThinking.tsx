@@ -99,7 +99,7 @@ export function MarkThinking({ skill }: {
   const entering = useAnimatedStyle(() => ({ opacity: enter.value }));
 
   const label = `${t('ai.title')} ${phase.text}`;
-  const text = { color: colors.text, fontSize: 14.5, lineHeight: 20 } as const;
+  const text = { color: colors.text, fontSize: 18, lineHeight: 27 } as const;
 
   return (
     <ReanimatedAnimated.View style={[{ alignSelf: 'flex-start', paddingVertical: 2 }, entering]}>
@@ -107,7 +107,7 @@ export function MarkThinking({ skill }: {
       <MaskedView
         maskElement={
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            {phase.skill ? <BrainCircuit size={14} color="#000000" /> : null}
+            {phase.skill ? <BrainCircuit size={18} color="#000000" /> : null}
             <Text accessibilityRole="progressbar" accessibilityLabel={label} style={text}>
               {label}
             </Text>
@@ -115,10 +115,10 @@ export function MarkThinking({ skill }: {
         }
       >
         {/* The mask decides the shape; everything below only supplies colour. The copy of the
-            text is what gives the block its size — it is invisible, and it is load-bearing. */}
+            text is what gives the block its size -- it is invisible, and it is load-bearing. */}
         <View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, opacity: 0 }}>
-            {phase.skill ? <BrainCircuit size={14} color="#000000" /> : null}
+            {phase.skill ? <BrainCircuit size={18} color="#000000" /> : null}
             <Text style={text}>{label}</Text>
           </View>
           <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.muted }]} />
