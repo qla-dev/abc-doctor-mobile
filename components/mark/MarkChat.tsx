@@ -607,7 +607,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
 
   return (
     <View style={g.screen}>
-      {header ? <ChatHeader onHistory={openHistory} patientName={patient?.name} /> : null}
+      {header ? <ChatHeader onHistory={openHistory} patientName={patient ? `${patient.name}, ${patient.age}` : undefined} /> : null}
       <ScrollView
         ref={scroller}
         onLayout={event => {
