@@ -204,7 +204,8 @@
     "noAnswer": "The patient looks unsure and does not answer that.",
     "opened": "Consultation started",
     "setupDesc": "Configure your patient case. Mark plays the patient, you take the history, examine, and diagnose.",
-    "symptoms": "Symptoms"
+    "symptoms": "Symptoms",
+    "practiceDetails": "Practice details"
   },
   "skills": {
     "patient_simulator": "Patient Simulator"

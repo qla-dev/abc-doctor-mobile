@@ -204,7 +204,8 @@
     "noAnswer": "Der Patient wirkt unsicher und antwortet darauf nicht.",
     "opened": "Konsultation gestartet",
     "setupDesc": "Konfiguriere deinen Patientenfall. Mark spielt den Patienten, du erhebst die Anamnese, untersuchst und stellst die Diagnose.",
-    "symptoms": "Symptome"
+    "symptoms": "Symptome",
+    "practiceDetails": "Praxisdetails"
   },
   "skills": {
     "patient_simulator": "Patientensimulator"

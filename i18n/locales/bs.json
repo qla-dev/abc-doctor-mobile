@@ -206,7 +206,8 @@
     "noAnswer": "Pacijent djeluje nesigurno i ne odgovara na to.",
     "opened": "Konsultacija je počela",
     "setupDesc": "Prilagodi slučaj pacijenta. Mark glumi pacijenta, ti uzimaš anamnezu, pregledaš i postavljaš dijagnozu.",
-    "symptoms": "Simptomi"
+    "symptoms": "Simptomi",
+    "practiceDetails": "Detalji vjezbe"
   },
   "skills": {
     "patient_simulator": "Simulator pacijenta"

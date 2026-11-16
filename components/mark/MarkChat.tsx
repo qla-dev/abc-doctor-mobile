@@ -29,6 +29,7 @@ import {
   MarkComposer, useKeyboardHeight, type MarkComposerHandle,
 } from '@/components/mark/MarkComposer';
 import { SymptomsSheet } from '@/components/mark/SymptomsSheet';
+import { PracticeSheet } from '@/components/mark/PracticeSheet';
 import { MarkThinking } from '@/components/mark/MarkThinking';
 import { SkillSheet } from '@/components/mark/SkillSheet';
 import type { CaseSetup } from '@/lib/caseGenerator';
@@ -157,6 +158,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
   const [skills, setSkills] = useState<MarkSkill[]>([]);
   const [skillsOpen, setSkillsOpen] = useState(false);
   const [symptomsOpen, setSymptomsOpen] = useState(false);
+  const [practiceOpen, setPracticeOpen] = useState(false);
   const [starting, setStarting] = useState(false);
 
   /**
@@ -607,7 +609,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
 
   return (
     <View style={g.screen}>
-      {header ? <ChatHeader onHistory={openHistory} patientName={patient ? `${patient.name}, ${patient.age}` : undefined} /> : null}
+      {header ? <ChatHeader onHistory={openHistory} patientName={patient ? `${patient.name}, ${patient.age}` : undefined} practiceTitle={conversation?.is_practice ? (conversation.title ?? t('sim.practiceDetails')) : undefined} /> : null}
       <ScrollView
         ref={scroller}
         onLayout={event => {
@@ -713,8 +715,8 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
           onSend={send}
           onTalk={talk}
           ref={bar}
-          onSkills={patient ? () => setSymptomsOpen(true) : openSkills}
-          skillLabel={patient ? t('sim.symptoms') : (conversation?.skill?.name ?? t('ai.title'))}
+          onSkills={patient ? () => setSymptomsOpen(true) : conversation?.is_practice ? () => setPracticeOpen(true) : openSkills}
+          skillLabel={patient ? t('sim.symptoms') : conversation?.is_practice ? t('sim.practiceDetails') : (conversation?.skill?.name ?? t('ai.title'))}
           busy={busy || starting || Boolean(conversationId && !conversation)}
           disabled={!effective.compatible || noMessages || pending.some(item => item.pending !== 'local')}
           canSpeak={effective.compatible && effective.input === 'voice' && !noVoice && !calling && !speech.listening}
@@ -723,7 +725,7 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
             <>
               {creditLimit ? <CreditLimitNotice kind={creditLimit} /> : null}
               {error ? <Text accessibilityRole="alert" style={[styles.error, { paddingHorizontal: 12, paddingBottom: 8 }]}>{error}</Text> : null}
-              {!patient ? <ModePicker skill={conversation?.skill} disabled={busy} beforeChange={async () => { speech.stop(); await drainCall.current?.(); if (conversation) { await Mark.flushTranscripts(conversation.id); await reload(conversation.id); } setCalling(false); }} /> : null}
+              {!patient && !conversation?.is_practice ? <ModePicker skill={conversation?.skill} disabled={busy} beforeChange={async () => { speech.stop(); await drainCall.current?.(); if (conversation) { await Mark.flushTranscripts(conversation.id); await reload(conversation.id); } setCalling(false); }} /> : null}
               {effective.input === 'voice' && !calling && !speech.listening && !speech.speaking ? <Text style={{ color: colors.muted, paddingHorizontal: 12, paddingBottom: 8 }}>Tap the microphone to speak.</Text> : null}
               {!effective.realtime && effective.output === 'voice' && !speech.listening && !speech.speaking && messages.some(message => message.role === 'assistant') ? <ChatAction title="Hear last reply" onPress={() => { const reply = [...messages].reverse().find(message => message.role === 'assistant'); if (reply) void speech.speak(reply.body); }} /> : null}
               {speech.listening || speech.speaking ? <ChatAction title={speech.listening ? 'Stop listening' : 'Stop playback'} onPress={speech.stop} /> : null}
@@ -762,6 +764,14 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
           patient={patient}
           onExamine={examine}
           onInvestigate={investigate}
+        />
+      ) : null}
+
+      {conversation?.is_practice && conversation.id ? (
+        <PracticeSheet
+          open={practiceOpen}
+          onClose={() => setPracticeOpen(false)}
+          conversationId={conversation.id}
         />
       ) : null}
 
@@ -817,11 +827,11 @@ function Hugging({ body, style }: { body: string; style: StyleProp<TextStyle> })
  * the Mark tab has one — must not have a second `useScreenHeader` writing over its options, and
  * a hook cannot be skipped while a child can simply not be mounted.
  */
-function ChatHeader({ onHistory, patientName }: { onHistory: () => void; patientName?: string | null }) {
+function ChatHeader({ onHistory, patientName, practiceTitle }: { onHistory: () => void; patientName?: string | null; practiceTitle?: string | null }) {
   const { colors } = useTheme();
   const { t } = useLanguage();
 
-  const title = patientName ?? t('ai.title');
+  const title = patientName ?? practiceTitle ?? t('ai.title');
 
   /**
    * The button goes through the app's own header plumbing rather than `headerRight`: on the
