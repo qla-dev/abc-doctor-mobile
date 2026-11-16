@@ -1,9 +1,10 @@
 import { ModePicker } from '@/components/mark/ModePicker';
 import { useAuth } from '@/context/AuthContext';
-import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack } from 'expo-router';
-import { Moon, Smartphone, Sun } from 'lucide-react-native';
+import { ChevronRight, Moon, Smartphone, Sun } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
@@ -14,8 +15,90 @@ import { AppButton } from '@/components/common/AppButton';
 import { AppCard } from '@/components/common/AppCard';
 import { FLASHCARDS_DATA } from '@/data/flashcardsData';
 import { QuizHistory, Reviews, Streak, resetAll } from '@/services/storage';
+import { Auth, type AccountInfo, type SignInMethod } from '@/services/auth';
+import { SignInMethodRow } from '@/components/auth/SignInMethodRow';
 import type { ThemeMode } from '@/theme/colors';
 import type { Language } from '@/i18n';
+
+function AccountRow({ label, value, onPress }: { label: string; value?: string | null; onPress?: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => { void Haptics.selectionAsync(); onPress?.(); }}
+        disabled={!onPress}
+        style={({ pressed }) => ({
+          flexDirection: 'row', alignItems: 'center', gap: 12,
+          paddingVertical: 13, paddingHorizontal: 14, minHeight: 48,
+          opacity: pressed ? 0.65 : 1,
+        })}
+      >
+        <Text style={{ color: colors.text, fontSize: 15, fontWeight: '600', flex: 1 }}>{label}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: 180 }}>
+          <Text style={{ color: value ? colors.secondaryText : colors.muted, fontSize: 14 }} numberOfLines={1}>
+            {value || 'Nije postavljeno'}
+          </Text>
+          {onPress && <ChevronRight size={14} color={colors.muted} />}
+        </View>
+      </Pressable>
+      <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.separator, marginLeft: 14 }} />
+    </>
+  );
+}
+
+function EditNameSheet({ currentName, onSaved, onCancel }: { currentName: string; onSaved: (name: string) => void; onCancel: () => void }) {
+  const { colors } = useTheme();
+  const [name, setName] = useState(currentName);
+  const [saving, setSaving] = useState(false);
+  const trimmed = name.trim();
+  const valid = trimmed.length > 0 && trimmed !== currentName;
+
+  const save = async () => {
+    if (!valid || saving) return;
+    setSaving(true);
+    try {
+      await Auth.updateProfile({ name: trimmed });
+      onSaved(trimmed);
+    } catch (e: any) {
+      Alert.alert('Greška', e?.message ?? 'Pokušajte ponovo.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <View style={{ padding: 16, gap: 12 }}>
+      <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>Ime</Text>
+      <TextInput
+        value={name}
+        onChangeText={setName}
+        placeholder="Unesite ime"
+        placeholderTextColor={colors.muted}
+        autoFocus
+        returnKeyType="done"
+        onSubmitEditing={() => void save()}
+        style={{
+          color: colors.text, fontSize: 16, backgroundColor: colors.input,
+          borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
+        }}
+      />
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <View style={{ flex: 1 }}>
+          <AppButton label="Odustani" tone="secondary" onPress={onCancel} full />
+        </View>
+        <View style={{ flex: 1 }}>
+          <AppButton
+            label={saving ? 'Sprema se…' : 'Spremi'}
+            onPress={() => void save()}
+            disabled={!valid || saving}
+            full
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function SettingsScreen() {
   const { user, signOut } = useAuth();
@@ -23,6 +106,17 @@ export default function SettingsScreen() {
   const { t, language, setLanguage, languages } = useLanguage();
   const g = createGlobalStyles(colors);
   const [, forceRender] = useState(0);
+  const [account, setAccount] = useState<AccountInfo | null>(null);
+  const [editingName, setEditingName] = useState(false);
+
+  const loadAccount = useCallback(async () => {
+    try {
+      const data = await Auth.me();
+      setAccount(data);
+    } catch {}
+  }, []);
+
+  useEffect(() => { void loadAccount(); }, [loadAccount]);
 
   const themeOptions: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
     { value: 'system', label: t('settings.system'), icon: Smartphone },
@@ -55,14 +149,48 @@ export default function SettingsScreen() {
     );
   };
 
+  const methods: SignInMethod[] = account?.sign_in_methods ?? [];
+
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       style={g.screen} contentContainerStyle={g.scrollContent} showsVerticalScrollIndicator={false}>
       <Stack.Screen options={{ title: t('common.settings') }} />
 
-      <SectionHeader title={user?.email ?? 'Account'} />
-      <AppButton label="Sign out" onPress={() => void signOut().catch(e => Alert.alert('Could not sign out', e.message))} full />
+      {/* ── Korisničko ime ─────────────────────────────────── */}
+      <SectionHeader title="Korisničko ime" />
+      {editingName && account ? (
+        <AppCard>
+          <EditNameSheet
+            currentName={account.name}
+            onSaved={(newName) => {
+              setAccount(prev => prev ? { ...prev, name: newName } : prev);
+              setEditingName(false);
+              void loadAccount();
+            }}
+            onCancel={() => setEditingName(false)}
+          />
+        </AppCard>
+      ) : (
+        <List>
+          <AccountRow
+            label="Ime"
+            value={account?.name ?? user?.name}
+            onPress={() => setEditingName(true)}
+          />
+          <AccountRow label="Email" value={account?.email ?? user?.email} />
+        </List>
+      )}
+
+      {/* ── Načini prijave ─────────────────────────────────── */}
+      <SectionHeader title="Načini prijave" />
+      <List>
+        {Platform.OS === 'ios' && (
+          <SignInMethodRow provider="apple" methods={methods} onUpdated={() => void loadAccount()} />
+        )}
+        <SignInMethodRow provider="google" methods={methods} onUpdated={() => void loadAccount()} />
+      </List>
+
       <SectionHeader title="Conversation mode" />
       <ModePicker />
       <SectionHeader title={t('common.theme')} />
@@ -114,6 +242,9 @@ export default function SettingsScreen() {
 
       <SectionHeader title={t('settings.data')} />
       <AppButton label={t('settings.reset')} tone="danger" onPress={confirmReset} full />
+
+      <SectionHeader title="" />
+      <AppButton label="Odjavi se" onPress={() => void signOut().catch(e => Alert.alert('Greška', e.message))} full />
     </ScrollView>
   );
 }

@@ -1,6 +1,15 @@
 import { apiRequest } from '@/lib/api';
 import type { User } from '@/context/AuthContext';
 
+export type SignInMethod = { provider: 'google' | 'apple'; email: string | null };
+
+export type AccountInfo = {
+  id: number;
+  name: string;
+  email: string;
+  sign_in_methods: SignInMethod[];
+};
+
 export type SocialAuthResponse = {
   user: User;
   token: string;
@@ -28,5 +37,22 @@ export const Auth = {
 
   logout: () => apiRequest<null>('/auth/logout', { method: 'POST' }),
 
-  me: () => apiRequest<User>('/auth/me'),
+  me: () => apiRequest<AccountInfo>('/auth/me'),
+
+  updateProfile: (fields: { name?: string }) =>
+    apiRequest<AccountInfo>('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(fields),
+    }),
+
+  linkMethod: (provider: 'google' | 'apple', credentials: Record<string, string>) =>
+    apiRequest<AccountInfo>(`/auth/sign-in-methods/${provider}`, {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    }),
+
+  unlinkMethod: (provider: 'google' | 'apple') =>
+    apiRequest<AccountInfo>(`/auth/sign-in-methods/${provider}`, {
+      method: 'DELETE',
+    }),
 };
