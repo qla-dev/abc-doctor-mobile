@@ -7,17 +7,15 @@ import { FallbackTabHeader, useTabBarClearance } from '@/components/common/TabHe
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useDayControl } from '@/hooks/useDayControl';
 import {
-  Brain, ChevronDown, ChevronRight, ClipboardList, Ear, MessageSquareText, MessagesSquare, Mic,
+  Brain, ChevronRight, ClipboardList, Ear, MessageSquareText, MessagesSquare, Mic,
   Settings, Stethoscope,
 } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
 import { AppCard } from '@/components/common/AppCard';
-import { CaseForm } from '@/components/mark/CaseForm';
 import { Mark, type Modality, type MarkSkill } from '@/services/mark';
 import { ApiError } from '@/lib/api';
-import { type CaseSetup } from '@/lib/caseGenerator';
 
 type Tone = 'indigo' | 'blue' | 'green' | 'orange' | 'red' | 'cyan';
 
@@ -49,17 +47,6 @@ export default function AiScreen() {
   const [skillsError, setSkillsError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
-  /**
-   * The case. The simulator used to be a screen of its own to hold these four choices; they are
-   * four rows, and a whole screen to reach them made the one skill you have to configure the one
-   * skill you could not simply start.
-   */
-  const [setup, setSetup] = useState<CaseSetup>({
-    difficulty: 'medium', specialty: 'any', gender: 'any', ageBand: '35-54',
-  });
-  const [caseOpen, setCaseOpen] = useState(false);
-  const patch = (next: Partial<CaseSetup>) => setSetup(current => ({ ...current, ...next }));
-
   useEffect(() => {
     Mark.skills().then(setSkills).catch((e: ApiError) => setSkillsError(e.message));
   }, []);
@@ -72,15 +59,12 @@ export default function AiScreen() {
     key: string,
     modality: Modality,
     extra: Record<string, string> = {},
-    context?: string,
-    sex?: string,
-    caseSetup?: CaseSetup,
   ) => {
     if (starting) return;
     setStarting(true);
     setSkillsError(null);
     try {
-      const thread = await Mark.startConversation(key, modality, undefined, context, sex, caseSetup);
+      const thread = await Mark.startConversation(key, modality);
       router.push({
         pathname: '/mark',
         params: {
@@ -104,21 +88,13 @@ export default function AiScreen() {
     if (question) void begin('consultant', 'text', { seed: question });
   };
 
-  /** A skill card. The simulator opens its four choices in place; the rest just start. */
   const open = (skill: MarkSkill) => {
     if (skill.key === 'patient_simulator') {
-      setCaseOpen(o => !o);
+      router.push('/patient-simulator');
       return;
     }
     if (!resolveMode(currentMode(), skill).compatible) { setSkillsError('This role requires voice input. Select a voice mode.'); return; }
     void begin(skill.key, resolveMode(currentMode(), skill).input);
-  };
-
-  /**
-   * The server resolves these choices into a saved case shared by the AI and the display.
-   */
-  const startCase = (modality: Modality) => {
-    void begin('patient_simulator', modality, {}, undefined, undefined, { ...setup });
   };
 
   const day = useDayControl();
@@ -198,21 +174,11 @@ export default function AiScreen() {
                     {skill.supports_text ? <MessageSquareText size={17} color={colors.blue} /> : null}
                     {skill.supports_voice ? <Mic size={17} color={colors.indigo} /> : null}
                   </View>
-                  {/* The simulator opens its choices in place, so it points down at them. */}
-                  {skill.key === 'patient_simulator' && caseOpen
-                    ? <ChevronDown size={16} color={colors.muted} />
-                    : <ChevronRight size={16} color={colors.muted} />}
+                  <ChevronRight size={16} color={colors.muted} />
                 </View>
               </AppCard>
             );
           })}
-
-          {/* Choosing the simulator is one more step, not one more screen. */}
-          {caseOpen ? (
-            <AppCard>
-              <CaseForm setup={setup} onChange={patch} onStart={startCase} starting={starting} />
-            </AppCard>
-          ) : null}
 
           <AppCard onPress={() => router.push('/practice')}>
             <View style={styles.skillRow}>

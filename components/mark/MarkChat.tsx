@@ -749,11 +749,9 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
         onClose={closeSkills}
         skills={skills}
         activeKey={conversation?.skill?.key ?? null}
-        onStart={(skill, modality, setup) => {
-          // Noted before the sheet closes, because closing is what decides whether the keyboard
-          // comes back — and it must not come back over a call that is about to open.
+        onStart={(skill, modality) => {
           spokenSkill.current = modality === 'voice';
-          void startSkill(skill.key, modality, setup);
+          void startSkill(skill.key, modality);
         }}
         starting={starting}
       />

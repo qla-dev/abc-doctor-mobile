@@ -2,16 +2,13 @@ import { ModePicker } from './ModePicker';
 import { resolveMode } from '@/lib/conversationMode';
 import { useConversationPreferences } from '@/stores/conversationPreferences';
 import { router } from 'expo-router';
-import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
-import { Brain, ChevronDown, Ear, Mic, Stethoscope } from 'lucide-react-native';
+import { Brain, Ear, Mic, Stethoscope } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { CustomBottomSheet } from '@/components/common/Sheets';
-import { CaseForm } from '@/components/mark/CaseForm';
-import type { CaseSetup } from '@/lib/caseGenerator';
 import type { Modality, MarkSkill } from '@/services/mark';
 
 type Tone = 'indigo' | 'blue' | 'green' | 'orange' | 'red' | 'cyan';
@@ -25,30 +22,17 @@ const LOOK: Record<string, { icon: typeof Brain; tone: Tone }> = {
   whisperer: { icon: Ear, tone: 'cyan' },
 };
 
-/**
- * What Mark can be, reached from the plus inside the composer.
- *
- * It opens over the conversation rather than replacing it, and the one skill with something to
- * configure — the simulated patient — unfolds its case here too. Both used to be screens you
- * navigated to; a choice about the next message belongs next to the message box.
- */
 export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting }: {
   open: boolean;
   onClose: () => void;
   skills: MarkSkill[];
   activeKey?: string | null;
-  /** The case comes with it when the skill is the simulator, and never otherwise. */
-  onStart: (skill: MarkSkill, modality: Modality, setup?: CaseSetup) => void;
+  onStart: (skill: MarkSkill, modality: Modality) => void;
   starting: boolean;
 }) {
   const { colors } = useTheme();
   const mode = useConversationPreferences(state => state.mode);
   const { t } = useLanguage();
-
-  const [setup, setSetup] = useState<CaseSetup>({
-    difficulty: 'medium', specialty: 'any', gender: 'any', ageBand: '35-54',
-  });
-  const [caseOpen, setCaseOpen] = useState(false);
 
   const styles = StyleSheet.create({
     row: {
@@ -58,20 +42,12 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
     icon: { width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
     name: { color: colors.text, fontSize: 14, fontWeight: '700' },
     desc: { color: colors.muted, fontSize: 12, marginTop: 2 },
-    voice: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.input },
-    form: { paddingHorizontal: 12, paddingBottom: 8 },
   });
 
   const tintFor = (tone: Tone) => ({
     indigo: colors.indigo, blue: colors.blue, green: colors.green,
     orange: colors.orange, red: colors.red, cyan: colors.cyan,
   })[tone];
-
-  const start = (skill: MarkSkill, modality: Modality) => {
-    void Haptics.selectionAsync();
-    onStart(skill, modality, skill.key === 'patient_simulator' ? setup : undefined);
-    onClose();
-  };
 
   return (
     <CustomBottomSheet open={open} onClose={onClose} title={t('ai.skills')}>
@@ -80,46 +56,39 @@ export function SkillSheet({ open, onClose, skills, activeKey, onStart, starting
         {skills.map(skill => {
           const look = LOOK[skill.key] ?? { icon: Brain, tone: 'blue' as Tone };
           const Icon = look.icon;
-          const configurable = skill.key === 'patient_simulator';
           const active = skill.key === activeKey;
 
           return (
-            <View key={skill.id}>
-              <Pressable
-                disabled={starting || !resolveMode(mode, skill).compatible}
-                onPress={() => {
-                  if (configurable) { setCaseOpen(o => !o); return; }
-                  start(skill, resolveMode(mode, skill).input);
-                }}
-                style={({ pressed }) => [
-                  styles.row,
-                  { backgroundColor: active || pressed ? colors.input : 'transparent' },
-                ]}
-              >
-                <View style={[styles.icon, { backgroundColor: tintFor(look.tone) + '22' }]}>
-                  <Icon size={17} color={tintFor(look.tone)} />
-                </View>
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={styles.name} numberOfLines={1}>{skill.name}</Text>
-                  {skill.description ? (
-                    <Text style={styles.desc} numberOfLines={2}>{skill.description}</Text>
-                  ) : null}
-                </View>
+            <Pressable
+              key={skill.id}
+              disabled={starting || !resolveMode(mode, skill).compatible}
+              onPress={() => {
+                void Haptics.selectionAsync();
+                if (skill.key === 'patient_simulator') {
+                  onClose();
+                  router.push('/patient-simulator');
+                  return;
+                }
+                onStart(skill, resolveMode(mode, skill).input);
+                onClose();
+              }}
+              style={({ pressed }) => [
+                styles.row,
+                { backgroundColor: active || pressed ? colors.input : 'transparent' },
+              ]}
+            >
+              <View style={[styles.icon, { backgroundColor: tintFor(look.tone) + '22' }]}>
+                <Icon size={17} color={tintFor(look.tone)} />
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.name} numberOfLines={1}>{skill.name}</Text>
+                {skill.description ? (
+                  <Text style={styles.desc} numberOfLines={2}>{skill.description}</Text>
+                ) : null}
+              </View>
 
-                {!resolveMode(mode, skill).compatible ? <Text style={styles.desc}>Select a voice mode</Text> : null}
-              </Pressable>
-
-              {configurable && caseOpen ? (
-                <View style={styles.form}>
-                  <CaseForm
-                    setup={setup}
-                    onChange={next => setSetup(current => ({ ...current, ...next }))}
-                    onStart={modality => start(skill, modality)}
-                    starting={starting}
-                  />
-                </View>
-              ) : null}
-            </View>
+              {!resolveMode(mode, skill).compatible ? <Text style={styles.desc}>Select a voice mode</Text> : null}
+            </Pressable>
           );
         })}
 
