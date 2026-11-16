@@ -14,15 +14,18 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "The camera is used to capture lecture slides and textbook pages to turn into flashcards.",
-        "NSMicrophoneUsageDescription": "The microphone is used for spoken consultations with the AI tutor and simulated patients.",
-        "NSPhotoLibraryUsageDescription": "Choose an image of study material to turn into flashcards."
+        "NSMicrophoneUsageDescription": "Allow ABC Doctor to hear spoken conversation turns.",
+        "NSPhotoLibraryUsageDescription": "Choose an image of study material to turn into flashcards.",
+        "NSSpeechRecognitionUsageDescription": "Allow ABC Doctor to transcribe spoken conversation turns."
       },
       "entitlements": {
         "com.apple.security.application-groups": [
+          "group.abc.qla.dev",
           "group.abc.qla.dev"
         ]
       },
-      "buildNumber": "6"
+      "buildNumber": "6",
+      "bitcode": false
     },
     "android": {
       "adaptiveIcon": {
@@ -40,14 +43,28 @@
         "POST_NOTIFICATIONS",
         "RECEIVE_BOOT_COMPLETED",
         "SCHEDULE_EXACT_ALARM",
-        "INTERNET"
+        "INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WAKE_LOCK",
+        "android.permission.BLUETOOTH",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ]
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/323d1cfb-6bdb-4145-ab71-06be95eca9ff",
+      "url": "https://u.expo.dev/2ee99cf3-4493-4d83-a927-cd3c76c190fe",
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 5000
     },
