@@ -1,9 +1,10 @@
-import { ModePicker } from '@/components/mark/ModePicker';
+import { modeLabels } from '@/lib/conversationMode';
+import { useConversationPreferences } from '@/stores/conversationPreferences';
 import { useAuth } from '@/context/AuthContext';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { ChevronRight, Moon, ShoppingBag, Smartphone, Sun } from 'lucide-react-native';
+import { ChevronRight, Crown, MessageCircle, Mic, Moon, Smartphone, Sun } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -18,6 +19,7 @@ import { QuizHistory, Reviews, Streak, resetAll } from '@/services/storage';
 import { Auth, type AccountInfo, type SignInMethod } from '@/services/auth';
 import { SignInMethodRow } from '@/components/auth/SignInMethodRow';
 import type { ThemeMode } from '@/theme/colors';
+import { usePurchaseState } from '@/hooks/usePurchases';
 import type { Language } from '@/i18n';
 
 function AccountRow({ label, value, onPress }: { label: string; value?: string | null; onPress?: () => void }) {
@@ -105,6 +107,8 @@ export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
   const { t, language, setLanguage, languages } = useLanguage();
   const router = useRouter();
+  const { data: purchaseState } = usePurchaseState();
+  const conversationMode = useConversationPreferences(s => s.mode);
   const g = createGlobalStyles(colors);
   const [, forceRender] = useState(0);
   const [account, setAccount] = useState<AccountInfo | null>(null);
@@ -192,21 +196,76 @@ export default function SettingsScreen() {
         <SignInMethodRow provider="google" methods={methods} onUpdated={() => void loadAccount()} />
       </List>
 
-      {/* ── Trgovina ────────────────────────────────────── */}
+      {/* ── Kupovina ────────────────────────────────────── */}
       <SectionHeader title="Kupovina" />
-      <AppCard onPress={() => router.push('/store')}>
+      {purchaseState && (
+        <AppCard>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-evenly' }}>
+            <View style={{ alignItems: 'center', gap: 2 }}>
+              <Text style={{ fontSize: 22, fontWeight: '800', color: colors.blue }}>{purchaseState.messages}</Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.muted }}>poruka</Text>
+            </View>
+            <View style={{ width: StyleSheet.hairlineWidth, height: 30, backgroundColor: colors.separator }} />
+            <View style={{ alignItems: 'center', gap: 2 }}>
+              <Text style={{ fontSize: 22, fontWeight: '800', color: colors.green }}>{purchaseState.voice_minutes}</Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.muted }}>minuta</Text>
+            </View>
+            <View style={{ width: StyleSheet.hairlineWidth, height: 30, backgroundColor: colors.separator }} />
+            <View style={{ alignItems: 'center', gap: 2 }}>
+              <Text style={{ fontSize: 22, fontWeight: '800', color: colors.orange }}>
+                {purchaseState.subscription_tier === 'pro' ? 'Pro' : purchaseState.subscription_tier === 'basic' ? 'Basic' : '—'}
+              </Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.muted }}>plan</Text>
+            </View>
+          </View>
+        </AppCard>
+      )}
+      <AppCard onPress={() => router.push('/store/messages')}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <ShoppingBag size={20} color={colors.blue} />
+          <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.blue + '18', alignItems: 'center', justifyContent: 'center' }}>
+            <MessageCircle size={18} color={colors.blue} />
+          </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700' }}>Trgovina</Text>
-            <Text style={{ color: colors.muted, fontSize: 13 }}>Poruke, minute i pretplate</Text>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700' }}>Poruke</Text>
+            <Text style={{ color: colors.muted, fontSize: 12 }}>od $2.99</Text>
+          </View>
+          <ChevronRight size={16} color={colors.muted} />
+        </View>
+      </AppCard>
+      <AppCard onPress={() => router.push('/store/voice')}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.green + '18', alignItems: 'center', justifyContent: 'center' }}>
+            <Mic size={18} color={colors.green} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700' }}>Glasovne minute</Text>
+            <Text style={{ color: colors.muted, fontSize: 12 }}>od $5.99</Text>
+          </View>
+          <ChevronRight size={16} color={colors.muted} />
+        </View>
+      </AppCard>
+      <AppCard onPress={() => router.push('/store/subscription')}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: colors.orange + '18', alignItems: 'center', justifyContent: 'center' }}>
+            <Crown size={18} color={colors.orange} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: '700' }}>Pretplata</Text>
+            <Text style={{ color: colors.muted, fontSize: 12 }}>od $9.99/mj</Text>
           </View>
           <ChevronRight size={16} color={colors.muted} />
         </View>
       </AppCard>
 
       <SectionHeader title="Conversation mode" />
-      <ModePicker />
+      <AppCard onPress={() => router.push('/conversation-mode')}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.blue, fontSize: 15, fontWeight: '600' }}>{modeLabels[conversationMode]}</Text>
+          </View>
+          <ChevronRight size={16} color={colors.muted} />
+        </View>
+      </AppCard>
       <SectionHeader title={t('common.theme')} />
       <List>
         {themeOptions.map((option, index) => {

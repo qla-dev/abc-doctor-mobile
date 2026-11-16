@@ -94,7 +94,7 @@ export default function HomeScreen() {
         onScroll={({ nativeEvent }) => {
           // Once iOS has applied its own inset, contentOffset.y rests at -contentInset.top, so the
           // two are added for the threshold to mean "moved away from the top" rather than "past 16".
-          const offset = nativeEvent.contentOffset.y + nativeEvent.contentInset.top;
+          const offset = nativeEvent.contentOffset.y + (nativeEvent.contentInset?.top ?? 0);
           setShowBarTitle(offset > 16);
         }}
         contentContainerStyle={{ paddingBottom: bottomPad }} showsVerticalScrollIndicator={false}>

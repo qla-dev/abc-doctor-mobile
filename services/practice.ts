@@ -35,10 +35,10 @@ export const Practice = {
       method: "PUT",
       body: JSON.stringify({ disabled }),
     }),
-  start: (workflow_id?: number) =>
+  start: (workflow_id?: number, gender?: string, age_band?: string) =>
     apiRequest<MarkConversation>("/practice/start", {
       method: "POST",
-      body: JSON.stringify({ workflow_id, mode: currentMode() }),
+      body: JSON.stringify({ workflow_id, mode: currentMode(), gender, age_band }),
     }),
   attempt: (id: number) => apiRequest<Attempt>(`/practice/${id}`),
   event: (id: number, event_key: string, args: Record<string, unknown>) =>

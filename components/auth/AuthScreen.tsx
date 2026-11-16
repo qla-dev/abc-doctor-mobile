@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Easing, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Easing, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
@@ -15,6 +15,7 @@ import { AppButton } from '@/components/common/AppButton';
 import { useTheme } from '@/theme/ThemeProvider';
 import { Auth } from '@/services/auth';
 import { playClickSound } from '@/lib/sound';
+import { ArrowLeft, Mail } from 'lucide-react-native';
 
 const googleExtra = Constants.expoConfig?.extra?.googleAuth ?? {};
 const normalizeGoogleClientId = (value?: string) => value?.trim().replace(/\/+$/, '') || '';
@@ -46,7 +47,12 @@ export function AuthScreen() {
   const { width } = useWindowDimensions();
   const [promptingProvider, setPromptingProvider] = useState<'apple' | 'google' | null>(null);
   const [signingInProvider, setSigningInProvider] = useState<'apple' | 'google' | null>(null);
+  const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [signingInEmail, setSigningInEmail] = useState(false);
   const processedGoogleToken = useRef<string | null>(null);
+  const passwordRef = useRef<any>(null);
   const transitionX = useRef(new Animated.Value(width)).current;
   const googleRedirectUri = Platform.OS === 'ios' && reversedGoogleClientId
     ? `${reversedGoogleClientId}:/oauthredirect`
@@ -153,6 +159,19 @@ export function AuthScreen() {
     }
   };
 
+  const handleEmailLogin = async () => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) return;
+    try {
+      setSigningInEmail(true);
+      const result = await Auth.login(trimmedEmail, password);
+      await finishSignIn(result);
+    } catch (error) {
+      setSigningInEmail(false);
+      Alert.alert('Prijava nije uspjela', error instanceof Error ? error.message : 'Provjerite email i lozinku.');
+    }
+  };
+
   useEffect(() => {
     if (!googleResponse) return;
     if (googleResponse.type !== 'success') {
@@ -176,6 +195,106 @@ export function AuthScreen() {
         showAuthError(error);
       });
   }, [googleResponse]);
+
+  if (showEmailLogin) {
+    return (
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <LinearGradient colors={['#11182A', '#080B12', '#05070B']} style={[StyleSheet.absoluteFill]} />
+        <LoginParticles />
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + 18, paddingBottom: insets.bottom + 14, paddingHorizontal: 18, justifyContent: 'space-between' }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={{ gap: 6 }}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => { void Haptics.selectionAsync(); setShowEmailLogin(false); }}
+              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: pressed ? 0.55 : 1, paddingVertical: 4 })}
+            >
+              <ArrowLeft size={18} color="#8C93A3" />
+              <Text style={{ color: '#8C93A3', fontSize: 13, fontWeight: '600' }}>Nazad</Text>
+            </Pressable>
+          </View>
+
+          <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1, gap: 7 }}>
+            <Image source={require('../../assets/icon.png')} style={a.logo} />
+            <Text style={a.brand}>ABC Doctor</Text>
+          </View>
+
+          <View style={[a.sheet, {
+            backgroundColor: colors.card,
+            marginHorizontal: -18,
+            marginBottom: -(insets.bottom + 14),
+            paddingBottom: 13,
+          }]}>
+            <Text style={{ color: colors.text, fontSize: 17, fontWeight: '800', textAlign: 'center' }}>
+              Prijava emailom
+            </Text>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email adresa"
+              placeholderTextColor={colors.muted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              autoFocus
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              editable={!signingInEmail}
+              style={[a.input, { backgroundColor: colors.input, color: colors.text }]}
+            />
+            <TextInput
+              ref={passwordRef}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Lozinka"
+              placeholderTextColor={colors.muted}
+              secureTextEntry
+              autoComplete="password"
+              returnKeyType="go"
+              onSubmitEditing={() => void handleEmailLogin()}
+              editable={!signingInEmail}
+              style={[a.input, { backgroundColor: colors.input, color: colors.text }]}
+            />
+            <AppButton
+              tone="dark"
+              label={signingInEmail ? 'Prijavljujem se…' : 'Prijavi se'}
+              icon={signingInEmail ? <ActivityIndicator size="small" color={resolvedMode === 'dark' ? '#000000' : '#FFFFFF'} /> : <Mail size={18} color={resolvedMode === 'dark' ? '#000000' : '#FFFFFF'} />}
+              disabled={signingInEmail || !email.trim() || !password}
+              onPress={() => void handleEmailLogin()}
+              full
+            />
+            <View style={a.legalOptions}>
+              {[
+                ['Privatnost', PRIVACY_URL],
+                ['Uslovi korištenja', TERMS_URL],
+              ].map(([label, url], index) => (
+                <View key={url} style={a.legalOption}>
+                  {index > 0 && <Text style={[a.legalSeparator, { color: colors.muted }]}>•</Text>}
+                  <Pressable
+                    accessibilityRole="link"
+                    accessibilityLabel={`Otvori: ${label}`}
+                    onPress={() => openLegalLink(url)}
+                    style={({ pressed }) => pressed && { opacity: .55 }}
+                  >
+                    <Text style={[a.legalOptionText, { color: colors.muted }]}>{label}</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+        <Animated.View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, a.transition, { backgroundColor: colors.background, transform: [{ translateX: transitionX }] }]}
+        >
+          <Image source={require('../../assets/icon.png')} style={a.transitionLogo} />
+          <Text style={[a.transitionText, { color: colors.text }]}>ABC Doctor</Text>
+        </Animated.View>
+      </KeyboardAvoidingView>
+    );
+  }
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
@@ -229,6 +348,17 @@ export function AuthScreen() {
               disabled={promptingProvider !== null || signingInProvider !== null}
               onPress={() => void handleSignIn(secondaryProvider)}
             />}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 2 }}>
+              <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.separator }} />
+              <Text style={{ color: colors.muted, fontSize: 11, fontWeight: '600' }}>ili</Text>
+              <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.separator }} />
+            </View>
+            <AppButton
+              tone="ghost"
+              label="Prijava emailom"
+              icon={<Mail size={18} color={colors.blue} />}
+              onPress={() => { void Haptics.selectionAsync(); setShowEmailLogin(true); }}
+            />
             <View style={a.legalOptions}>
               {[
                 ['Privatnost', PRIVACY_URL],
@@ -286,4 +416,5 @@ const a = StyleSheet.create({
   suiteText: { color: '#8C93A3', fontSize: 13, marginTop: -7 },
   qlaText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
   devText: { color: '#0195F5', fontWeight: '800', fontSize: 13 },
+  input: { borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15 },
 });

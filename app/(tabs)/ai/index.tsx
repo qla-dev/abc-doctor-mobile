@@ -1,6 +1,5 @@
-import { ModePicker } from '@/components/mark/ModePicker';
-import { currentMode } from '@/stores/conversationPreferences';
-import { resolveMode } from '@/lib/conversationMode';
+import { currentMode, useConversationPreferences } from '@/stores/conversationPreferences';
+import { modeLabels, resolveMode } from '@/lib/conversationMode';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, Stack } from 'expo-router';
@@ -50,6 +49,7 @@ export default function AiScreen() {
   const [skills, setSkills] = useState<MarkSkill[]>([]);
   const [skillsError, setSkillsError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const conversationMode = useConversationPreferences(s => s.mode);
 
   /**
    * The case. The simulator used to be a screen of its own to hold these four choices; they are
@@ -180,7 +180,15 @@ export default function AiScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={g.scrollContent}>
-          <ModePicker />
+          <AppCard onPress={() => router.push('/conversation-mode')}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.muted, fontSize: 10, fontWeight: '700', letterSpacing: 0.5, marginBottom: 2 }}>CONVERSATION MODE</Text>
+                <Text style={{ color: colors.blue, fontSize: 15, fontWeight: '600' }}>{modeLabels[conversationMode]}</Text>
+              </View>
+              <ChevronRight size={16} color={colors.muted} />
+            </View>
+          </AppCard>
           <AppCard onPress={() => router.push('/practice')}><Text style={styles.skillLabel}>Practice</Text><Text style={styles.skillDesc}>Choose a workflow. Meet an unexpected patient.</Text></AppCard>
           <TypingText text={t('ai.greeting')} style={styles.greeting} />
           {skillsError ? <Text style={styles.skillError}>{skillsError}</Text> : null}
