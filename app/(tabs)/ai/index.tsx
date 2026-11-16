@@ -1,5 +1,5 @@
-import { currentMode, useConversationPreferences } from '@/stores/conversationPreferences';
-import { modeLabels, resolveMode } from '@/lib/conversationMode';
+import { currentMode } from '@/stores/conversationPreferences';
+import { resolveMode } from '@/lib/conversationMode';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, Stack } from 'expo-router';
@@ -14,7 +14,6 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
 import { createGlobalStyles } from '@/theme/styles';
 import { AppCard } from '@/components/common/AppCard';
-import { TypingText } from '@/components/common/TypingText';
 import { CaseForm } from '@/components/mark/CaseForm';
 import { Mark, type Modality, type MarkSkill } from '@/services/mark';
 import { ApiError } from '@/lib/api';
@@ -49,7 +48,6 @@ export default function AiScreen() {
   const [skills, setSkills] = useState<MarkSkill[]>([]);
   const [skillsError, setSkillsError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
-  const conversationMode = useConversationPreferences(s => s.mode);
 
   /**
    * The case. The simulator used to be a screen of its own to hold these four choices; they are
@@ -144,7 +142,6 @@ export default function AiScreen() {
     skillDesc: { color: colors.muted, fontSize: 12.5, marginTop: 2 },
     skillError: { color: colors.red, fontSize: 13.5 },
     modeIcons: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-    greeting: { color: colors.text, fontSize: 15.5, lineHeight: 21 },
   });
 
   return (
@@ -180,17 +177,6 @@ export default function AiScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={g.scrollContent}>
-          <AppCard onPress={() => router.push('/conversation-mode')}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.muted, fontSize: 10, fontWeight: '700', letterSpacing: 0.5, marginBottom: 2 }}>CONVERSATION MODE</Text>
-                <Text style={{ color: colors.blue, fontSize: 15, fontWeight: '600' }}>{modeLabels[conversationMode]}</Text>
-              </View>
-              <ChevronRight size={16} color={colors.muted} />
-            </View>
-          </AppCard>
-          <AppCard onPress={() => router.push('/practice')}><Text style={styles.skillLabel}>Practice</Text><Text style={styles.skillDesc}>Choose a workflow. Meet an unexpected patient.</Text></AppCard>
-          <TypingText text={t('ai.greeting')} style={styles.greeting} />
           {skillsError ? <Text style={styles.skillError}>{skillsError}</Text> : null}
 
           {skills.map(skill => {

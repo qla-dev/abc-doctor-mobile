@@ -165,8 +165,8 @@
       "revenueCat": {
         "iosApiKey": "appl_XvLvuCqeciwhjJTzMqKnqqgNZFi",
         "androidApiKey": "goog_mArwiVdtqvrfQpPRLmgLSSyFfIm",
-        "entitlementIdentifier": "ABC Doctor Pro",
-        "offeringIdentifier": "tokens"
+        "webBillingKey": "rcb_sb_BDPmKAtcOihEnOiRBOdvHQlTx",
+        "entitlementIdentifier": "ABC Doctor Pro"
       }
     }
   }

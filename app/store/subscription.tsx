@@ -8,7 +8,7 @@ import { AppButton } from '@/components/common/AppButton';
 import { AppCard } from '@/components/common/AppCard';
 import { SegmentedControl } from '@/components/common/SegmentedControl';
 import { useStorePrices, usePurchaseState, useInvalidatePurchaseState, priceLabel } from '@/hooks/usePurchases';
-import { buySubscription, SUBSCRIPTION_PRODUCTS, PurchaseCancelledError } from '@/lib/purchases';
+import { buySubscription, SUBSCRIPTION_PRODUCTS, PurchaseCancelledError, purchasesAvailable } from '@/lib/purchases';
 import { createGlobalStyles } from '@/theme/styles';
 
 type Tier = 'basic' | 'pro';
@@ -43,6 +43,7 @@ export default function SubscriptionScreen() {
   const [tier, setTier] = useState<Tier>('pro');
   const [period, setPeriod] = useState<Period>('monthly');
   const [buying, setBuying] = useState(false);
+  const [error, setError] = useState('');
 
   const selectedProduct = SUBSCRIPTION_PRODUCTS.find(p => p.tier === tier && p.period === period)!;
   const monthlyEquiv = period === 'annual'
@@ -53,6 +54,7 @@ export default function SubscriptionScreen() {
 
   const handleBuy = async () => {
     setBuying(true);
+    setError('');
     try {
       await buySubscription(selectedProduct.productId);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -60,7 +62,7 @@ export default function SubscriptionScreen() {
       router.back();
     } catch (e) {
       if (e instanceof PurchaseCancelledError) return;
-      Alert.alert('Greška', e instanceof Error ? e.message : 'Kupovina nije uspjela.');
+      setError(e instanceof Error ? e.message : 'Kupovina nije uspjela.');
     } finally {
       setBuying(false);
     }
@@ -156,6 +158,8 @@ export default function SubscriptionScreen() {
       </AppCard>
 
       <View style={s.footer}>
+        {error ? <Text style={{ color: colors.red, fontSize: 13, fontWeight: '600', textAlign: 'center', marginBottom: 8 }}>{error}</Text> : null}
+        {!purchasesAvailable() ? <Text style={{ color: colors.orange, fontSize: 13, fontWeight: '600', textAlign: 'center', marginBottom: 8 }}>Kupovina nije dostupna u ovom okruženju.</Text> : null}
         <AppButton
           label={
             buying ? 'Kupovina…'
@@ -163,7 +167,7 @@ export default function SubscriptionScreen() {
                 : `Pretplati se · ${priceLabel(prices.data, selectedProduct.productId, selectedProduct.listPrice)}/${period === 'monthly' ? 'mj' : 'god'}`
           }
           onPress={() => void handleBuy()}
-          disabled={buying || isCurrentPlan}
+          disabled={buying || isCurrentPlan || !purchasesAvailable()}
           icon={buying ? <ActivityIndicator color="#FFF" size="small" /> : undefined}
           full
         />

@@ -6,7 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme/ThemeProvider';
 import { AppButton } from '@/components/common/AppButton';
 import { useStorePrices, usePurchaseState, useInvalidatePurchaseState, priceLabel } from '@/hooks/usePurchases';
-import { buyMessages, MESSAGE_PRODUCTS, PurchaseCancelledError } from '@/lib/purchases';
+import { buyMessages, MESSAGE_PRODUCTS, PurchaseCancelledError, purchasesAvailable } from '@/lib/purchases';
 import { createGlobalStyles } from '@/theme/styles';
 
 export default function MessagesScreen() {
@@ -19,10 +19,12 @@ export default function MessagesScreen() {
 
   const [selected, setSelected] = useState(MESSAGE_PRODUCTS[0].productId);
   const [buying, setBuying] = useState(false);
+  const [error, setError] = useState('');
   const product = MESSAGE_PRODUCTS.find(p => p.productId === selected)!;
 
   const handleBuy = async () => {
     setBuying(true);
+    setError('');
     try {
       await buyMessages(selected);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -30,7 +32,7 @@ export default function MessagesScreen() {
       router.back();
     } catch (e) {
       if (e instanceof PurchaseCancelledError) return;
-      Alert.alert('Greška', e instanceof Error ? e.message : 'Kupovina nije uspjela.');
+      setError(e instanceof Error ? e.message : 'Kupovina nije uspjela.');
     } finally {
       setBuying(false);
     }
@@ -84,10 +86,12 @@ export default function MessagesScreen() {
       })}
 
       <View style={s.footer}>
+        {error ? <Text style={{ color: colors.red, fontSize: 13, fontWeight: '600', textAlign: 'center', marginBottom: 8 }}>{error}</Text> : null}
+        {!purchasesAvailable() ? <Text style={{ color: colors.orange, fontSize: 13, fontWeight: '600', textAlign: 'center', marginBottom: 8 }}>Kupovina nije dostupna u ovom okruženju.</Text> : null}
         <AppButton
           label={buying ? 'Kupovina…' : `Kupi ${product.messages} poruka · ${priceLabel(prices.data, selected, product.listPrice)}`}
           onPress={() => void handleBuy()}
-          disabled={buying}
+          disabled={buying || !purchasesAvailable()}
           icon={buying ? <ActivityIndicator color="#FFF" size="small" /> : undefined}
           full
         />
