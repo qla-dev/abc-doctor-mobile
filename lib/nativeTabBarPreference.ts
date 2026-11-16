@@ -9,6 +9,11 @@ import { canUseLiquidGlass } from '@/lib/liquidGlass';
  * to satisfy `react-hooks/rules-of-hooks`.
  */
 export function useNativeIOSTabsActive(): boolean {
+  return useLiquidGlassActive();
+}
+
+/** All glass surfaces follow the same persisted preference as the tab bar. */
+export function useLiquidGlassActive(): boolean {
   const enabled = useAppPreferencesStore((s) => s.liquidGlassTabBarEnabled);
   return canUseLiquidGlass() && enabled;
 }

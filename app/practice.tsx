@@ -31,8 +31,9 @@ const SECTION_COLORS: Record<string, (c: any) => string> = {
 };
 
 export default function PracticeScreen() {
-  const { conversationId } = useLocalSearchParams<{ conversationId?: string }>();
+  const { conversationId, workflowId } = useLocalSearchParams<{ conversationId?: string; workflowId?: string }>();
   const id = Number(conversationId);
+  const selectedWorkflowId = Number(workflowId);
   const { colors } = useTheme();
   const { t } = useLanguage();
   const g = createGlobalStyles(colors);
@@ -121,7 +122,7 @@ export default function PracticeScreen() {
             </Text>
           </View>
 
-          <AppButton
+          {!selectedWorkflowId ? <AppButton
             label={busy ? 'Starting…' : 'Surprise me'}
             icon={busy
               ? <ActivityIndicator size="small" color="#FFF" />
@@ -129,11 +130,16 @@ export default function PracticeScreen() {
             disabled={busy || !workflows.some(w => w.enabled)}
             onPress={() => void start()}
             full
-          />
+          /> : null}
 
           {workflows.length > 0 && <SectionHeader title="Workflows" />}
 
+          {selectedWorkflowId && workflows.length > 0 && !workflows.some(w => w.id === selectedWorkflowId) ? (
+            <AppCard><Text style={[s.emptyText, { color: colors.muted }]}>{t('ai.workflowUnavailable')}</Text></AppCard>
+          ) : null}
+
           {workflows.map((w, index) => {
+            if (selectedWorkflowId && w.id !== selectedWorkflowId) return null;
             const ICONS = [ClipboardList, Stethoscope, Search, Microscope, HeartPulse, Syringe];
             const TINTS = [colors.blue, colors.green, colors.orange, colors.indigo, colors.red, colors.blue];
             const Icon = ICONS[index % ICONS.length];

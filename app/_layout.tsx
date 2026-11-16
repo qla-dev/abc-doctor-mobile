@@ -1,5 +1,4 @@
 import { useEffect, useMemo } from 'react';
-import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
@@ -20,6 +19,7 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { configurePurchases, purchasesAvailable, identifyUser } from '@/lib/purchases';
 import { useOTAUpdate } from '@/hooks/useOTAUpdate';
 import '@/i18n';
+import { useLiquidGlassActive } from '@/lib/nativeTabBarPreference';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 60_000, retry: 2 } },
@@ -28,6 +28,7 @@ const queryClient = new QueryClient({
 function RootStack() {
   const { ready, authenticated } = useAuth();
   const { colors, resolvedMode } = useTheme();
+  const glassActive = useLiquidGlassActive();
   const isDark = resolvedMode === 'dark';
 
   /**
@@ -85,8 +86,8 @@ function RootStack() {
            * iOS insets them below the bar and lets the content pass under it.
            */
           // Browser ScrollViews do not apply native automatic header insets.
-          headerTransparent: Platform.OS !== 'web',
-          headerStyle: { backgroundColor: Platform.OS === 'web' ? colors.background : 'transparent' },
+          headerTransparent: glassActive,
+          headerStyle: { backgroundColor: glassActive ? 'transparent' : colors.background },
         }}
         /**
          * The back chevron is drawn by the OS and has no press handler to hang a haptic on, so the

@@ -114,6 +114,14 @@
     "urgency": "Hitnost"
   },
   "ai": {
+    "searchPlaceholder": "Pretraži načine rada i procedure…",
+    "clearSearch": "Očisti pretragu",
+    "modes": "Načini rada",
+    "workflows": "Procedure",
+    "noSearchResults": "Nema načina rada ili procedura za ovu pretragu.",
+    "practiceTitle": "Procedure",
+    "practiceDescription": "Strukturirane vježbe s evaluacijom i povratnom informacijom.",
+    "workflowUnavailable": "Ova procedura više nije dostupna.",
     "pickSkill": "Izaberi vještinu",
     "freeTalk": "Započni",
     "subtitle": "Imate druga pitanja?",
@@ -207,12 +215,18 @@
     "opened": "Konsultacija je počela",
     "setupDesc": "Prilagodi slučaj pacijenta. Mark glumi pacijenta, ti uzimaš anamnezu, pregledaš i postavljaš dijagnozu.",
     "symptoms": "Simptomi",
-    "practiceDetails": "Detalji vjezbe"
+    "practiceDetails": "Detalji vjezbe",
+    "practiceType": "Vrsta vježbe",
+    "finishPractice": "Završi i pregledaj",
+    "finishingPractice": "Završavanje…"
   },
   "skills": {
     "patient_simulator": "Simulator pacijenta"
   },
   "settings": {
+    "liquidGlass": "Liquid Glass",
+    "liquidGlassDescription": "Koristi stakleni izgled navigacije, panela i dugmadi.",
+    "liquidGlassUnavailable": "Dostupno na podržanim uređajima s iOS 26. Ovdje se koriste standardne kontrole.",
     "system": "Prati sistem",
     "light": "Svijetla",
     "dark": "Tamna",

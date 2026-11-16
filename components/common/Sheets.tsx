@@ -1,6 +1,7 @@
-import { ReactNode, useCallback, useMemo, useRef } from 'react';
+import { ReactNode, useCallback, useContext, useMemo, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetFooter, BottomSheetScrollView, BottomSheetView, type BottomSheetFooterProps } from '@gorhom/bottom-sheet';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme/ThemeProvider';
 import { AppButton } from './AppButton';
@@ -10,8 +11,11 @@ import { AppButton } from './AppButton';
  * tapping the backdrop; a sheet that can only be closed by a button strands people who opened
  * it by accident.
  */
-export function CustomBottomSheet({ open, onClose, title, children }: {
+export function CustomBottomSheet({ open, onClose, title, children, footer, scrollable = false }: {
   open: boolean; onClose: () => void; title?: string; children: ReactNode;
+  /** Kept at the foot of the sheet while the body scrolls. */
+  footer?: ReactNode;
+  scrollable?: boolean;
 }) {
   const { colors } = useTheme();
   const sheet = useRef<BottomSheet>(null);
@@ -28,6 +32,10 @@ export function CustomBottomSheet({ open, onClose, title, children }: {
     []
   );
 
+  const renderFooter = useCallback((props: BottomSheetFooterProps) => (
+    <BottomSheetFooter {...props}>{footer}</BottomSheetFooter>
+  ), [footer]);
+
   if (!open) return null;
 
   const styles = StyleSheet.create({
@@ -42,16 +50,28 @@ export function CustomBottomSheet({ open, onClose, title, children }: {
       ref={sheet}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={scrollable || footer ? false : undefined}
       enablePanDownToClose
       onChange={handleChange}
       backdropComponent={renderBackdrop}
       backgroundStyle={styles.background}
       handleIndicatorStyle={styles.handle}
+      footerComponent={footer ? renderFooter : undefined}
     >
-      <BottomSheetView style={styles.content}>
-        {title ? <Text style={styles.title}>{title}</Text> : null}
-        {children}
-      </BottomSheetView>
+      {scrollable ? (
+        <BottomSheetScrollView
+          contentContainerStyle={styles.content}
+          enableFooterMarginAdjustment={Boolean(footer)}
+        >
+          {title ? <Text style={styles.title}>{title}</Text> : null}
+          {children}
+        </BottomSheetScrollView>
+      ) : (
+        <BottomSheetView style={styles.content}>
+          {title ? <Text style={styles.title}>{title}</Text> : null}
+          {children}
+        </BottomSheetView>
+      )}
     </BottomSheet>
   );
 }
@@ -92,16 +112,18 @@ export function ActionBottomSheet({ open, onClose, title, actions, cancelLabel }
  * A pinned call to action. It sits above the home indicator with the screen's own background
  * behind it, so content scrolling underneath never shows through a transparent strip.
  */
-export function FooterCta({ children, inset = 0 }: { children: ReactNode; inset?: number }) {
+export function FooterCta({ children, inset, surface = 'screen' }: {
+  children: ReactNode; inset?: number; surface?: 'screen' | 'sheet';
+}) {
   const { colors } = useTheme();
+  const safeArea = useContext(SafeAreaInsetsContext);
+  const bottomInset = inset ?? safeArea?.bottom ?? 0;
   return (
     <View style={{
       paddingHorizontal: 16,
       paddingTop: 10,
-      paddingBottom: inset + 10,
-      backgroundColor: colors.background,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.separator,
+      paddingBottom: Math.max(bottomInset, 12) + 5,
+      backgroundColor: surface === 'sheet' ? colors.card : colors.background,
       gap: 8,
     }}>
       {children}

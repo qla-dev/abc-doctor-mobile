@@ -112,6 +112,14 @@
     "urgency": "Dringlichkeit"
   },
   "ai": {
+    "searchPlaceholder": "Modi und Abläufe suchen…",
+    "clearSearch": "Suche löschen",
+    "modes": "Modi",
+    "workflows": "Abläufe",
+    "noSearchResults": "Keine passenden Modi oder Abläufe gefunden.",
+    "practiceTitle": "Übungen",
+    "practiceDescription": "Strukturierte Übungen mit Auswertung und Feedback.",
+    "workflowUnavailable": "Dieser Ablauf ist nicht mehr verfügbar.",
     "pickSkill": "Fähigkeit wählen",
     "freeTalk": "Starten",
     "subtitle": "Weitere Fragen?",
@@ -205,12 +213,18 @@
     "opened": "Konsultation gestartet",
     "setupDesc": "Konfiguriere deinen Patientenfall. Mark spielt den Patienten, du erhebst die Anamnese, untersuchst und stellst die Diagnose.",
     "symptoms": "Symptome",
-    "practiceDetails": "Praxisdetails"
+    "practiceDetails": "Praxisdetails",
+    "practiceType": "Übungstyp",
+    "finishPractice": "Beenden und auswerten",
+    "finishingPractice": "Wird beendet…"
   },
   "skills": {
     "patient_simulator": "Patientensimulator"
   },
   "settings": {
+    "liquidGlass": "Liquid Glass",
+    "liquidGlassDescription": "Glasoptik für Navigation, Bereiche und Aktionsschaltflächen verwenden.",
+    "liquidGlassUnavailable": "Auf unterstützten Geräten mit iOS 26 verfügbar. Hier werden Standardsteuerelemente verwendet.",
     "system": "System folgen",
     "light": "Hell",
     "dark": "Dunkel",

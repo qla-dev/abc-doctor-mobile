@@ -30,6 +30,7 @@ import {
 } from '@/components/mark/MarkComposer';
 import { SymptomsSheet } from '@/components/mark/SymptomsSheet';
 import { PracticeSheet } from '@/components/mark/PracticeSheet';
+import { Practice } from '@/services/practice';
 import { MarkThinking } from '@/components/mark/MarkThinking';
 import { SkillSheet } from '@/components/mark/SkillSheet';
 import type { CaseSetup } from '@/lib/caseGenerator';
@@ -698,7 +699,6 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
             Not during a call. On the line there is nothing to wait for — he answers out loud as
             you speak, and a line saying he is thinking would be describing the silence between
             two people talking. */}
-        {conversation?.is_practice ? <Pressable onPress={() => router.push({pathname:'/practice',params:{conversationId:String(conversation.id)}})}><Text style={{color:colors.blue,padding:16}}>Practice brief and feedback</Text></Pressable> : null}
         {(busy || starting) && !calling ? <MarkThinking skill={conversation?.skill?.name} /> : null}
 
         <Animated.View style={tail} />
@@ -729,7 +729,6 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
               {effective.input === 'voice' && !calling && !speech.listening && !speech.speaking ? <Text style={{ color: colors.muted, paddingHorizontal: 12, paddingBottom: 8 }}>Tap the microphone to speak.</Text> : null}
               {!effective.realtime && effective.output === 'voice' && !speech.listening && !speech.speaking && messages.some(message => message.role === 'assistant') ? <ChatAction title="Hear last reply" onPress={() => { const reply = [...messages].reverse().find(message => message.role === 'assistant'); if (reply) void speech.speak(reply.body); }} /> : null}
               {speech.listening || speech.speaking ? <ChatAction title={speech.listening ? 'Stop listening' : 'Stop playback'} onPress={speech.stop} /> : null}
-              {conversation?.is_practice ? <ChatAction title="Practice overview / finish" onPress={async () => { try { speech.stop(); await drainCall.current?.(); await Mark.flushTranscripts(conversation.id); setCalling(false); router.push({ pathname: '/practice', params: { conversationId: String(conversation.id) } }); } catch (e) { setError((e as Error).message); } }} /> : null}
               {conversation && calling && effective.realtime && effective.compatible ? (
                 <MarkCallBar
                   key={`${conversation.id}:${mode}`}
@@ -772,6 +771,14 @@ export const MarkChat = forwardRef<MarkChatHandle, MarkChatProps>(function MarkC
           open={practiceOpen}
           onClose={() => setPracticeOpen(false)}
           conversationId={conversation.id}
+          workflowName={conversation.title}
+          finishDisabled={busy || starting || pending.some(item => item.pending !== 'local')}
+          onFinish={async () => {
+            speech.stop();
+            await drainCall.current?.();
+            setCalling(false);
+            await Practice.finish(conversation.id);
+          }}
         />
       ) : null}
 

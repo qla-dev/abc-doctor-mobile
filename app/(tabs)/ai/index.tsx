@@ -1,14 +1,14 @@
 import { currentMode } from '@/stores/conversationPreferences';
 import { resolveMode } from '@/lib/conversationMode';
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import { FallbackTabHeader, useTabBarClearance } from '@/components/common/TabHeader';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useDayControl } from '@/hooks/useDayControl';
 import {
   Brain, ChevronRight, ClipboardList, Ear, MessageSquareText, MessagesSquare, Mic,
-  Settings, Stethoscope,
+  Search, Settings, Stethoscope, X,
 } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -16,6 +16,9 @@ import { createGlobalStyles } from '@/theme/styles';
 import { AppCard } from '@/components/common/AppCard';
 import { Mark, type Modality, type MarkSkill } from '@/services/mark';
 import { ApiError } from '@/lib/api';
+import { Practice, type Workflow } from '@/services/practice';
+import { SectionHeader } from '@/components/common/SectionHeader';
+import { matchesCatalogSearch } from '@/lib/catalogSearch';
 
 type Tone = 'indigo' | 'blue' | 'green' | 'orange' | 'red' | 'cyan';
 
@@ -31,11 +34,8 @@ const LOOK: Record<string, { icon: typeof Brain; tone: Tone }> = {
 /**
  * Where a conversation is chosen, not where it is held.
  *
- * The field in the tab bar — this is the search tab, and on iOS 26 the bar becomes that field —
- * starts a consultation from whatever is typed into it. The cards below say what else Mark can
- * be, and the one that needs deciding first, the simulated patient, unfolds its case here
- * rather than on a screen of its own. Every one of them opens the same chat screen, already
- * holding a thread and ready to be spoken to.
+ * Search filters the available modes and practice workflows. A conversation opens only when
+ * the learner chooses a mode; workflows open their setup before anything starts.
  */
 export default function AiScreen() {
   const { colors } = useTheme();
@@ -44,12 +44,36 @@ export default function AiScreen() {
   const clearance = useTabBarClearance();
 
   const [skills, setSkills] = useState<MarkSkill[]>([]);
+  const [loadingSkills, setLoadingSkills] = useState(true);
   const [skillsError, setSkillsError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [query, setQuery] = useState('');
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [workflowsError, setWorkflowsError] = useState<string | null>(null);
+  const [loadingWorkflows, setLoadingWorkflows] = useState(true);
 
   useEffect(() => {
-    Mark.skills().then(setSkills).catch((e: ApiError) => setSkillsError(e.message));
+    let alive = true;
+    Mark.skills()
+      .then(list => { if (alive) setSkills(list); })
+      .catch((e: ApiError) => { if (alive) setSkillsError(e.message); })
+      .finally(() => { if (alive) setLoadingSkills(false); });
+    return () => { alive = false; };
   }, []);
+
+  useFocusEffect(useCallback(() => {
+    let alive = true;
+    setLoadingWorkflows(true);
+    Practice.workflows()
+      .then(list => { if (alive) { setWorkflows(list); setWorkflowsError(null); } })
+      .catch((e: ApiError) => { if (alive) setWorkflowsError(e.message); })
+      .finally(() => { if (alive) setLoadingWorkflows(false); });
+    return () => { alive = false; };
+  }, []));
+
+  const searching = Boolean(query.trim());
+  const filteredSkills = skills.filter(skill => matchesCatalogSearch(query, skill.name, skill.description, skill.key, t('ai.modes')));
+  const filteredWorkflows = workflows.filter(workflow => matchesCatalogSearch(query, workflow.name, workflow.purpose, t('ai.workflows'), t('ai.practiceTitle')));
 
   /**
    * Every way in comes through here: the thread is opened first, so the chat screen is a
@@ -58,7 +82,6 @@ export default function AiScreen() {
   const begin = async (
     key: string,
     modality: Modality,
-    extra: Record<string, string> = {},
   ) => {
     if (starting) return;
     setStarting(true);
@@ -71,7 +94,6 @@ export default function AiScreen() {
           conversationId: String(thread.id),
           // A spoken thread arrives with the line already open; a written one does not.
           ...(currentMode() === 'high_quality_voice' ? { autoVoice: '1' } : {}),
-          ...extra,
         },
       });
     } catch (e) {
@@ -79,13 +101,6 @@ export default function AiScreen() {
     } finally {
       setStarting(false);
     }
-  };
-
-  /** A question typed into the tab's field. Mark is not a list to search, so it opens one. */
-  const ask = (text: string) => {
-    const question = text.trim();
-    if (question && resolveMode(currentMode()).input !== 'text') { setSkillsError('Select Type → read or Type → hear to send a typed question.'); return; }
-    if (question) void begin('consultant', 'text', { seed: question });
   };
 
   const open = (skill: MarkSkill) => {
@@ -117,16 +132,20 @@ export default function AiScreen() {
     skillDesc: { color: colors.muted, fontSize: 12.5, marginTop: 2 },
     skillError: { color: colors.red, fontSize: 13.5 },
     modeIcons: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+    search: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.input, borderRadius: 16, paddingHorizontal: 14 },
+    searchInput: { flex: 1, minWidth: 0, minHeight: 48, color: colors.text, fontSize: 15 },
   });
 
   return (
     <View style={g.screen} collapsable={false}>
-      {/* The tab bar is the field: iOS 26 turns a search tab's bar into one, and it is focused
-          the moment you get here, so asking Mark something is a tap and then typing. */}
       {usesNativeHeader ? <Stack.SearchBar
-        placeholder={t('ai.placeholder')}
-        autoFocus
-        onSearchButtonPress={event => ask(event.nativeEvent.text)}
+        placeholder={t('ai.searchPlaceholder')}
+        autoFocus={false}
+        autoCapitalize="none"
+        hideWhenScrolling={false}
+        onChangeText={event => setQuery(event.nativeEvent.text)}
+        onCancelButtonPress={() => setQuery('')}
+        onSearchButtonPress={() => Keyboard.dismiss()}
       /> : null}
       <FallbackTabHeader
         title={t('tabs.ai')}
@@ -150,11 +169,38 @@ export default function AiScreen() {
         automaticallyAdjustsScrollIndicatorInsets={usesNativeHeader}
         contentContainerStyle={{ paddingBottom: clearance }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         <View style={g.scrollContent}>
+          {!usesNativeHeader ? (
+            <View style={styles.search}>
+              <Search size={18} color={colors.muted} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder={t('ai.searchPlaceholder')}
+                accessibilityLabel={t('ai.searchPlaceholder')}
+                placeholderTextColor={colors.muted}
+                autoFocus={false}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="search"
+                onSubmitEditing={() => Keyboard.dismiss()}
+                style={styles.searchInput}
+              />
+              {query ? (
+                <Pressable onPress={() => setQuery('')} accessibilityRole="button" accessibilityLabel={t('ai.clearSearch')} hitSlop={10}>
+                  <X size={18} color={colors.muted} />
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
           {skillsError ? <Text style={styles.skillError}>{skillsError}</Text> : null}
+          {loadingSkills ? <ActivityIndicator color={colors.blue} /> : null}
 
-          {skills.flatMap(skill => {
+          {searching && filteredSkills.length > 0 ? <SectionHeader title={t('ai.modes')} /> : null}
+          {filteredSkills.flatMap(skill => {
             const look = LOOK[skill.key] ?? { icon: Brain, tone: 'blue' as Tone };
             const Icon = look.icon;
 
@@ -179,7 +225,7 @@ export default function AiScreen() {
               </AppCard>
             );
 
-            if (skill.key !== 'patient_simulator') return [card];
+            if (searching || skill.key !== 'patient_simulator') return [card];
 
             return [card, (
               <AppCard key="practice" onPress={() => router.push('/practice')}>
@@ -188,14 +234,38 @@ export default function AiScreen() {
                     <ClipboardList size={20} color={colors.red} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.skillLabel}>Procedure</Text>
-                    <Text style={styles.skillDesc} numberOfLines={2}>Strukturirane vježbe s evaluacijom i povratnom informacijom.</Text>
+                    <Text style={styles.skillLabel}>{t('ai.practiceTitle')}</Text>
+                    <Text style={styles.skillDesc} numberOfLines={2}>{t('ai.practiceDescription')}</Text>
                   </View>
                   <ChevronRight size={16} color={colors.muted} />
                 </View>
               </AppCard>
             )];
           })}
+          {searching ? (
+            <>
+              {workflowsError ? <Text accessibilityRole="alert" style={styles.skillError}>{workflowsError}</Text> : null}
+              {loadingWorkflows ? <ActivityIndicator color={colors.blue} /> : null}
+              {filteredWorkflows.length > 0 ? <SectionHeader title={t('ai.workflows')} /> : null}
+              {filteredWorkflows.map(workflow => (
+                <AppCard key={`workflow-${workflow.id}`} onPress={() => router.push({ pathname: '/practice', params: { workflowId: String(workflow.id) } })}>
+                  <View style={styles.skillRow}>
+                    <View style={[styles.iconWrap, { backgroundColor: colors.blue + '22' }]}>
+                      <ClipboardList size={20} color={colors.blue} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.skillLabel}>{workflow.name}</Text>
+                      <Text style={styles.skillDesc} numberOfLines={2}>{workflow.purpose}</Text>
+                    </View>
+                    <ChevronRight size={16} color={colors.muted} />
+                  </View>
+                </AppCard>
+              ))}
+              {!loadingSkills && !loadingWorkflows && !skillsError && !workflowsError && filteredSkills.length === 0 && filteredWorkflows.length === 0 ? (
+                <Text style={styles.skillDesc}>{t('ai.noSearchResults')}</Text>
+              ) : null}
+            </>
+          ) : null}
         </View>
       </ScrollView>
       {day.sheet}

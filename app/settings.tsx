@@ -2,7 +2,7 @@ import { modeLabels } from '@/lib/conversationMode';
 import { useConversationPreferences } from '@/stores/conversationPreferences';
 import { useAuth } from '@/context/AuthContext';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { ChevronRight, Crown, MessageCircle, Mic, Moon, Smartphone, Sun } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -22,6 +22,8 @@ import type { ThemeMode } from '@/theme/colors';
 import { usePurchaseState, useInvalidatePurchaseState } from '@/hooks/usePurchases';
 import { apiRequest } from '@/lib/api';
 import type { Language } from '@/i18n';
+import { useAppPreferencesStore } from '@/stores/appPreferencesStore';
+import { canUseLiquidGlass } from '@/lib/liquidGlass';
 
 function AccountRow({ label, value, onPress }: { label: string; value?: string | null; onPress?: () => void }) {
   const { colors } = useTheme();
@@ -111,6 +113,9 @@ export default function SettingsScreen() {
   const { data: purchaseState } = usePurchaseState();
   const invalidatePurchases = useInvalidatePurchaseState();
   const conversationMode = useConversationPreferences(s => s.mode);
+  const glassEnabled = useAppPreferencesStore(s => s.liquidGlassTabBarEnabled);
+  const setGlassEnabled = useAppPreferencesStore(s => s.setLiquidGlassTabBarEnabled);
+  const glassAvailable = canUseLiquidGlass();
   const [recharging, setRecharging] = useState(false);
   const g = createGlobalStyles(colors);
   const [, forceRender] = useState(0);
@@ -293,6 +298,23 @@ export default function SettingsScreen() {
         </View>
       </AppCard>
       <SectionHeader title={t('common.theme')} />
+      <AppCard>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.text, fontSize: 15, fontWeight: '600' }}>{t('settings.liquidGlass')}</Text>
+            <Text style={{ color: colors.muted, fontSize: 12.5, lineHeight: 18, marginTop: 3 }}>
+              {t(glassAvailable ? 'settings.liquidGlassDescription' : 'settings.liquidGlassUnavailable')}
+            </Text>
+          </View>
+          <Switch
+            accessibilityLabel={t('settings.liquidGlass')}
+            value={glassAvailable && glassEnabled}
+            disabled={!glassAvailable}
+            trackColor={{ true: colors.blue, false: colors.input }}
+            onValueChange={enabled => { void Haptics.selectionAsync(); setGlassEnabled(enabled); }}
+          />
+        </View>
+      </AppCard>
       <List>
         {themeOptions.map((option, index) => {
           const Icon = option.icon;

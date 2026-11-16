@@ -112,6 +112,14 @@
     "urgency": "Urgency"
   },
   "ai": {
+    "searchPlaceholder": "Search modes and workflows…",
+    "clearSearch": "Clear search",
+    "modes": "Modes",
+    "workflows": "Workflows",
+    "noSearchResults": "No modes or workflows match your search.",
+    "practiceTitle": "Practice",
+    "practiceDescription": "Structured practice with evaluation and feedback.",
+    "workflowUnavailable": "This workflow is no longer available.",
     "pickSkill": "Pick a skill",
     "freeTalk": "Start",
     "subtitle": "Other questions?",
@@ -205,12 +213,18 @@
     "opened": "Consultation started",
     "setupDesc": "Configure your patient case. Mark plays the patient, you take the history, examine, and diagnose.",
     "symptoms": "Symptoms",
-    "practiceDetails": "Practice details"
+    "practiceDetails": "Practice details",
+    "practiceType": "Practice type",
+    "finishPractice": "Finish and review",
+    "finishingPractice": "Finishing…"
   },
   "skills": {
     "patient_simulator": "Patient Simulator"
   },
   "settings": {
+    "liquidGlass": "Liquid Glass",
+    "liquidGlassDescription": "Use glass navigation, panels and action buttons.",
+    "liquidGlassUnavailable": "Available on supported iOS 26 devices. Standard controls are used here.",
     "system": "Follow system",
     "light": "Light",
     "dark": "Dark",
