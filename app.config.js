@@ -1,26 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-
 const normalizeGoogleClientId = value => value?.trim().replace(/\/+$/, '') || '';
 
-const readBackendEnv = () => {
-  try {
-    return Object.fromEntries(
-      fs.readFileSync(path.join(__dirname, '..', 'backend', '.env'), 'utf8')
-        .split(/\r?\n/)
-        .filter(line => line && !line.trimStart().startsWith('#') && line.includes('='))
-        .map(line => {
-          const separator = line.indexOf('=');
-          return [line.slice(0, separator).trim(), line.slice(separator + 1).trim().replace(/^["']|["']$/g, '')];
-        }),
-    );
-  } catch {
-    return {};
-  }
-};
-
 module.exports = ({ config }) => {
-  const backendEnv = readBackendEnv();
   const googleAuth = config.extra?.googleAuth || {};
   const webClientId = normalizeGoogleClientId(googleAuth.webClientId);
   const iosClientId = normalizeGoogleClientId(googleAuth.iosClientId);
@@ -49,10 +29,10 @@ module.exports = ({ config }) => {
       googleAuth: { webClientId, iosClientId, androidClientId },
       revenueCat: {
         ...revenueCat,
-        androidApiKey: process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY || backendEnv.REVENUECAT_GOOGLE_API_KEY || revenueCat.androidApiKey || '',
-        iosApiKey: process.env.EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY || backendEnv.REVENUECAT_APPLE_API_KEY || revenueCat.iosApiKey || '',
-        webBillingKey: process.env.EXPO_PUBLIC_REVENUECAT_WEB_BILLING_KEY || backendEnv.REVENUECAT_WEB_BILLING_KEY || revenueCat.webBillingKey || '',
-        entitlementIdentifier: process.env.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_IDENTIFIER || backendEnv.REVENUECAT_ENTITLEMENT_IDENTIFIER || revenueCat.entitlementIdentifier || 'ABC Doctor Pro',
+        androidApiKey: process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY || revenueCat.androidApiKey || '',
+        iosApiKey: process.env.EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY || revenueCat.iosApiKey || '',
+        webBillingKey: process.env.EXPO_PUBLIC_REVENUECAT_WEB_BILLING_KEY || revenueCat.webBillingKey || '',
+        entitlementIdentifier: process.env.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_IDENTIFIER || revenueCat.entitlementIdentifier || 'ABC Doctor Pro',
       },
     },
   };
