@@ -7,8 +7,8 @@ import { FallbackTabHeader, useTabBarClearance } from '@/components/common/TabHe
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useDayControl } from '@/hooks/useDayControl';
 import {
-  Brain, ChevronDown, ChevronRight, Ear, MessageSquareText, MessagesSquare, Mic, Settings,
-  Stethoscope,
+  Brain, ChevronDown, ChevronRight, ClipboardList, Ear, MessageSquareText, MessagesSquare, Mic,
+  Settings, Stethoscope,
 } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLanguage } from '@/context/LanguageContext';
@@ -213,6 +213,19 @@ export default function AiScreen() {
               <CaseForm setup={setup} onChange={patch} onStart={startCase} starting={starting} />
             </AppCard>
           ) : null}
+
+          <AppCard onPress={() => router.push('/practice')}>
+            <View style={styles.skillRow}>
+              <View style={[styles.iconWrap, { backgroundColor: colors.red + '22' }]}>
+                <ClipboardList size={20} color={colors.red} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.skillLabel}>Practice</Text>
+                <Text style={styles.skillDesc} numberOfLines={2}>Structured workflows with evaluation and feedback.</Text>
+              </View>
+              <ChevronRight size={16} color={colors.muted} />
+            </View>
+          </AppCard>
         </View>
       </ScrollView>
       {day.sheet}
